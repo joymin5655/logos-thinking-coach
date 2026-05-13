@@ -1,107 +1,86 @@
 /*
  * ThinkerModel.tsx
- * LOGOS Design: 로댕의 생각하는 사람 3D 모델
- * - Y축 회전 (20초/회전)
- * - 세이지 그린 배경에 어울리는 조명
- * - GLB 텍스처 포함 모델 렌더링
- *
- * Fix: scene.clone() to avoid React Three Fiber DOM unmount TypeError
- * when Suspense switches from fallback to actual component.
+ * LOGOS Design: 로댕의 생각하는 사람 이미지 기반 회전 효과
+ * - 배경 제거된 PNG 이미지 사용 (GLB 대신)
+ * - CSS perspective + scaleX 트릭으로 Y축 회전 시뮬레이션
+ * - 20초에 한 바퀴 회전
+ * - 세이지 그린 배경에 어울리는 drop-shadow 필터
  */
-import { useRef, Suspense, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, ContactShadows } from '@react-three/drei';
-import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
 
-const GLB_URL = '/template-storage/thinker_0440d172.glb';
-
-function RotatingThinker() {
-  const groupRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(GLB_URL);
-
-  // Clone the scene to avoid sharing the same object between renders
-  // This prevents the "Cannot convert undefined or null to object" error
-  // that occurs when React Three Fiber tries to remove a child from a
-  // container that has already been cleaned up.
-  const clonedScene = useMemo(() => scene.clone(true), [scene]);
-
-  useFrame((_, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * (Math.PI * 2 / 20); // 20초에 한 바퀴
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={[0, -1.2, 0]} scale={[1.8, 1.8, 1.8]}>
-      <primitive object={clonedScene} />
-    </group>
-  );
-}
-
-function FallbackThinker() {
-  const groupRef = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * (Math.PI * 2 / 20);
-    }
-  });
-  return (
-    <group ref={groupRef}>
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.8, 1.6, 0.6]} />
-        <meshStandardMaterial color="#2A2A1A" roughness={0.9} metalness={0.1} />
-      </mesh>
-      <mesh position={[0, 1.0, 0]}>
-        <sphereGeometry args={[0.35, 16, 16]} />
-        <meshStandardMaterial color="#2A2A1A" roughness={0.9} metalness={0.1} />
-      </mesh>
-    </group>
-  );
-}
+const RODIN_IMG = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663647714246/6TkpfBVetBKa7U8H88xcFN/rodin_transparent-MeJJLUhBdXeWmJKycwYuw3.png';
 
 interface ThinkerModelProps {
   className?: string;
 }
 
 export default function ThinkerModel({ className }: ThinkerModelProps) {
-  return (
-    <div className={className} style={{ background: 'transparent' }}>
-      <Canvas
-        camera={{ position: [0, 0.5, 4], fov: 45 }}
-        style={{ background: 'transparent' }}
-        gl={{ alpha: true, antialias: true }}
-        // frameloop="always" ensures smooth rotation
-        frameloop="always"
-      >
-        {/* Lighting tuned for sage green background */}
-        <ambientLight intensity={0.5} color="#C5C9B4" />
-        <directionalLight
-          position={[3, 5, 3]}
-          intensity={1.4}
-          color="#FFFFFF"
-          castShadow
-        />
-        <directionalLight
-          position={[-2, 3, -2]}
-          intensity={0.3}
-          color="#D8DBC8"
-        />
-        <pointLight position={[0, 4, 2]} intensity={0.4} color="#EF9F27" />
+  const imgRef = useRef<HTMLImageElement>(null);
+  const animRef = useRef<number>(0);
+  const startTimeRef = useRef<number>(performance.now());
 
-        <Suspense fallback={<FallbackThinker />}>
-          <RotatingThinker />
-          <ContactShadows
-            position={[0, -1.8, 0]}
-            opacity={0.2}
-            scale={4}
-            blur={2.5}
-            color="#1E1E14"
-          />
-        </Suspense>
-      </Canvas>
+  useEffect(() => {
+    const PERIOD = 20000; // 20 seconds per full rotation
+
+    const animate = (now: number) => {
+      const elapsed = now - startTimeRef.current;
+      const angle = ((elapsed % PERIOD) / PERIOD) * Math.PI * 2;
+
+      if (imgRef.current) {
+        // Simulate Y-axis rotation using scaleX with perspective distortion
+        const scaleX = Math.cos(angle);
+        const absScale = Math.abs(scaleX);
+
+        // Perspective depth effect: slightly shrink when side-on
+        const scaleY = 1 - (1 - absScale) * 0.05;
+
+        // Slight horizontal shift to simulate 3D parallax
+        const translateX = Math.sin(angle) * 8;
+
+        imgRef.current.style.transform =
+          `translateX(${translateX}px) scaleX(${scaleX}) scaleY(${scaleY})`;
+
+        // Drop shadow shifts with rotation
+        const shadowX = Math.sin(angle) * 12;
+        imgRef.current.style.filter =
+          `drop-shadow(${shadowX}px 20px 30px rgba(20, 20, 10, 0.45))`;
+      }
+
+      animRef.current = requestAnimationFrame(animate);
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, []);
+
+  return (
+    <div
+      className={className}
+      style={{
+        background: 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        perspective: '800px',
+      }}
+    >
+      <img
+        ref={imgRef}
+        src={RODIN_IMG}
+        alt="The Thinker by Rodin"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          objectPosition: 'center bottom',
+          transformOrigin: 'center center',
+          willChange: 'transform, filter',
+          transition: 'none',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
+        draggable={false}
+      />
     </div>
   );
 }
-
-// Preload the GLB
-useGLTF.preload('/template-storage/thinker_0440d172.glb');

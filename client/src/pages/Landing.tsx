@@ -117,15 +117,17 @@ export default function Landing() {
           <PixelDotGrid className="w-full h-full" />
         </div>
 
-        {/* 3D Thinker — center, above pixel grid */}
+        {/* Thinker statue — center, above pixel grid */}
         <div
           className="absolute z-20"
           style={{
             left: '50%',
             top: '45%',
             transform: 'translate(-50%, -50%)',
-            width: 'min(380px, 48vw)',
-            height: 'min(560px, 72vh)',
+            width: 'min(420px, 52vw)',
+            height: 'min(620px, 78vh)',
+            background: 'transparent',
+            mixBlendMode: 'normal',
           }}
         >
           <ThinkerModel className="w-full h-full" />
