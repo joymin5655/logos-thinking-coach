@@ -13,7 +13,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
-const GLB_URL = '/template-storage/thinker_bc8101a6.glb';
+const GLB_URL = '/template-storage/thinker_0440d172.glb';
 
 function RotatingThinker() {
   const groupRef = useRef<THREE.Group>(null);
@@ -104,4 +104,4 @@ export default function ThinkerModel({ className }: ThinkerModelProps) {
 }
 
 // Preload the GLB
-useGLTF.preload(GLB_URL);
+useGLTF.preload('/template-storage/thinker_0440d172.glb');
