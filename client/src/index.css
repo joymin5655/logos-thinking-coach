@@ -3,6 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 
+ * LOGOS Design System — "박물관 밖의 철학" Sage Minimalism + Editorial
+ * Color Philosophy: 로댕 이미지의 크림/베이지 배경 직접 이식
+ * - Background: Cream/Beige (#E8E0D0, #D4C9B5)
+ * - Text: Dark Olive (#2C2C1E)
+ * - Accent: Amber (#EF9F27) — 깨달음의 순간에만
+ * - Brand: Deep Purple (#534AB7) — 지성, 철학
+ * - Secondary: Teal (#1D9E75) — 성장
+ * Typography: Libre Baskerville (headlines) + Pretendard (body)
+ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -43,74 +54,52 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
+  --radius: 0.25rem;
+
+  /* LOGOS Brand Colors */
+  --logos-cream: #E8E0D0;
+  --logos-beige: #D4C9B5;
+  --logos-dark-olive: #2C2C1E;
+  --logos-olive-mid: #4A4A38;
+  --logos-olive-light: #888780;
+  --logos-amber: #EF9F27;
+  --logos-purple: #534AB7;
+  --logos-teal: #1D9E75;
+  --logos-bronze: #3D2B1A;
+
+  /* Semantic tokens */
+  --background: oklch(0.92 0.015 80);
+  --foreground: oklch(0.18 0.02 80);
+  --card: oklch(0.94 0.012 80);
+  --card-foreground: oklch(0.18 0.02 80);
+  --popover: oklch(0.96 0.008 80);
+  --popover-foreground: oklch(0.18 0.02 80);
+  --primary: oklch(0.38 0.12 280);
+  --primary-foreground: oklch(0.97 0 0);
+  --secondary: oklch(0.85 0.018 80);
+  --secondary-foreground: oklch(0.25 0.02 80);
+  --muted: oklch(0.88 0.014 80);
+  --muted-foreground: oklch(0.52 0.02 80);
+  --accent: oklch(0.73 0.16 60);
+  --accent-foreground: oklch(0.15 0.02 80);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
-}
-
-.dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --border: oklch(0.78 0.02 80);
+  --input: oklch(0.88 0.014 80);
+  --ring: oklch(0.38 0.12 280);
+  --chart-1: oklch(0.38 0.12 280);
+  --chart-2: oklch(0.52 0.14 175);
+  --chart-3: oklch(0.73 0.16 60);
+  --chart-4: oklch(0.52 0.02 80);
+  --chart-5: oklch(0.35 0.02 80);
+  --sidebar: oklch(0.88 0.016 80);
+  --sidebar-foreground: oklch(0.18 0.02 80);
+  --sidebar-primary: oklch(0.38 0.12 280);
+  --sidebar-primary-foreground: oklch(0.97 0 0);
+  --sidebar-accent: oklch(0.85 0.018 80);
+  --sidebar-accent-foreground: oklch(0.18 0.02 80);
+  --sidebar-border: oklch(0.78 0.02 80);
+  --sidebar-ring: oklch(0.38 0.12 280);
 }
 
 @layer base {
@@ -119,6 +108,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -131,27 +123,18 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+
+  h1, h2, h3 {
+    font-family: 'Libre Baskerville', Georgia, serif;
+  }
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,16 +145,69 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1440px;
     }
+  }
+
+  /* Marquee animation */
+  @keyframes marquee-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes marquee-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+
+  .marquee-left {
+    animation: marquee-left 40s linear infinite;
+  }
+
+  .marquee-right {
+    animation: marquee-right 50s linear infinite;
+  }
+
+  /* ASCII art flicker */
+  @keyframes ascii-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Fade in up */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in-up {
+    animation: fade-in-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* Dashboard sidebar */
+  .logos-sidebar {
+    background-color: var(--logos-dark-olive);
+    color: var(--logos-cream);
+  }
+
+  /* Score ring animation */
+  @keyframes score-fill {
+    from { stroke-dashoffset: 251.2; }
+    to { stroke-dashoffset: var(--target-offset); }
   }
 }
