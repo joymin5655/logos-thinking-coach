@@ -101,10 +101,14 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             onClick={() => navigate('/')}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <svg width="22" height="22" viewBox="0 0 28 28" fill="none" className="shrink-0">
-              <polygon points="14,2 26,9.5 26,18.5 14,26 2,18.5 2,9.5" stroke="#E8E0D0" strokeWidth="1.5" fill="none" />
-              <polygon points="14,7 21,11 21,17 14,21 7,17 7,11" stroke="#E8E0D0" strokeWidth="0.8" fill="none" opacity="0.4" />
-            </svg>
+            <img
+              src="/template-storage/logos-icon-192_bd75ec0c.png"
+              alt="LOGOS"
+              width="24"
+              height="24"
+              className="shrink-0"
+              style={{ objectFit: 'contain' }}
+            />
             {!collapsed && (
               <span
                 className="text-sm font-bold tracking-[0.15em] uppercase"

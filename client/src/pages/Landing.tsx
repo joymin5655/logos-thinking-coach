@@ -71,15 +71,14 @@ export default function Landing() {
         style={{ backgroundColor: 'transparent' }}
       >
         {/* Logo mark */}
-        <div className="flex items-center gap-2.5">
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-            <polygon
-              points="14,2 26,9.5 26,18.5 14,26 2,18.5 2,9.5"
-              stroke={TEXT}
-              strokeWidth="1.5"
-              fill="none"
-            />
-          </svg>
+        <div className="flex items-center gap-2">
+          <img
+            src="/template-storage/logos-icon-192_bd75ec0c.png"
+            alt="LOGOS"
+            width="28"
+            height="28"
+            style={{ objectFit: 'contain' }}
+          />
           <span
             className="text-xs font-semibold tracking-[0.18em] uppercase"
             style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT }}
