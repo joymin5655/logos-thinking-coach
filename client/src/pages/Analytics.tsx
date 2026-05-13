@@ -63,12 +63,12 @@ export default function Analytics() {
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
   const tooltipStyle = {
-    backgroundColor: '#2C2C1E',
+    backgroundColor: '#1E1E14',
     border: 'none',
     borderRadius: 0,
-    color: '#E8E0D0',
+    color: '#C5C9B4',
     fontSize: 11,
-    fontFamily: 'Pretendard Variable, sans-serif',
+    fontFamily: 'DM Sans, sans-serif',
   };
 
   return (
@@ -88,14 +88,14 @@ export default function Analytics() {
           >
             <div
               className="text-[0.55rem] tracking-[0.3em] uppercase opacity-40 mb-3"
-              style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
             >
               {stat.labelEn}
             </div>
             <div className="flex items-baseline gap-2">
               <span
                 className="text-3xl font-bold"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
               >
                 {stat.value}
               </span>
@@ -110,7 +110,7 @@ export default function Analytics() {
             </div>
             <div
               className="text-xs opacity-60 mt-1"
-              style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
             >
               {stat.label}
             </div>
@@ -126,9 +126,9 @@ export default function Analytics() {
             onClick={() => setPeriod(p)}
             className="px-5 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-200"
             style={{
-              fontFamily: 'Pretendard Variable, sans-serif',
-              backgroundColor: period === p ? '#2C2C1E' : 'transparent',
-              color: period === p ? '#E8E0D0' : 'rgba(44,44,30,0.5)',
+              fontFamily: 'DM Sans, sans-serif',
+              backgroundColor: period === p ? '#1E1E14' : 'transparent',
+              color: period === p ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
               border: '1px solid rgba(44,44,30,0.2)',
             }}
           >
@@ -144,13 +144,13 @@ export default function Analytics() {
       >
         <div
           className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
         >
           Score Trend
         </div>
         <div
           className="text-xl font-bold mb-6"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
         >
           {period === 'weekly' ? '주간 스코어 변화' : '월간 스코어 변화'}
         </div>
@@ -161,13 +161,13 @@ export default function Analytics() {
                 <CartesianGrid stroke="rgba(44,44,30,0.06)" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[50, 100]}
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -181,13 +181,13 @@ export default function Analytics() {
                 <CartesianGrid stroke="rgba(44,44,30,0.06)" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[40, 100]}
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -208,13 +208,13 @@ export default function Analytics() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             Skill Radar
           </div>
           <div
             className="text-lg font-bold mb-4"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
           >
             역량 분석
           </div>
@@ -224,7 +224,7 @@ export default function Analytics() {
                 <PolarGrid stroke="rgba(44,44,30,0.1)" />
                 <PolarAngleAxis
                   dataKey="subject"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.5)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.5)', fontFamily: 'DM Sans, sans-serif' }}
                 />
                 <Radar
                   name="Score"
@@ -246,13 +246,13 @@ export default function Analytics() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             AI Feedback
           </div>
           <div
             className="text-lg font-bold mb-6"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
           >
             개선 피드백
           </div>
@@ -261,7 +261,7 @@ export default function Analytics() {
               <div key={fb.type}>
                 <div
                   className="text-[0.6rem] tracking-[0.25em] uppercase mb-3 font-semibold"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: fb.color }}
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: fb.color }}
                 >
                   {fb.type}
                 </div>
@@ -271,7 +271,7 @@ export default function Analytics() {
                       <span style={{ color: fb.color, marginTop: 2 }}>—</span>
                       <span
                         className="text-xs leading-relaxed opacity-70"
-                        style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', lineHeight: 1.75 }}
+                        style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
                       >
                         {item}
                       </span>

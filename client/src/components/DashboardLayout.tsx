@@ -82,7 +82,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#E8E0D0' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#C5C9B4' }}>
       {/* Sidebar */}
       <aside
         className="flex flex-col shrink-0 transition-all duration-300"
@@ -108,7 +108,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             {!collapsed && (
               <span
                 className="text-sm font-bold tracking-[0.15em] uppercase"
-                style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#E8E0D0' }}
+                style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
               >
                 LOGOS
               </span>
@@ -161,13 +161,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                   <div>
                     <div
                       className="text-xs font-semibold"
-                      style={{ fontFamily: 'Pretendard Variable, sans-serif' }}
+                      style={{ fontFamily: 'DM Sans, sans-serif' }}
                     >
                       {item.label}
                     </div>
                     <div
                       className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40"
-                      style={{ fontFamily: 'Pretendard Variable, sans-serif' }}
+                      style={{ fontFamily: 'DM Sans, sans-serif' }}
                     >
                       {item.labelEn}
                     </div>
@@ -194,13 +194,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               <div>
                 <div
                   className="text-xs font-semibold"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#E8E0D0' }}
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
                 >
                   사용자
                 </div>
                 <div
                   className="text-[0.6rem] opacity-40"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#E8E0D0' }}
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
                 >
                   Free Plan
                 </div>
@@ -211,21 +211,21 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#EFEAD8' }}>
+      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#D8DBC8' }}>
         {/* Top bar */}
         {(title || titleEn) && (
           <div
             className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 border-b"
             style={{
-              backgroundColor: '#EFEAD8',
-              borderColor: 'rgba(44, 44, 30, 0.1)',
+              backgroundColor: '#D8DBC8',
+              borderColor: 'rgba(30, 30, 20, 0.1)',
             }}
           >
             <div>
               {titleEn && (
                 <div
                   className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-0.5"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
                 >
                   {titleEn}
                 </div>
@@ -233,7 +233,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               {title && (
                 <h1
                   className="text-lg font-bold"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', fontWeight: 700 }}
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14', fontWeight: 700 }}
                 >
                   {title}
                 </h1>
@@ -243,17 +243,17 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               <button
                 className="text-xs tracking-[0.15em] uppercase px-4 py-2 transition-all duration-200"
                 style={{
-                  fontFamily: 'Pretendard Variable, sans-serif',
-                  color: '#E8E0D0',
-                  backgroundColor: '#2C2C1E',
+                  fontFamily: 'DM Sans, sans-serif',
+                  color: '#C5C9B4',
+                  backgroundColor: '#1E1E14',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#EF9F27';
-                  e.currentTarget.style.color = '#2C2C1E';
+                  e.currentTarget.style.backgroundColor = '#3A3A28';
+                  e.currentTarget.style.color = '#C5C9B4';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2C2C1E';
-                  e.currentTarget.style.color = '#E8E0D0';
+                  e.currentTarget.style.backgroundColor = '#1E1E14';
+                  e.currentTarget.style.color = '#C5C9B4';
                 }}
                 onClick={() => navigate('/dashboard/session')}
               >

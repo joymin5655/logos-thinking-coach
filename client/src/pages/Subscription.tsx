@@ -89,21 +89,21 @@ export default function Subscription() {
         <div>
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-1"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             Current Plan
           </div>
           <div className="flex items-center gap-3">
             <span
               className="text-xl font-bold"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+              style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
             >
               Free Plan
             </span>
             <span
               className="text-[0.6rem] tracking-[0.15em] px-2 py-1"
               style={{
-                fontFamily: 'Pretendard Variable, sans-serif',
+                fontFamily: 'DM Sans, sans-serif',
                 backgroundColor: 'rgba(44,44,30,0.08)',
                 color: 'rgba(44,44,30,0.6)',
               }}
@@ -113,7 +113,7 @@ export default function Subscription() {
           </div>
           <p
             className="text-xs opacity-50 mt-1"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             오늘 남은 세션: 2회 / 3회
           </p>
@@ -121,13 +121,13 @@ export default function Subscription() {
         <div className="text-right">
           <div
             className="text-xs opacity-40 mb-1"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             다음 갱신일
           </div>
           <div
             className="text-sm font-semibold"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             매일 자정 초기화
           </div>
@@ -142,9 +142,9 @@ export default function Subscription() {
             onClick={() => setBillingCycle(cycle)}
             className="px-5 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-200"
             style={{
-              fontFamily: 'Pretendard Variable, sans-serif',
-              backgroundColor: billingCycle === cycle ? '#2C2C1E' : 'transparent',
-              color: billingCycle === cycle ? '#E8E0D0' : 'rgba(44,44,30,0.5)',
+              fontFamily: 'DM Sans, sans-serif',
+              backgroundColor: billingCycle === cycle ? '#1E1E14' : 'transparent',
+              color: billingCycle === cycle ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
               border: '1px solid rgba(44,44,30,0.2)',
             }}
           >
@@ -160,8 +160,8 @@ export default function Subscription() {
             key={plan.id}
             className="p-7 flex flex-col"
             style={{
-              backgroundColor: plan.highlight ? '#2C2C1E' : '#EFEAD8',
-              color: plan.highlight ? '#E8E0D0' : '#2C2C1E',
+              backgroundColor: plan.highlight ? '#1E1E14' : '#D8DBC8',
+              color: plan.highlight ? '#C5C9B4' : '#1E1E14',
             }}
           >
             {/* Plan Header */}
@@ -169,7 +169,7 @@ export default function Subscription() {
               <div
                 className="text-[0.6rem] tracking-[0.3em] uppercase mb-2"
                 style={{
-                  fontFamily: 'Pretendard Variable, sans-serif',
+                  fontFamily: 'DM Sans, sans-serif',
                   opacity: 0.5,
                 }}
               >
@@ -178,7 +178,7 @@ export default function Subscription() {
               <div className="flex items-baseline gap-1 mb-2">
                 <span
                   className="text-4xl font-bold"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
                 >
                   {plan.price === 0 ? '무료' : `₩${plan.price.toLocaleString()}`}
                 </span>
@@ -196,7 +196,7 @@ export default function Subscription() {
               )}
               <p
                 className="text-xs mt-2 opacity-60"
-                style={{ fontFamily: 'Pretendard Variable, sans-serif' }}
+                style={{ fontFamily: 'DM Sans, sans-serif' }}
               >
                 {plan.description}
               </p>
@@ -218,7 +218,7 @@ export default function Subscription() {
                   <span
                     className="text-xs"
                     style={{
-                      fontFamily: 'Pretendard Variable, sans-serif',
+                      fontFamily: 'DM Sans, sans-serif',
                       opacity: feature.included ? 0.8 : 0.3,
                     }}
                   >
@@ -234,10 +234,10 @@ export default function Subscription() {
               disabled={plan.current}
               className="w-full py-3 text-xs tracking-[0.2em] uppercase font-semibold border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
-                fontFamily: 'Pretendard Variable, sans-serif',
+                fontFamily: 'DM Sans, sans-serif',
                 borderColor: plan.highlight ? '#EF9F27' : 'rgba(44,44,30,0.3)',
                 backgroundColor: plan.highlight ? '#EF9F27' : 'transparent',
-                color: plan.highlight ? '#2C2C1E' : (plan.highlight ? '#E8E0D0' : '#2C2C1E'),
+                color: plan.highlight ? '#1E1E14' : (plan.highlight ? '#C5C9B4' : '#1E1E14'),
               }}
             >
               {plan.current ? '현재 플랜' : plan.cta}
@@ -250,7 +250,7 @@ export default function Subscription() {
       <div>
         <div
           className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-6"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
         >
           FAQ
         </div>
@@ -276,13 +276,13 @@ export default function Subscription() {
             >
               <div
                 className="text-sm font-semibold mb-2"
-                style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', fontWeight: 600 }}
+                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', fontWeight: 600 }}
               >
                 {item.q}
               </div>
               <p
                 className="text-xs opacity-60 leading-relaxed"
-                style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', lineHeight: 1.75 }}
+                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
               >
                 {item.a}
               </p>

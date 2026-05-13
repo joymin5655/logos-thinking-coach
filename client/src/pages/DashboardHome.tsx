@@ -76,13 +76,13 @@ function ScoreRing({ score }: { score: number }) {
       <div className="absolute text-center">
         <div
           className="text-2xl font-bold"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
         >
           {score}
         </div>
         <div
           className="text-[0.55rem] tracking-[0.2em] uppercase opacity-50"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
         >
           Score
         </div>
@@ -100,19 +100,19 @@ export default function DashboardHome() {
       <div className="mb-10">
         <div
           className="text-[0.65rem] tracking-[0.4em] uppercase opacity-40 mb-2"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
         >
           Good Morning
         </div>
         <h2
           className="text-3xl font-bold mb-1"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E', letterSpacing: '-0.02em' }}
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14', letterSpacing: '-0.02em' }}
         >
           오늘도 깊이 생각하세요
         </h2>
         <p
           className="text-sm opacity-50"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', lineHeight: 1.75 }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
         >
           일 3회 무료 세션 중 <strong>2회</strong> 남았습니다
         </p>
@@ -133,27 +133,27 @@ export default function DashboardHome() {
           >
             <div
               className="text-[0.55rem] tracking-[0.3em] uppercase opacity-40 mb-3"
-              style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
             >
               {stat.labelEn}
             </div>
             <div className="flex items-baseline gap-1">
               <span
                 className="text-3xl font-bold"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
               >
                 {stat.value}
               </span>
               <span
                 className="text-xs opacity-50"
-                style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
               >
                 {stat.unit}
               </span>
             </div>
             <div
               className="text-xs opacity-60 mt-1"
-              style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
             >
               {stat.label}
             </div>
@@ -170,7 +170,7 @@ export default function DashboardHome() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             Current Score
           </div>
@@ -185,7 +185,7 @@ export default function DashboardHome() {
                 <div key={item.label} className="flex items-center gap-3">
                   <span
                     className="text-[0.6rem] w-16 opacity-60"
-                    style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
                   >
                     {item.label}
                   </span>
@@ -197,7 +197,7 @@ export default function DashboardHome() {
                   </div>
                   <span
                     className="text-[0.6rem] opacity-60 w-6 text-right"
-                    style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
                   >
                     {item.value}
                   </span>
@@ -214,19 +214,19 @@ export default function DashboardHome() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             Weekly Progress
           </div>
           <div
             className="text-2xl font-bold mb-1"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#2C2C1E' }}
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
           >
             이번 주 성장 추이
           </div>
           <p
             className="text-xs opacity-50 mb-6"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
           >
             논리력 스코어 변화
           </p>
@@ -235,18 +235,18 @@ export default function DashboardHome() {
               <LineChart data={SCORE_DATA}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Pretendard Variable, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#2C2C1E',
+                    backgroundColor: '#1E1E14',
                     border: 'none',
                     borderRadius: 0,
-                    color: '#E8E0D0',
+                    color: '#C5C9B4',
                     fontSize: 11,
-                    fontFamily: 'Pretendard Variable, sans-serif',
+                    fontFamily: 'DM Sans, sans-serif',
                   }}
                   labelStyle={{ color: 'rgba(232,224,208,0.6)' }}
                 />
@@ -267,24 +267,24 @@ export default function DashboardHome() {
       {/* Quick Start */}
       <div
         className="p-8 mb-10 flex items-center justify-between"
-        style={{ backgroundColor: '#2C2C1E' }}
+        style={{ backgroundColor: '#1E1E14' }}
       >
         <div>
           <div
             className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#E8E0D0' }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
           >
             New Session
           </div>
           <h3
             className="text-2xl font-bold mb-2"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#E8E0D0' }}
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#C5C9B4' }}
           >
             새로운 생각을 시작하세요
           </h3>
           <p
             className="text-sm opacity-60"
-            style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#E8E0D0', lineHeight: 1.75 }}
+            style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4', lineHeight: 1.75 }}
           >
             고민을 입력하면 소크라테스가 질문을 던집니다
           </p>
@@ -293,12 +293,12 @@ export default function DashboardHome() {
           onClick={() => navigate('/dashboard/session')}
           className="px-8 py-4 text-sm tracking-[0.2em] uppercase font-semibold shrink-0 transition-all duration-200"
           style={{
-            fontFamily: 'Pretendard Variable, sans-serif',
+            fontFamily: 'DM Sans, sans-serif',
             backgroundColor: '#EF9F27',
-            color: '#2C2C1E',
+            color: '#1E1E14',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#E8E0D0';
+            e.currentTarget.style.backgroundColor = '#C5C9B4';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = '#EF9F27';
@@ -312,7 +312,7 @@ export default function DashboardHome() {
       <div>
         <div
           className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-4"
-          style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
         >
           Recent Sessions
         </div>
@@ -327,20 +327,20 @@ export default function DashboardHome() {
               <div className="flex items-center gap-6">
                 <span
                   className="text-xs opacity-30 w-4"
-                  style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
                   <div
                     className="text-sm font-semibold mb-0.5"
-                    style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E', fontWeight: 600 }}
+                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', fontWeight: 600 }}
                   >
                     {session.topic}
                   </div>
                   <div
                     className="text-xs opacity-50"
-                    style={{ fontFamily: 'Pretendard Variable, sans-serif', color: '#2C2C1E' }}
+                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
                   >
                     {session.date} · {session.duration} · {session.level} 단계
                   </div>
@@ -349,12 +349,12 @@ export default function DashboardHome() {
               <div className="flex items-center gap-4">
                 <div
                   className="text-lg font-bold"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif", color: '#EF9F27' }}
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#EF9F27' }}
                 >
                   {session.score}
                 </div>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.3 }}>
-                  <path d="M5 3L9 7L5 11" stroke="#2C2C1E" strokeWidth="1.2" strokeLinecap="round" />
+                  <path d="M5 3L9 7L5 11" stroke="#1E1E14" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
               </div>
             </button>

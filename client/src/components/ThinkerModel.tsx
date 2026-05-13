@@ -64,17 +64,17 @@ export default function ThinkerModel({ className }: ThinkerModelProps) {
         gl={{ alpha: true, antialias: true }}
       >
         {/* Warm lighting to match cream/beige background */}
-        <ambientLight intensity={0.6} color="#E8E0D0" />
+        <ambientLight intensity={0.6} color="#C5C9B4" />
         <directionalLight
           position={[3, 5, 3]}
           intensity={1.2}
-          color="#F0E8D8"
+          color="#D8DBC8"
           castShadow
         />
         <directionalLight
           position={[-2, 3, -2]}
           intensity={0.4}
-          color="#D4C9B5"
+          color="#BFC4AB"
         />
         <pointLight position={[0, 4, 2]} intensity={0.5} color="#EF9F27" />
 
