@@ -120,14 +120,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-75 transition-opacity"
           >
-            <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
-              <polygon
-                points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
-                stroke={CREAM}
-                strokeWidth="1.3"
-                fill="none"
-              />
-            </svg>
+            <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)' }} />
             {!collapsed && (
               <span
                 style={{

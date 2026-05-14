@@ -89,14 +89,7 @@ export default function Landing() {
             height: '100%',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
-            <polygon
-              points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
-              stroke={CREAM}
-              strokeWidth="1.3"
-              fill="none"
-            />
-          </svg>
+          <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)' }} />
           <span
             style={{
               fontFamily: "'Space Mono', monospace",
@@ -535,9 +528,7 @@ export default function Landing() {
       {/* ── FOOTER ── */}
       <footer style={{ backgroundColor: BLACK, color: CREAM, padding: '2rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${CREAM_DIM}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-            <polygon points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5" stroke={CREAM} strokeWidth="1.3" fill="none" />
-          </svg>
+          <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '18px', height: '18px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)', opacity: 0.45 }} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.45, color: CREAM }}>LOGOS © 2026</span>
         </div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.28, color: CREAM }}>생각하는 힘을 기르다</div>
