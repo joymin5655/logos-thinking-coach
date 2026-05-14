@@ -149,71 +149,49 @@ export default function ThinkingSession() {
     setPhase('complete');
   };
 
+  const CREAM       = '#F0EBE0';
+  const CREAM_MID   = 'rgba(240,235,224,0.55)';
+  const CREAM_DIM   = 'rgba(240,235,224,0.12)';
+  const CREAM_FAINT = 'rgba(240,235,224,0.06)';
+  const BLACK       = '#0A0A0A';
   const stageColors: Record<Stage, string> = {
-    '표면': '#888780',
-    '전제': '#534AB7',
-    '본질': '#1D9E75',
-    '통합': '#EF9F27',
+    '표면': 'rgba(240,235,224,0.35)',
+    '전제': 'rgba(240,235,224,0.55)',
+    '본질': 'rgba(240,235,224,0.75)',
+    '통합': '#F0EBE0',
   };
 
   if (phase === 'intro') {
     return (
       <DashboardLayout title="씽킹 세션" titleEn="Thinking Session">
         <div className="max-w-2xl mx-auto py-16">
-          <div
-            className="text-[0.65rem] tracking-[0.4em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            New Session
-          </div>
-          <h2
-            className="text-4xl font-bold mb-3"
-            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14', letterSpacing: '-0.02em' }}
-          >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '16px' }}>New Session</div>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '36px', fontWeight: 600, color: CREAM, letterSpacing: '-0.02em', marginBottom: '12px' }}>
             무엇을 생각하고 싶으신가요?
           </h2>
-          <p
-            className="text-sm opacity-60 mb-12 leading-relaxed"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
-          >
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '48px' }}>
             고민, 아이디어, 결정해야 할 것 — 무엇이든 입력하세요.<br />
             소크라테스가 질문을 통해 당신의 생각을 깊이 있게 만들어드립니다.
           </p>
-
           <div className="mb-6">
             <textarea
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="예: 직장을 그만두고 창업을 해야 할지 고민됩니다..."
-              className="w-full p-5 text-sm resize-none border-0 border-b-2 bg-transparent outline-none"
+              className="w-full p-5 resize-none bg-transparent outline-none"
               rows={4}
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                color: '#1E1E14',
-                borderColor: 'rgba(44,44,30,0.2)',
-                lineHeight: 1.8,
-              }}
-              onFocus={(e) => { e.target.style.borderColor = '#1E1E14'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(44,44,30,0.2)'; }}
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: CREAM, borderBottom: `2px solid ${CREAM_DIM}`, lineHeight: 1.8 }}
+              onFocus={(e) => { e.target.style.borderBottomColor = CREAM; }}
+              onBlur={(e) => { e.target.style.borderBottomColor = CREAM_DIM; }}
             />
           </div>
-
           <div className="flex items-center justify-between">
-            <p
-              className="text-xs opacity-40"
-              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-            >
-              오늘 남은 세션: 2회 (무료)
-            </p>
+            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>오늘 남은 세션: 2회 (무료)</p>
             <button
               onClick={startSession}
               disabled={!topic.trim()}
-              className="px-8 py-3 text-sm tracking-[0.2em] uppercase font-semibold transition-all duration-200 disabled:opacity-30"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                backgroundColor: topic.trim() ? '#1E1E14' : 'rgba(44,44,30,0.3)',
-                color: '#C5C9B4',
-              }}
+              className="transition-all duration-200 disabled:opacity-30"
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase' as const, fontWeight: 700, padding: '12px 28px', backgroundColor: CREAM, color: BLACK, border: 'none', cursor: topic.trim() ? 'pointer' : 'not-allowed' }}
             >
               생각 시작하기 →
             </button>
@@ -227,80 +205,39 @@ export default function ThinkingSession() {
     return (
       <DashboardLayout title="세션 완료" titleEn="Session Complete">
         <div className="max-w-2xl mx-auto py-16 text-center">
-          <div
-            className="text-6xl font-bold mb-2"
-            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#EF9F27' }}
-          >
-            78
-          </div>
-          <div
-            className="text-[0.65rem] tracking-[0.4em] uppercase opacity-50 mb-8"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            Logic Score
-          </div>
-          <h2
-            className="text-3xl font-bold mb-4"
-            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
-          >
-            세션이 완료되었습니다
-          </h2>
-          <p
-            className="text-sm opacity-60 mb-12 leading-relaxed"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
-          >
+          <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '64px', fontWeight: 600, color: CREAM, marginBottom: '4px' }}>78</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '32px' }}>Logic Score</div>
+          <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '28px', fontWeight: 600, color: CREAM, marginBottom: '12px' }}>세션이 완료되었습니다</h2>
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '48px' }}>
             오늘의 사고 여정을 마쳤습니다.<br />
             당신은 스스로 생각하는 힘을 한 단계 키웠습니다.
           </p>
-
-          <div className="grid grid-cols-3 gap-4 mb-12">
+          <div className="grid grid-cols-3 gap-3 mb-12">
             {[
               { label: '논리 구조', score: 80 },
               { label: '일관성', score: 75 },
               { label: '근거의 질', score: 79 },
             ].map((item) => (
-              <div
-                key={item.label}
-                className="p-5 border"
-                style={{ borderColor: 'rgba(44,44,30,0.12)', backgroundColor: 'rgba(232,224,208,0.5)' }}
-              >
-                <div
-                  className="text-2xl font-bold mb-1"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
-                >
-                  {item.score}
-                </div>
-                <div
-                  className="text-xs opacity-50"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-                >
-                  {item.label}
-                </div>
+              <div key={item.label} className="p-5" style={{ border: `1px solid ${CREAM_DIM}`, backgroundColor: CREAM_FAINT }}>
+                <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '24px', fontWeight: 600, color: CREAM, marginBottom: '4px' }}>{item.score}</div>
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>{item.label}</div>
               </div>
             ))}
           </div>
-
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => navigate('/dashboard/analytics')}
-              className="px-6 py-3 text-xs tracking-[0.2em] uppercase border transition-all duration-200"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                borderColor: '#1E1E14',
-                color: '#1E1E14',
-                backgroundColor: 'transparent',
-              }}
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase' as const, padding: '10px 24px', border: `1px solid ${CREAM_DIM}`, color: CREAM_MID, backgroundColor: 'transparent', cursor: 'pointer', transition: 'all 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = CREAM; e.currentTarget.style.color = CREAM; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = CREAM_DIM; e.currentTarget.style.color = CREAM_MID; }}
             >
               상세 분석 보기
             </button>
             <button
               onClick={() => { setPhase('intro'); setTopic(''); setMessages([]); setStageIndex(0); setCurrentStage('표면'); setQuestionCount(0); }}
-              className="px-6 py-3 text-xs tracking-[0.2em] uppercase transition-all duration-200"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                backgroundColor: '#1E1E14',
-                color: '#C5C9B4',
-              }}
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase' as const, fontWeight: 700, padding: '10px 24px', backgroundColor: CREAM, color: BLACK, border: 'none', cursor: 'pointer', transition: 'opacity 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
             >
               새 세션 시작
             </button>
@@ -319,28 +256,18 @@ export default function ThinkingSession() {
             <div key={stage} className="flex items-center flex-1">
               <div className="flex-1 flex flex-col items-center">
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[0.55rem] font-bold mb-1 transition-all duration-500"
-                  style={{
-                    backgroundColor: i <= stageIndex ? stageColors[stage] : 'rgba(44,44,30,0.1)',
-                    color: i <= stageIndex ? '#fff' : 'rgba(44,44,30,0.3)',
-                  }}
+                  className="w-6 h-6 flex items-center justify-center mb-1 transition-all duration-500"
+                  style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', fontWeight: 700, backgroundColor: i <= stageIndex ? stageColors[stage] : CREAM_FAINT, color: i <= stageIndex ? BLACK : CREAM_MID }}
                 >
                   {i + 1}
                 </div>
-                <span
-                  className="text-[0.55rem] tracking-[0.15em]"
-                  style={{
-                    fontFamily: 'Outfit, sans-serif',
-                    color: i <= stageIndex ? stageColors[stage] : 'rgba(44,44,30,0.3)',
-                  }}
-                >
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.15em', color: i <= stageIndex ? stageColors[stage] : CREAM_DIM }}>
                   {stage}
                 </span>
               </div>
               {i < STAGES.length - 1 && (
-                <div
-                  className="h-px flex-1 mx-1 mb-4 transition-all duration-500"
-                  style={{ backgroundColor: i < stageIndex ? stageColors[STAGES[i + 1]] : 'rgba(44,44,30,0.1)' }}
+                <div className="h-px flex-1 mx-1 mb-4 transition-all duration-500"
+                  style={{ backgroundColor: i < stageIndex ? stageColors[STAGES[i + 1]] : CREAM_DIM }}
                 />
               )}
             </div>
@@ -348,81 +275,39 @@ export default function ThinkingSession() {
         </div>
 
         {/* Topic */}
-        <div
-          className="text-xs opacity-40 mb-8 pb-4 border-b"
-          style={{
-            fontFamily: 'Outfit, sans-serif',
-            color: '#1E1E14',
-            borderColor: 'rgba(44,44,30,0.12)',
-          }}
-        >
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, marginBottom: '32px', paddingBottom: '16px', borderBottom: `1px solid ${CREAM_DIM}` }}>
           주제: {topic}
         </div>
 
         {/* Messages */}
-        <div className="space-y-0 mb-8">
+        <div className="mb-8">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className="py-5 border-b"
-              style={{ borderColor: 'rgba(44,44,30,0.08)' }}
-            >
+            <div key={msg.id} className="py-5" style={{ borderBottom: `1px solid ${CREAM_DIM}` }}>
               <div className="flex items-start gap-4">
-                <div
-                  className="text-[0.55rem] tracking-[0.2em] uppercase w-12 shrink-0 pt-0.5"
-                  style={{
-                    fontFamily: 'Outfit, sans-serif',
-                    color: msg.role === 'ai'
-                      ? (msg.stage ? stageColors[msg.stage] : '#888780')
-                      : 'rgba(44,44,30,0.4)',
-                  }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.2em', textTransform: 'uppercase' as const, width: '48px', flexShrink: 0, paddingTop: '2px', color: msg.role === 'ai' ? (msg.stage ? stageColors[msg.stage] : CREAM_MID) : 'rgba(240,235,224,0.3)' }}>
                   {msg.role === 'ai' ? (msg.stage || 'AI') : 'You'}
                 </div>
                 <div className="flex-1">
-                  <p
-                    className="text-sm leading-relaxed whitespace-pre-line"
-                    style={{
-                      fontFamily: msg.role === 'ai'
-                        ? "'Source Serif 4', Georgia, serif"
-                        : 'Outfit, sans-serif',
-                      color: '#1E1E14',
-                      fontWeight: msg.role === 'ai' ? 400 : 400,
-                      lineHeight: 1.8,
-                    }}
-                  >
+                  <p style={{ fontFamily: msg.role === 'ai' ? "'Source Serif 4', Georgia, serif" : "'Space Mono', monospace", fontSize: msg.role === 'ai' ? '13px' : '10px', color: CREAM, lineHeight: 1.85, whiteSpace: 'pre-line' as const }}>
                     {msg.content}
                   </p>
                 </div>
-                <span
-                  className="text-[0.55rem] opacity-30 shrink-0 pt-0.5"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-                >
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: CREAM_MID, flexShrink: 0, paddingTop: '2px', opacity: 0.5 }}>
                   {msg.timestamp}
                 </span>
               </div>
             </div>
           ))}
-
           {isTyping && (
-            <div className="py-5 border-b" style={{ borderColor: 'rgba(44,44,30,0.08)' }}>
+            <div className="py-5" style={{ borderBottom: `1px solid ${CREAM_DIM}` }}>
               <div className="flex items-start gap-4">
-                <div
-                  className="text-[0.55rem] tracking-[0.2em] uppercase w-12 shrink-0"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: stageColors[currentStage] }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.2em', textTransform: 'uppercase' as const, width: '48px', flexShrink: 0, color: stageColors[currentStage] }}>
                   {currentStage}
                 </div>
                 <div className="flex gap-1 pt-1">
                   {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        backgroundColor: '#1E1E14',
-                        opacity: 0.4,
-                        animation: `fade-in-up 0.6s ease ${i * 0.15}s infinite alternate`,
-                      }}
+                    <div key={i} className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: CREAM, opacity: 0.4, animation: `fade-in-up 0.6s ease ${i * 0.15}s infinite alternate` }}
                     />
                   ))}
                 </div>
@@ -434,83 +319,50 @@ export default function ThinkingSession() {
 
         {/* Input */}
         <div className="mb-6">
-          <div
-            className="flex items-end gap-4 border-b-2 pb-2"
-            style={{ borderColor: '#1E1E14' }}
-          >
+          <div className="flex items-end gap-4 pb-2" style={{ borderBottom: `2px solid ${CREAM_DIM}` }}>
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
               placeholder="생각을 입력하세요..."
-              className="flex-1 bg-transparent outline-none resize-none text-sm"
+              className="flex-1 bg-transparent outline-none resize-none"
               rows={2}
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                color: '#1E1E14',
-                lineHeight: 1.75,
-              }}
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: CREAM, lineHeight: 1.75 }}
             />
             <button
               onClick={sendMessage}
               disabled={!inputValue.trim() || isTyping}
-              className="shrink-0 px-4 py-2 text-xs tracking-[0.15em] uppercase transition-all duration-200 disabled:opacity-30"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                backgroundColor: '#1E1E14',
-                color: '#C5C9B4',
-              }}
+              className="shrink-0 transition-all duration-200 disabled:opacity-30"
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, fontWeight: 700, padding: '8px 16px', backgroundColor: CREAM, color: BLACK, border: 'none', cursor: 'pointer' }}
             >
               전송
             </button>
           </div>
-          <p
-            className="text-[0.6rem] opacity-30 mt-2"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            Enter로 전송 · Shift+Enter로 줄바꿈
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: CREAM_MID, marginTop: '8px', opacity: 0.6 }}>
+            Enter로 전송 · Shift+Enter로 줄바꿼
           </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleAporia}
-            className="px-5 py-2.5 text-xs tracking-[0.15em] uppercase border transition-all duration-200"
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              borderColor: 'rgba(44,44,30,0.3)',
-              color: 'rgba(44,44,30,0.6)',
-              backgroundColor: 'transparent',
-            }}
+          <button onClick={handleAporia}
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, padding: '9px 18px', border: `1px solid ${CREAM_DIM}`, color: CREAM_MID, backgroundColor: 'transparent', cursor: 'pointer', transition: 'all 0.18s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = CREAM; e.currentTarget.style.color = CREAM; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = CREAM_DIM; e.currentTarget.style.color = CREAM_MID; }}
           >
-            막혔어요
+            막혀요
           </button>
-          <button
-            onClick={endSession}
-            className="px-5 py-2.5 text-xs tracking-[0.15em] uppercase border transition-all duration-200"
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              borderColor: 'rgba(44,44,30,0.3)',
-              color: 'rgba(44,44,30,0.6)',
-              backgroundColor: 'transparent',
-            }}
+          <button onClick={endSession}
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, padding: '9px 18px', border: `1px solid ${CREAM_DIM}`, color: CREAM_MID, backgroundColor: 'transparent', cursor: 'pointer', transition: 'all 0.18s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = CREAM; e.currentTarget.style.color = CREAM; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = CREAM_DIM; e.currentTarget.style.color = CREAM_MID; }}
           >
-            이 정도면 됐어
+            이 정도면 됨어
           </button>
-          <button
-            onClick={sendMessage}
-            className="ml-auto px-5 py-2.5 text-xs tracking-[0.15em] uppercase transition-all duration-200"
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              backgroundColor: '#534AB7',
-              color: '#C5C9B4',
-            }}
+          <button onClick={sendMessage} className="ml-auto"
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase' as const, fontWeight: 700, padding: '9px 18px', backgroundColor: CREAM, color: BLACK, border: 'none', cursor: 'pointer', transition: 'opacity 0.18s' }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
           >
             더 파고들어줘
           </button>

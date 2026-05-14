@@ -1,12 +1,27 @@
 /*
  * DashboardLayout.tsx
- * LOGOS Design: 대시보드 레이아웃 — 사이드바 + 메인 콘텐츠
- * - 다크 올리브 사이드바 (#2C2C1E)
- * - 크림 메인 영역 (#E8E0D0)
- * - 미니멀 아이콘 + 텍스트 네비게이션
+ * LOGOS Design: 대시보드 레이아웃 — 랜딩페이지 팔레트 통일
+ *
+ * Palette (랜딩페이지와 동일):
+ *   Sidebar BG  : #0A0A0A (BLACK)
+ *   Main BG     : #111111 (NEAR BLACK)
+ *   Text        : #F0EBE0 (CREAM)
+ *   Text dim    : rgba(240,235,224,0.55) (CREAM_MID)
+ *   Border      : rgba(240,235,224,0.15) (CREAM_DIM)
+ *   Active      : #F0EBE0 (CREAM) border-left + bg tint
+ *   Accent      : #C8C0A8 (ACCENT)
+ * Typography: Space Mono
  */
 import { useLocation } from 'wouter';
 import { useState } from 'react';
+
+// ── 팔레트 (랜딩페이지와 동일) ──
+const BLACK    = '#0A0A0A';
+const NEAR_BK  = '#111111';
+const CREAM    = '#F0EBE0';
+const CREAM_MID = 'rgba(240,235,224,0.55)';
+const CREAM_DIM = 'rgba(240,235,224,0.15)';
+const ACCENT   = '#C8C0A8';
 
 interface NavItem {
   path: string;
@@ -21,7 +36,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '홈',
     labelEn: 'Home',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <path d="M2 6L8 1L14 6V14H10V10H6V14H2V6Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
       </svg>
     ),
@@ -31,7 +46,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '씽킹 세션',
     labelEn: 'Session',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
         <path d="M8 5V8L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
       </svg>
@@ -42,7 +57,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '논리력 분석',
     labelEn: 'Analytics',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <path d="M2 12L5 8L8 10L11 5L14 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M2 14H14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
       </svg>
@@ -53,7 +68,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '세션 기록',
     labelEn: 'History',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="1.2" />
         <path d="M5 7H11M5 10H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
       </svg>
@@ -64,7 +79,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '구독',
     labelEn: 'Subscription',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <path d="M8 2L10 6H14L11 9L12 13L8 11L4 13L5 9L2 6H6L8 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
       </svg>
     ),
@@ -82,37 +97,46 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#C5C9B4' }}>
-      {/* Sidebar */}
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ backgroundColor: BLACK, fontFamily: "'Space Mono', monospace" }}
+    >
+      {/* ── Sidebar ── */}
       <aside
         className="flex flex-col shrink-0 transition-all duration-300"
         style={{
-          width: collapsed ? '60px' : '220px',
-          backgroundColor: '#2C2C1E',
-          color: '#E8E0D0',
+          width: collapsed ? '56px' : '216px',
+          backgroundColor: BLACK,
+          color: CREAM,
+          borderRight: `1px solid ${CREAM_DIM}`,
         }}
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-3 px-4 py-5 border-b"
-          style={{ borderColor: 'rgba(232, 224, 208, 0.1)' }}
+          className="flex items-center gap-3 px-4 py-4"
+          style={{ borderBottom: `1px solid ${CREAM_DIM}` }}
         >
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-75 transition-opacity"
           >
-            <img
-              src="/template-storage/logos-icon-192_bd75ec0c.png"
-              alt="LOGOS"
-              width="24"
-              height="24"
-              className="shrink-0"
-              style={{ objectFit: 'contain' }}
-            />
+            <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
+              <polygon
+                points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
+                stroke={CREAM}
+                strokeWidth="1.3"
+                fill="none"
+              />
+            </svg>
             {!collapsed && (
               <span
-                className="text-sm font-bold tracking-[0.15em] uppercase"
-                style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
+                style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  letterSpacing: '0.22em',
+                  color: CREAM,
+                }}
               >
                 LOGOS
               </span>
@@ -120,10 +144,12 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="ml-auto opacity-30 hover:opacity-70 transition-opacity"
-            style={{ color: '#E8E0D0' }}
+            className="ml-auto transition-opacity"
+            style={{ color: CREAM_MID, opacity: 0.4 }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '0.4'; }}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
               {collapsed ? (
                 <path d="M2 4H12M2 7H12M2 10H12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               ) : (
@@ -134,7 +160,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-3 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive = location === item.path;
             return (
@@ -143,19 +169,19 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 onClick={() => navigate(item.path)}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-150"
                 style={{
-                  color: isActive ? '#EF9F27' : 'rgba(232, 224, 208, 0.6)',
-                  backgroundColor: isActive ? 'rgba(239, 159, 39, 0.08)' : 'transparent',
-                  borderLeft: isActive ? '2px solid #EF9F27' : '2px solid transparent',
+                  color: isActive ? CREAM : CREAM_MID,
+                  backgroundColor: isActive ? 'rgba(240,235,224,0.06)' : 'transparent',
+                  borderLeft: isActive ? `2px solid ${CREAM}` : `2px solid transparent`,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = '#E8E0D0';
-                    e.currentTarget.style.backgroundColor = 'rgba(232, 224, 208, 0.05)';
+                    e.currentTarget.style.color = CREAM;
+                    e.currentTarget.style.backgroundColor = 'rgba(240,235,224,0.04)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = 'rgba(232, 224, 208, 0.6)';
+                    e.currentTarget.style.color = CREAM_MID;
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
@@ -164,14 +190,24 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 {!collapsed && (
                   <div>
                     <div
-                      className="text-xs font-semibold"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
+                      style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        letterSpacing: '0.06em',
+                      }}
                     >
                       {item.label}
                     </div>
                     <div
-                      className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
+                      style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: '7px',
+                        letterSpacing: '0.22em',
+                        textTransform: 'uppercase',
+                        opacity: 0.35,
+                        marginTop: '1px',
+                      }}
                     >
                       {item.labelEn}
                     </div>
@@ -184,27 +220,45 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
 
         {/* User section */}
         <div
-          className="px-4 py-4 border-t"
-          style={{ borderColor: 'rgba(232, 224, 208, 0.1)' }}
+          className="px-4 py-4"
+          style={{ borderTop: `1px solid ${CREAM_DIM}` }}
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ backgroundColor: '#534AB7', color: '#E8E0D0' }}
+              className="w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0"
+              style={{
+                backgroundColor: 'transparent',
+                border: `1px solid ${CREAM_DIM}`,
+                color: CREAM_MID,
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '8px',
+              }}
             >
               U
             </div>
             {!collapsed && (
               <div>
                 <div
-                  className="text-xs font-semibold"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
+                  style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '9px',
+                    fontWeight: 700,
+                    color: CREAM_MID,
+                    letterSpacing: '0.06em',
+                  }}
                 >
                   사용자
                 </div>
                 <div
-                  className="text-[0.6rem] opacity-40"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
+                  style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '7px',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    color: CREAM_MID,
+                    opacity: 0.4,
+                    marginTop: '1px',
+                  }}
                 >
                   Free Plan
                 </div>
@@ -214,30 +268,45 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#D8DBC8' }}>
+      {/* ── Main Content ── */}
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{ backgroundColor: NEAR_BK }}
+      >
         {/* Top bar */}
         {(title || titleEn) && (
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 border-b"
+            className="sticky top-0 z-10 flex items-center justify-between px-8 py-4"
             style={{
-              backgroundColor: '#D8DBC8',
-              borderColor: 'rgba(30, 30, 20, 0.1)',
+              backgroundColor: NEAR_BK,
+              borderBottom: `1px solid ${CREAM_DIM}`,
             }}
           >
             <div>
               {titleEn && (
                 <div
-                  className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-0.5"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
+                  style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '7px',
+                    letterSpacing: '0.4em',
+                    textTransform: 'uppercase',
+                    color: CREAM_MID,
+                    opacity: 0.45,
+                    marginBottom: '3px',
+                  }}
                 >
                   {titleEn}
                 </div>
               )}
               {title && (
                 <h1
-                  className="text-lg font-bold"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14', fontWeight: 700 }}
+                  style={{
+                    fontFamily: "'Source Serif 4', Georgia, serif",
+                    fontWeight: 600,
+                    fontSize: '18px',
+                    color: CREAM,
+                    letterSpacing: '-0.01em',
+                  }}
                 >
                   {title}
                 </h1>
@@ -245,20 +314,21 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             </div>
             <div className="flex items-center gap-3">
               <button
-                className="text-xs tracking-[0.15em] uppercase px-4 py-2 transition-all duration-200"
                 style={{
-                  fontFamily: 'Outfit, sans-serif',
-                  color: '#C5C9B4',
-                  backgroundColor: '#1E1E14',
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '8px',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  color: BLACK,
+                  backgroundColor: CREAM,
+                  border: 'none',
+                  padding: '7px 14px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.18s',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#3A3A28';
-                  e.currentTarget.style.color = '#C5C9B4';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1E1E14';
-                  e.currentTarget.style.color = '#C5C9B4';
-                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = ACCENT; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = CREAM; }}
                 onClick={() => navigate('/dashboard/session')}
               >
                 + 새 세션

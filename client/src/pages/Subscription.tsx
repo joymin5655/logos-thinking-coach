@@ -67,86 +67,44 @@ const PLANS = [
   },
 ];
 
+const CREAM       = '#F0EBE0';
+const CREAM_MID   = 'rgba(240,235,224,0.55)';
+const CREAM_DIM   = 'rgba(240,235,224,0.12)';
+const CREAM_FAINT = 'rgba(240,235,224,0.06)';
+const BLACK       = '#0A0A0A';
+
 export default function Subscription() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const handleUpgrade = (planId: string) => {
     if (planId === 'free') return;
-    if (planId === 'team') {
-      toast('팀 플랜 문의는 준비 중입니다.');
-      return;
-    }
+    if (planId === 'team') { toast('팀 플랜 문의는 준비 중입니다.'); return; }
     toast('결제 기능은 준비 중입니다.');
   };
 
   return (
     <DashboardLayout title="구독" titleEn="Subscription">
       {/* Current Status */}
-      <div
-        className="p-6 mb-10 flex items-center justify-between border"
-        style={{ borderColor: 'rgba(44,44,30,0.12)', backgroundColor: 'rgba(232,224,208,0.5)' }}
-      >
+      <div className="p-6 mb-10 flex items-center justify-between" style={{ border: `1px solid ${CREAM_DIM}`, backgroundColor: CREAM_FAINT }}>
         <div>
-          <div
-            className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-1"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            Current Plan
-          </div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '6px' }}>Current Plan</div>
           <div className="flex items-center gap-3">
-            <span
-              className="text-xl font-bold"
-              style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#1E1E14' }}
-            >
-              Free Plan
-            </span>
-            <span
-              className="text-[0.6rem] tracking-[0.15em] px-2 py-1"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                backgroundColor: 'rgba(44,44,30,0.08)',
-                color: 'rgba(44,44,30,0.6)',
-              }}
-            >
-              활성
-            </span>
+            <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '20px', fontWeight: 600, color: CREAM }}>Free Plan</span>
+            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.15em', padding: '3px 8px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>활성</span>
           </div>
-          <p
-            className="text-xs opacity-50 mt-1"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            오늘 남은 세션: 2회 / 3회
-          </p>
+          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, marginTop: '5px' }}>오늘 남은 세션: 2회 / 3회</p>
         </div>
         <div className="text-right">
-          <div
-            className="text-xs opacity-40 mb-1"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            다음 갱신일
-          </div>
-          <div
-            className="text-sm font-semibold"
-            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-          >
-            매일 자정 초기화
-          </div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID, marginBottom: '4px' }}>다음 갱신일</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', fontWeight: 700, color: CREAM }}>매일 자정 초기화</div>
         </div>
       </div>
 
       {/* Billing Toggle */}
       <div className="flex items-center gap-0 mb-8">
         {(['monthly', 'yearly'] as const).map((cycle) => (
-          <button
-            key={cycle}
-            onClick={() => setBillingCycle(cycle)}
-            className="px-5 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-200"
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              backgroundColor: billingCycle === cycle ? '#1E1E14' : 'transparent',
-              color: billingCycle === cycle ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
-              border: '1px solid rgba(44,44,30,0.2)',
-            }}
+          <button key={cycle} onClick={() => setBillingCycle(cycle)}
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', padding: '7px 18px', backgroundColor: billingCycle === cycle ? CREAM : 'transparent', color: billingCycle === cycle ? BLACK : CREAM_MID, border: `1px solid ${CREAM_DIM}`, cursor: 'pointer', transition: 'all 0.18s' }}
           >
             {cycle === 'monthly' ? '월간 결제' : '연간 결제 (20% 할인)'}
           </button>
@@ -154,91 +112,35 @@ export default function Subscription() {
       </div>
 
       {/* Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[rgba(44,44,30,0.1)] mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-px mb-10" style={{ backgroundColor: CREAM_DIM }}>
         {PLANS.map((plan) => (
-          <div
-            key={plan.id}
-            className="p-7 flex flex-col"
-            style={{
-              backgroundColor: plan.highlight ? '#1E1E14' : '#D8DBC8',
-              color: plan.highlight ? '#C5C9B4' : '#1E1E14',
-            }}
+          <div key={plan.id} className="p-7 flex flex-col"
+            style={{ backgroundColor: plan.highlight ? 'rgba(240,235,224,0.1)' : '#0A0A0A', color: CREAM }}
           >
-            {/* Plan Header */}
             <div className="mb-6">
-              <div
-                className="text-[0.6rem] tracking-[0.3em] uppercase mb-2"
-                style={{
-                  fontFamily: 'Outfit, sans-serif',
-                  opacity: 0.5,
-                }}
-              >
-                {plan.name}
-              </div>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '8px' }}>{plan.name}</div>
               <div className="flex items-baseline gap-1 mb-2">
-                <span
-                  className="text-4xl font-bold"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
-                >
+                <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '34px', fontWeight: 600, color: CREAM }}>
                   {plan.price === 0 ? '무료' : `₩${plan.price.toLocaleString()}`}
                 </span>
-                {plan.price > 0 && (
-                  <span className="text-xs opacity-50">/{plan.period}</span>
-                )}
+                {plan.price > 0 && <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID }}>/{plan.period}</span>}
               </div>
               {billingCycle === 'yearly' && plan.price > 0 && (
-                <div
-                  className="text-xs"
-                  style={{ color: plan.highlight ? '#EF9F27' : '#1D9E75' }}
-                >
-                  연 {Math.floor(plan.price * 12 * 0.8).toLocaleString()}원 (20% 절약)
-                </div>
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID }}>연 {Math.floor(plan.price * 12 * 0.8).toLocaleString()}월 (20% 절약)</div>
               )}
-              <p
-                className="text-xs mt-2 opacity-60"
-                style={{ fontFamily: 'Outfit, sans-serif' }}
-              >
-                {plan.description}
-              </p>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, marginTop: '8px', lineHeight: 1.7 }}>{plan.description}</p>
             </div>
-
-            {/* Features */}
             <ul className="space-y-3 flex-1 mb-8">
               {plan.features.map((feature) => (
                 <li key={feature.text} className="flex items-center gap-2.5">
-                  <span
-                    style={{
-                      color: feature.included
-                        ? (plan.highlight ? '#EF9F27' : '#1D9E75')
-                        : 'rgba(44,44,30,0.2)',
-                    }}
-                  >
-                    {feature.included ? '✓' : '—'}
-                  </span>
-                  <span
-                    className="text-xs"
-                    style={{
-                      fontFamily: 'Outfit, sans-serif',
-                      opacity: feature.included ? 0.8 : 0.3,
-                    }}
-                  >
-                    {feature.text}
-                  </span>
+                  <span style={{ color: feature.included ? CREAM : CREAM_DIM, flexShrink: 0 }}>{feature.included ? '✓' : '—'}</span>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: feature.included ? CREAM_MID : 'rgba(240,235,224,0.2)' }}>{feature.text}</span>
                 </li>
               ))}
             </ul>
-
-            {/* CTA */}
-            <button
-              onClick={() => handleUpgrade(plan.id)}
-              disabled={plan.current}
-              className="w-full py-3 text-xs tracking-[0.2em] uppercase font-semibold border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                fontFamily: 'Outfit, sans-serif',
-                borderColor: plan.highlight ? '#EF9F27' : 'rgba(44,44,30,0.3)',
-                backgroundColor: plan.highlight ? '#EF9F27' : 'transparent',
-                color: plan.highlight ? '#1E1E14' : (plan.highlight ? '#C5C9B4' : '#1E1E14'),
-              }}
+            <button onClick={() => handleUpgrade(plan.id)} disabled={plan.current}
+              className="w-full py-3 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, border: `1px solid ${plan.highlight ? CREAM : CREAM_DIM}`, backgroundColor: plan.highlight ? CREAM : 'transparent', color: plan.highlight ? BLACK : CREAM_MID, cursor: plan.current ? 'default' : 'pointer' }}
             >
               {plan.current ? '현재 플랜' : plan.cta}
             </button>
@@ -248,47 +150,19 @@ export default function Subscription() {
 
       {/* FAQ */}
       <div>
-        <div
-          className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-6"
-          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-        >
-          FAQ
-        </div>
-        <div className="space-y-0">
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '20px' }}>FAQ</div>
+        <div>
           {[
-            {
-              q: '언제든지 해지할 수 있나요?',
-              a: '네, 언제든지 해지할 수 있습니다. 해지 후에도 결제 기간이 끝날 때까지 Pro 기능을 사용할 수 있습니다.',
-            },
-            {
-              q: '무료 세션은 매일 초기화되나요?',
-              a: '네, 매일 자정에 3회 무료 세션이 초기화됩니다.',
-            },
-            {
-              q: 'Team 플랜은 몇 명까지 사용할 수 있나요?',
-              a: '기본 5인 플랜이며, 추가 멤버는 1인당 월 9,000원으로 확장 가능합니다.',
-            },
+            { q: '언제든지 해지할 수 있나요?', a: '네, 언제든지 해지할 수 있습니다. 해지 후에도 결제 기간이 끝날 때까지 Pro 기능을 사용할 수 있습니다.' },
+            { q: '무료 세션은 매일 초기화되나요?', a: '네, 매일 자정에 3회 무료 세션이 초기화됩니다.' },
+            { q: 'Team 플랜은 몇 명까지 사용할 수 있나요?', a: '기본 5인 플랜이며, 추가 멤버는 1인당 월 9,000원으로 확장 가능합니다.' },
           ].map((item, i) => (
-            <div
-              key={i}
-              className="py-5 border-t"
-              style={{ borderColor: 'rgba(44,44,30,0.12)' }}
-            >
-              <div
-                className="text-sm font-semibold mb-2"
-                style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', fontWeight: 600 }}
-              >
-                {item.q}
-              </div>
-              <p
-                className="text-xs opacity-60 leading-relaxed"
-                style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
-              >
-                {item.a}
-              </p>
+            <div key={i} className="py-5" style={{ borderTop: `1px solid ${CREAM_DIM}` }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', fontWeight: 700, color: CREAM, marginBottom: '8px' }}>{item.q}</div>
+              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, lineHeight: 1.8 }}>{item.a}</p>
             </div>
           ))}
-          <div className="border-t" style={{ borderColor: 'rgba(44,44,30,0.12)' }} />
+          <div style={{ borderTop: `1px solid ${CREAM_DIM}` }} />
         </div>
       </div>
     </DashboardLayout>

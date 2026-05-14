@@ -45,7 +45,7 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.8;
+    renderer.toneMappingExposure = 1.35;
 
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -72,11 +72,11 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
 
     // ── LIGHTS ──
     // 검정 배경 조명 v2: 스포트라이트 효과와 연동하여 동상을 크림/골드로 밝게 부각
-    // Ambient: 약간 올려서 기본 가시성 확보
-    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.22));
+    // Ambient: 적당한 기본 가시성
+    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.12));
 
-    // Key Light: 매우 강한 크림-화이트, 좌상단 앞 → 주 그림자
-    const keyLight = new THREE.DirectionalLight(0xfff8f0, 5.5);
+    // Key Light: 크림-화이트, 좌상단 앞 → 주 그림자
+    const keyLight = new THREE.DirectionalLight(0xfff8f0, 3.2);
     keyLight.position.set(-2.0, 5.0, 3.5);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
@@ -92,22 +92,22 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     scene.add(keyLight);
 
     // Fill Light: 크림 우측 필 → 그림자 없는 면도 밝게
-    const fillLight = new THREE.DirectionalLight(0xf5ede0, 2.2);
+    const fillLight = new THREE.DirectionalLight(0xf5ede0, 1.2);
     fillLight.position.set(3.5, 2.0, 2.5);
     scene.add(fillLight);
 
     // Rim Light: 골드 후면 하단 → 배경에서 동상을 선명하게 분리
-    const rimLight = new THREE.DirectionalLight(0xffd580, 3.5);
+    const rimLight = new THREE.DirectionalLight(0xffd580, 2.0);
     rimLight.position.set(0.5, -1.0, -3.5);
     scene.add(rimLight);
 
     // Top accent: 위에서 내리켜는 스포트라이트 효과 연동
-    const topLight = new THREE.DirectionalLight(0xfff5e8, 2.8);
+    const topLight = new THREE.DirectionalLight(0xfff5e8, 1.6);
     topLight.position.set(0, 6, 2);
     scene.add(topLight);
 
     // Front fill: 정면 약한 크림 필 → 얼굴 부분 가시성
-    const frontLight = new THREE.DirectionalLight(0xf0ebe0, 1.4);
+    const frontLight = new THREE.DirectionalLight(0xf0ebe0, 0.7);
     frontLight.position.set(0, 1.5, 5.0);
     scene.add(frontLight);
 

@@ -64,6 +64,12 @@ const SESSIONS = [
 
 const ALL_TAGS = ['전체', '업무', '기획', '인간관계', '커리어', '자기계발', '창업', '심리', '학습'];
 
+const CREAM       = '#F0EBE0';
+const CREAM_MID   = 'rgba(240,235,224,0.55)';
+const CREAM_DIM   = 'rgba(240,235,224,0.12)';
+const CREAM_FAINT = 'rgba(240,235,224,0.06)';
+const BLACK       = '#0A0A0A';
+
 export default function SessionHistory() {
   const [, navigate] = useLocation();
   const [selectedTag, setSelectedTag] = useState('전체');
@@ -81,29 +87,25 @@ export default function SessionHistory() {
       {/* Search & Filter */}
       <div className="mb-8">
         <div
-          className="flex items-center gap-3 border-b pb-4 mb-4"
-          style={{ borderColor: 'rgba(44,44,30,0.12)' }}
+          className="flex items-center gap-3 pb-4 mb-4"
+          style={{ borderBottom: `1px solid ${CREAM_DIM}` }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.4 }}>
-            <circle cx="6" cy="6" r="4.5" stroke="#1E1E14" strokeWidth="1.2" />
-            <path d="M9.5 9.5L12 12" stroke="#1E1E14" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="6" cy="6" r="4.5" stroke={CREAM} strokeWidth="1.2" />
+            <path d="M9.5 9.5L12 12" stroke={CREAM} strokeWidth="1.2" strokeLinecap="round" />
           </svg>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="세션 검색..."
-            className="flex-1 bg-transparent outline-none text-sm"
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              color: '#1E1E14',
-            }}
+            className="flex-1 bg-transparent outline-none"
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: CREAM }}
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="opacity-40 hover:opacity-70"
-              style={{ color: '#1E1E14' }}
+              style={{ color: CREAM_MID, opacity: 0.6 }}
             >
               ×
             </button>
@@ -116,13 +118,16 @@ export default function SessionHistory() {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className="px-3 py-1 text-xs tracking-[0.1em] transition-all duration-150"
               style={{
-                fontFamily: 'Outfit, sans-serif',
-                backgroundColor: selectedTag === tag ? '#1E1E14' : 'transparent',
-                color: selectedTag === tag ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
-                border: '1px solid',
-                borderColor: selectedTag === tag ? '#1E1E14' : 'rgba(44,44,30,0.2)',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '7px',
+                letterSpacing: '0.12em',
+                padding: '4px 10px',
+                backgroundColor: selectedTag === tag ? CREAM : 'transparent',
+                color: selectedTag === tag ? BLACK : CREAM_MID,
+                border: `1px solid ${selectedTag === tag ? CREAM : CREAM_DIM}`,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
               }}
             >
               {tag}
@@ -132,123 +137,75 @@ export default function SessionHistory() {
       </div>
 
       {/* Session Count */}
-      <div
-        className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-        style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-      >
+      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '16px' }}>
         {filtered.length}개의 세션
       </div>
 
       {/* Session List */}
-      <div className="space-y-0">
+      <div>
         {filtered.map((session, i) => (
-          <div
-            key={session.id}
-            className="border-t"
-            style={{ borderColor: 'rgba(44,44,30,0.12)' }}
-          >
+          <div key={session.id} style={{ borderTop: `1px solid ${CREAM_DIM}` }}>
             <button
               onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
-              className="w-full flex items-start justify-between py-5 text-left hover:bg-[rgba(44,44,30,0.02)] transition-colors"
+              className="w-full flex items-start justify-between py-5 text-left transition-colors"
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = CREAM_FAINT; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <div className="flex items-start gap-6">
-                <span
-                  className="text-xs opacity-25 w-5 shrink-0 mt-0.5"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-                >
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, width: '20px', flexShrink: 0, marginTop: '2px' }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
-                  <div
-                    className="text-sm font-semibold mb-1"
-                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', fontWeight: 600 }}
-                  >
+                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', fontWeight: 700, color: CREAM, marginBottom: '5px' }}>
                     {session.topic}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span
-                      className="text-xs opacity-40"
-                      style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-                    >
-                      {session.date}
-                    </span>
-                    <span
-                      className="text-xs opacity-40"
-                      style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
-                    >
-                      {session.duration}
-                    </span>
-                    <span
-                      className="text-[0.6rem] tracking-[0.1em] px-2 py-0.5"
-                      style={{
-                        fontFamily: 'Outfit, sans-serif',
-                        backgroundColor: 'rgba(44,44,30,0.06)',
-                        color: 'rgba(44,44,30,0.6)',
-                      }}
-                    >
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>{session.date}</span>
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>{session.duration}</span>
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.1em', padding: '2px 6px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
                       {session.level} 단계
                     </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-4 shrink-0 ml-4">
-                <div
-                  className="text-xl font-bold"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: '#EF9F27' }}
-                >
+                <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '20px', fontWeight: 600, color: CREAM }}>
                   {session.score}
                 </div>
                 <svg
                   width="12" height="12" viewBox="0 0 12 12" fill="none"
-                  style={{
-                    opacity: 0.3,
-                    transform: expandedId === session.id ? 'rotate(90deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
-                  }}
+                  style={{ opacity: 0.3, transform: expandedId === session.id ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
                 >
-                  <path d="M4 2L8 6L4 10" stroke="#1E1E14" strokeWidth="1.2" strokeLinecap="round" />
+                  <path d="M4 2L8 6L4 10" stroke={CREAM} strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
               </div>
             </button>
 
-            {/* Expanded Detail */}
             {expandedId === session.id && (
-              <div
-                className="pb-6 pl-11"
-                style={{ animation: 'fade-in-up 0.3s ease forwards' }}
-              >
-                <p
-                  className="text-sm opacity-60 mb-4 leading-relaxed"
-                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
-                >
+              <div className="pb-6 pl-11">
+                <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '14px' }}>
                   {session.summary}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {session.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[0.6rem] tracking-[0.1em] px-2 py-1"
-                      style={{
-                        fontFamily: 'Outfit, sans-serif',
-                        backgroundColor: 'rgba(44,44,30,0.06)',
-                        color: 'rgba(44,44,30,0.5)',
-                      }}
-                    >
+                    <span key={tag} style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.1em', padding: '3px 8px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
                       #{tag}
                     </span>
                   ))}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
-                    className="text-xs tracking-[0.15em] uppercase opacity-50 hover:opacity-80 transition-opacity"
-                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; }}
                     onClick={() => navigate('/dashboard/analytics')}
                   >
                     분석 보기 →
                   </button>
                   <button
-                    className="text-xs tracking-[0.15em] uppercase opacity-30 hover:opacity-60 transition-opacity"
-                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.35 }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.35'; }}
                   >
                     삭제
                   </button>
@@ -257,7 +214,7 @@ export default function SessionHistory() {
             )}
           </div>
         ))}
-        <div className="border-t" style={{ borderColor: 'rgba(44,44,30,0.12)' }} />
+        <div style={{ borderTop: `1px solid ${CREAM_DIM}` }} />
       </div>
     </DashboardLayout>
   );
