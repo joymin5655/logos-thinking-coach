@@ -45,7 +45,7 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
+    renderer.toneMappingExposure = 1.8;
 
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -71,13 +71,13 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     camera.lookAt(0, 0.2, 0);
 
     // ── LIGHTS ──
-    // 검정 배경 조명: 크림/골드 튤으로 동상을 밝게 부각
-    // Ambient: 매우 약한 크림색
-    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.08));
+    // 검정 배경 조명 v2: 스포트라이트 효과와 연동하여 동상을 크림/골드로 밝게 부각
+    // Ambient: 약간 올려서 기본 가시성 확보
+    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.22));
 
-    // Key Light: 강한 크림-화이트, 좌상단 앞 → 주 그림자
-    const keyLight = new THREE.DirectionalLight(0xf5f0e8, 4.2);
-    keyLight.position.set(-2.5, 4.0, 3.0);
+    // Key Light: 매우 강한 크림-화이트, 좌상단 앞 → 주 그림자
+    const keyLight = new THREE.DirectionalLight(0xfff8f0, 5.5);
+    keyLight.position.set(-2.0, 5.0, 3.5);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
     keyLight.shadow.mapSize.height = 2048;
@@ -88,30 +88,35 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     keyLight.shadow.camera.top = 4;
     keyLight.shadow.camera.bottom = -3;
     keyLight.shadow.bias = -0.001;
-    keyLight.shadow.radius = 4;
+    keyLight.shadow.radius = 3;
     scene.add(keyLight);
 
-    // Fill Light: 소프트 크림 우측, 강한 그림자 완화
-    const fillLight = new THREE.DirectionalLight(0xf0e8d8, 0.9);
-    fillLight.position.set(3.0, 1.0, 2.0);
+    // Fill Light: 크림 우측 필 → 그림자 없는 면도 밝게
+    const fillLight = new THREE.DirectionalLight(0xf5ede0, 2.2);
+    fillLight.position.set(3.5, 2.0, 2.5);
     scene.add(fillLight);
 
-    // Rim Light: 강한 골드 후면 하단 → 배경에서 동상을 분리
-    const rimLight = new THREE.DirectionalLight(0xffd580, 2.8);
-    rimLight.position.set(0.5, -1.5, -3.0);
+    // Rim Light: 골드 후면 하단 → 배경에서 동상을 선명하게 분리
+    const rimLight = new THREE.DirectionalLight(0xffd580, 3.5);
+    rimLight.position.set(0.5, -1.0, -3.5);
     scene.add(rimLight);
 
-    // Top accent: 약한 따뜻한 화이트 위에서
-    const topLight = new THREE.DirectionalLight(0xfff8f0, 1.2);
-    topLight.position.set(0, 5, 1);
+    // Top accent: 위에서 내리켜는 스포트라이트 효과 연동
+    const topLight = new THREE.DirectionalLight(0xfff5e8, 2.8);
+    topLight.position.set(0, 6, 2);
     scene.add(topLight);
+
+    // Front fill: 정면 약한 크림 필 → 얼굴 부분 가시성
+    const frontLight = new THREE.DirectionalLight(0xf0ebe0, 1.4);
+    frontLight.position.set(0, 1.5, 5.0);
+    scene.add(frontLight);
 
     // ── MATERIAL: MeshStandardMaterial for real 3D lighting ──
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x1a1a1a),       // Very dark base
-      metalness: 0.85,                          // High metalness → strong reflections
-      roughness: 0.18,                          // Low roughness → glossy surface
-      envMapIntensity: 1.2,
+      color: new THREE.Color(0x2a2520),       // 약간 더 밝은 베이스 (순수 검정 대신 어두운 브라운)
+      metalness: 0.75,                          // 약간 낮춰서 디퓨즈 마스키로 더 밝게
+      roughness: 0.32,                          // 높이면 디퓨즈 많아져 전체적으로 밝아짐
+      envMapIntensity: 1.5,
     });
 
     // Simple environment map for reflections using a neutral grey scene

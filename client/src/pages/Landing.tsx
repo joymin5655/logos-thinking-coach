@@ -11,6 +11,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import ThinkerModel from '@/components/ThinkerModel';
+import SpotlightBeam from '@/components/SpotlightBeam';
 
 // ── 팔레트 ──
 const BLACK = '#0A0A0A';
@@ -215,7 +216,7 @@ export default function Landing() {
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: 48, height: 48, borderBottom: `2px solid ${CREAM_DIM}`, borderLeft: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
         <div style={{ position: 'absolute', bottom: 0, right: 0, width: 48, height: 48, borderBottom: `2px solid ${CREAM_DIM}`, borderRight: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
 
-        {/* ── 3D 동상 — 우측 배치 ── */}
+        {/* ── 3D 동상 + 스포트라이트 — 우측 배치 ── */}
         <div
           style={{
             position: 'absolute',
@@ -228,6 +229,8 @@ export default function Landing() {
           }}
         >
           <ThinkerModel className="w-full h-full" />
+          {/* 스포트라이트 빔 오버레이 — 동상 위에서 내려오는 크림/골드 빔 */}
+          <SpotlightBeam color="cream" style={{ zIndex: 25 }} />
         </div>
 
         {/* ── 좌측 텍스트 블록 ── */}
