@@ -134,7 +134,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+    font-family: 'Space Mono', 'Outfit', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

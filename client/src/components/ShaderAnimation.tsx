@@ -148,30 +148,31 @@ export function ShaderAnimation({ className, style }: ShaderAnimationProps) {
           sparkle += smoothstep(0.015, 0.0, ringDist) * (1.0 - float(k) * 0.2);
         }
 
-        // ── LOGOS 팔레트 기반 유리 색상 합성 ──
-        vec3 bg = vec3(0.784, 0.784, 0.714); // #C8C8B6
+        // ── 검정+크림 팔레트 기반 유리 색상 합성 ──
+        // 배경: 딥 블랙 (#0A0A0A)
+        vec3 bg = vec3(0.039, 0.039, 0.039);
 
-        // 어두운 올리브 라인 (R/G/B 채널 분리로 프리즘 효과)
-        vec3 lineCol = vec3(0.149, 0.149, 0.094); // 어두운 올리브
+        // 동심원 라인 색상: 크림 (#F0EBE0) — 어두운 배경 위에 밝게
+        vec3 lineCol = vec3(0.941, 0.922, 0.878);
 
-        // 프리즘 분산: R은 약간 따뜻하게, B는 약간 차갑게
-        float rStr = clamp(lineR * 0.50, 0.0, 1.0);
+        // 프리즘 분산: R은 약간 따뜻하게(크림), B는 약간 차갑게(쿨 화이트)
+        float rStr = clamp(lineR * 0.55, 0.0, 1.0);
         float gStr = clamp(lineG * 0.50, 0.0, 1.0);
-        float bStr = clamp(lineB * 0.50, 0.0, 1.0);
+        float bStr = clamp(lineB * 0.45, 0.0, 1.0);
 
-        // 유리 색상: 배경에서 어두운 라인으로 mix, 채널별로 약간 다른 강도
+        // 유리 색상: 검정 배경에서 크림 라인으로 mix
         vec3 glassColor;
-        glassColor.r = mix(bg.r, lineCol.r, rStr) + sparkle * 0.06;
-        glassColor.g = mix(bg.g, lineCol.g, gStr) + sparkle * 0.04;
-        glassColor.b = mix(bg.b, lineCol.b, bStr) + sparkle * 0.08;
+        glassColor.r = mix(bg.r, lineCol.r, rStr) + sparkle * 0.08;
+        glassColor.g = mix(bg.g, lineCol.g, gStr) + sparkle * 0.06;
+        glassColor.b = mix(bg.b, lineCol.b, bStr) + sparkle * 0.04;
 
-        // 크리스탈 반사: 밝은 흰색-크림 하이라이트
-        vec3 crystalHL = vec3(0.98, 0.97, 0.95);
-        glassColor += crystalHL * sparkle * 0.14;
+        // 크리스탈 반사: 크림-화이트 하이라이트
+        vec3 crystalHL = vec3(0.98, 0.96, 0.92);
+        glassColor += crystalHL * sparkle * 0.18;
 
         // 유리 엣지 프레넬 효과: 중심에서 멀수록 약간 더 밝게
-        float fresnel = smoothstep(0.0, 1.2, dist) * 0.06;
-        glassColor += vec3(fresnel * 0.8, fresnel * 0.85, fresnel);
+        float fresnel = smoothstep(0.0, 1.2, dist) * 0.04;
+        glassColor += vec3(fresnel * 0.9, fresnel * 0.88, fresnel * 0.82);
 
         glassColor = clamp(glassColor, 0.0, 1.0);
 

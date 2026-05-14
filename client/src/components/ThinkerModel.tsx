@@ -71,11 +71,12 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     camera.lookAt(0, 0.2, 0);
 
     // ── LIGHTS ──
-    // Very subtle ambient
-    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+    // 검정 배경 조명: 크림/골드 튤으로 동상을 밝게 부각
+    // Ambient: 매우 약한 크림색
+    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.08));
 
-    // Key Light: strong white, top-left-front → creates main shadow
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
+    // Key Light: 강한 크림-화이트, 좌상단 앞 → 주 그림자
+    const keyLight = new THREE.DirectionalLight(0xf5f0e8, 4.2);
     keyLight.position.set(-2.5, 4.0, 3.0);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
@@ -90,18 +91,18 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     keyLight.shadow.radius = 4;
     scene.add(keyLight);
 
-    // Fill Light: soft cool blue from right, reduces harsh shadows
-    const fillLight = new THREE.DirectionalLight(0x8ab4f8, 0.7);
+    // Fill Light: 소프트 크림 우측, 강한 그림자 완화
+    const fillLight = new THREE.DirectionalLight(0xf0e8d8, 0.9);
     fillLight.position.set(3.0, 1.0, 2.0);
     scene.add(fillLight);
 
-    // Rim Light: warm golden from behind-bottom → separates from background
-    const rimLight = new THREE.DirectionalLight(0xffd580, 2.2);
+    // Rim Light: 강한 골드 후면 하단 → 배경에서 동상을 분리
+    const rimLight = new THREE.DirectionalLight(0xffd580, 2.8);
     rimLight.position.set(0.5, -1.5, -3.0);
     scene.add(rimLight);
 
-    // Top accent: subtle warm white from above
-    const topLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+    // Top accent: 약한 따뜻한 화이트 위에서
+    const topLight = new THREE.DirectionalLight(0xfff8f0, 1.2);
     topLight.position.set(0, 5, 1);
     scene.add(topLight);
 
