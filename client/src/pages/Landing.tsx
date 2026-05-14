@@ -6,8 +6,8 @@
  * Palette: Black (#0A0A0A) + Cream (#F0EBE0) + Accent (#C8C0A8)
  * Typography: Space Mono (UI/라벨) + Source Serif 4 (제목)
  * Layout: 좌측 비대칭, 코너 프레임 장식, dither 패턴 사이드바
+ * Header: 로고 좌측 + 마퀴 텍스트 중앙 + CTA 우측
  * Hero: 검정 배경, 3D 동상 우측 배치, 좌측 텍스트 블록
- * Sections: 검정 + 크림 반전 교차 레이아웃
  */
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
@@ -78,66 +78,58 @@ export default function Landing() {
           left: 0,
           right: 0,
           zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '18px 28px',
-          borderBottom: `1px solid ${CREAM_DIM}`,
-          backgroundColor: 'rgba(10,10,10,0.85)',
+          backgroundColor: 'rgba(10,10,10,0.90)',
           backdropFilter: 'blur(12px)',
+          borderBottom: `1px solid ${CREAM_DIM}`,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        {/* 로고 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-            <polygon
-              points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
-              stroke={CREAM}
-              strokeWidth="1.3"
-              fill="none"
-            />
-          </svg>
-          <span
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontWeight: 700,
-              fontSize: '13px',
-              letterSpacing: '0.22em',
-              color: CREAM,
-            }}
-          >
-            LOGOS
-          </span>
-          <div style={{ width: 1, height: 12, backgroundColor: CREAM_DIM, margin: '0 4px' }} />
-          <span
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '9px',
-              letterSpacing: '0.15em',
-              color: CREAM_MID,
-            }}
-          >
-            EST. 2026
-          </span>
-        </div>
-
-        {/* 우측 좌표 + CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '9px',
-              color: CREAM_DIM,
-              letterSpacing: '0.08em',
-            }}
-          >
-            <span>LAT: 37.5665°</span>
-            <div style={{ width: 3, height: 3, backgroundColor: CREAM_DIM, borderRadius: '50%' }} />
-            <span>LONG: 126.9780°</span>
+        {/* 상단 행: 로고 + CTA */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 28px',
+          }}
+        >
+          {/* 로고 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+              <polygon
+                points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
+                stroke={CREAM}
+                strokeWidth="1.3"
+                fill="none"
+              />
+            </svg>
+            <span
+              style={{
+                fontFamily: "'Space Mono', monospace",
+                fontWeight: 700,
+                fontSize: '13px',
+                letterSpacing: '0.22em',
+                color: CREAM,
+              }}
+            >
+              LOGOS
+            </span>
+            <div style={{ width: 1, height: 12, backgroundColor: CREAM_DIM, margin: '0 4px' }} />
+            <span
+              style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '9px',
+                letterSpacing: '0.15em',
+                color: CREAM_MID,
+              }}
+            >
+              EST. 2026
+            </span>
           </div>
+
+          {/* CTA 버튼 */}
           <button
             onClick={() => navigate('/dashboard')}
             style={{
@@ -159,6 +151,41 @@ export default function Landing() {
             시작하기
           </button>
         </div>
+
+        {/* 마퀴 텍스트 행 */}
+        <div
+          style={{
+            borderTop: `1px solid ${CREAM_DIM}`,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            padding: '5px 0',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-block',
+              animation: 'logos-marquee-left 28s linear infinite',
+              willChange: 'transform',
+            }}
+          >
+            {[MARQUEE_TEXT, MARQUEE_TEXT, MARQUEE_TEXT, MARQUEE_TEXT].map((t, i) => (
+              <span
+                key={i}
+                style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontWeight: 400,
+                  fontSize: '9px',
+                  letterSpacing: '0.18em',
+                  color: CREAM_MID,
+                  display: 'inline-block',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
       </nav>
 
       {/* ── HERO ── */}
@@ -169,6 +196,7 @@ export default function Landing() {
           height: '100vh',
           overflow: 'hidden',
           backgroundColor: BLACK,
+          /* 헤더 높이(약 72px)만큼 패딩 없이 전체 화면으로 */
         }}
       >
         {/* 셰이더 배경 (전체 히어로) */}
@@ -184,13 +212,9 @@ export default function Landing() {
         </div>
 
         {/* ── 코너 프레임 장식 ── */}
-        {/* 좌상단 */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: 48, height: 48, borderTop: `2px solid ${CREAM_DIM}`, borderLeft: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
-        {/* 우상단 */}
         <div style={{ position: 'absolute', top: 0, right: 0, width: 48, height: 48, borderTop: `2px solid ${CREAM_DIM}`, borderRight: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
-        {/* 좌하단 */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: 48, height: 48, borderBottom: `2px solid ${CREAM_DIM}`, borderLeft: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
-        {/* 우하단 */}
         <div style={{ position: 'absolute', bottom: 0, right: 0, width: 48, height: 48, borderBottom: `2px solid ${CREAM_DIM}`, borderRight: `2px solid ${CREAM_DIM}`, zIndex: 50 }} />
 
         {/* ── 3D 동상 — 우측 배치 ── */}
@@ -479,49 +503,6 @@ export default function Landing() {
             <span>FRAME: ∞</span>
           </div>
         </div>
-
-        {/* ── 마퀴 텍스트 ── */}
-        <div
-          style={{
-            position: 'absolute',
-            zIndex: 20,
-            top: '62%',
-            left: 0,
-            right: 0,
-            overflow: 'hidden',
-            pointerEvents: 'none',
-            lineHeight: 0.85,
-          }}
-        >
-          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
-            <div
-              style={{
-                display: 'inline-block',
-                animation: 'logos-marquee-left 32s linear infinite',
-                willChange: 'transform',
-              }}
-            >
-              {[MARQUEE_TEXT, MARQUEE_TEXT, MARQUEE_TEXT, MARQUEE_TEXT].map((t, i) => (
-                <span
-                  key={i}
-                  style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontWeight: 700,
-                    fontSize: 'clamp(52px, 10vh, 120px)',
-                    letterSpacing: '-0.02em',
-                    color: CREAM,
-                    opacity: 0.07,
-                    lineHeight: 0.85,
-                    display: 'inline-block',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── SECTION 2 — About ── */}
@@ -530,7 +511,6 @@ export default function Landing() {
         style={{ backgroundColor: CREAM, color: BLACK, padding: '10rem 2rem' }}
       >
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          {/* 상단 구분선 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '3rem', opacity: 0.4 }}>
             <div style={{ width: 28, height: 1, backgroundColor: BLACK }} />
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.25em', color: BLACK }}>002</span>
@@ -659,7 +639,6 @@ export default function Landing() {
       {/* ── SECTION 3 — Features ── */}
       <section style={{ backgroundColor: '#0F0F0F', color: CREAM, padding: '10rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          {/* 상단 구분선 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '3rem', opacity: 0.35 }}>
             <div style={{ width: 28, height: 1, backgroundColor: CREAM }} />
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.25em', color: CREAM }}>003</span>
@@ -701,21 +680,9 @@ export default function Landing() {
             }}
           >
             {[
-              {
-                icon: '◎',
-                title: '소크라테스 코칭',
-                desc: '반박 질문, 가정 도전, 증거 요구를 통해 논리를 단련합니다.',
-              },
-              {
-                icon: '◈',
-                title: '실시간 논리 분석',
-                desc: '대화 중 논리적 오류와 빈틈을 즉시 감지하고 피드백합니다.',
-              },
-              {
-                icon: '◉',
-                title: '성장 대시보드',
-                desc: '논리력 스코어, 세션 기록, 성장 그래프를 한눈에 확인합니다.',
-              },
+              { icon: '◎', title: '소크라테스 코칭', desc: '반박 질문, 가정 도전, 증거 요구를 통해 논리를 단련합니다.' },
+              { icon: '◈', title: '실시간 논리 분석', desc: '대화 중 논리적 오류와 빈틈을 즉시 감지하고 피드백합니다.' },
+              { icon: '◉', title: '성장 대시보드', desc: '논리력 스코어, 세션 기록, 성장 그래프를 한눈에 확인합니다.' },
             ].map((f) => (
               <div
                 key={f.title}
@@ -725,39 +692,13 @@ export default function Landing() {
                   borderTop: `1px solid ${CREAM_DIM}`,
                 }}
               >
-                <div
-                  style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: '18px',
-                    marginBottom: '1.5rem',
-                    opacity: 0.5,
-                    color: CREAM,
-                  }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '18px', marginBottom: '1.5rem', opacity: 0.5, color: CREAM }}>
                   {f.icon}
                 </div>
-                <div
-                  style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontWeight: 700,
-                    fontSize: '10px',
-                    letterSpacing: '0.12em',
-                    marginBottom: '0.75rem',
-                    color: CREAM,
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '0.12em', marginBottom: '0.75rem', color: CREAM, textTransform: 'uppercase' }}>
                   {f.title}
                 </div>
-                <div
-                  style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: '10px',
-                    opacity: 0.48,
-                    lineHeight: 1.75,
-                    color: CREAM,
-                  }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', opacity: 0.48, lineHeight: 1.75, color: CREAM }}>
                   {f.desc}
                 </div>
               </div>
@@ -769,24 +710,13 @@ export default function Landing() {
       {/* ── SECTION 4 — Pricing ── */}
       <section style={{ backgroundColor: CREAM, color: BLACK, padding: '10rem 2rem' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          {/* 상단 구분선 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '3rem', opacity: 0.35 }}>
             <div style={{ width: 28, height: 1, backgroundColor: BLACK }} />
             <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.25em', color: BLACK }}>004</span>
             <div style={{ flex: 1, height: 1, backgroundColor: BLACK, opacity: 0.15 }} />
           </div>
 
-          <div
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '8px',
-              letterSpacing: '0.42em',
-              textTransform: 'uppercase',
-              opacity: 0.32,
-              marginBottom: '1.5rem',
-              color: BLACK,
-            }}
-          >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.42em', textTransform: 'uppercase', opacity: 0.32, marginBottom: '1.5rem', color: BLACK }}>
             Subscription
           </div>
           <h2
@@ -810,30 +740,9 @@ export default function Landing() {
             }}
           >
             {[
-              {
-                plan: 'Free',
-                price: '₩0',
-                period: '/월',
-                features: ['일 3회 씽킹 세션', '기본 논리력 스코어', '세션 기록 7일'],
-                cta: '무료로 시작',
-                highlight: false,
-              },
-              {
-                plan: 'Pro',
-                price: '₩9,900',
-                period: '/월',
-                features: ['무제한 씽킹 세션', '상세 논리력 분석', '무제한 세션 기록', '성장 추이 그래프', '개선 피드백'],
-                cta: '지금 시작하기',
-                highlight: true,
-              },
-              {
-                plan: 'Team',
-                price: '₩49,000',
-                period: '/월 (5인)',
-                features: ['Pro 기능 전체', '팀 논리력 비교', '관리자 대시보드', '맞춤 세션 설계', '전담 지원'],
-                cta: '팀 플랜 문의',
-                highlight: false,
-              },
+              { plan: 'Free', price: '₩0', period: '/월', features: ['일 3회 씽킹 세션', '기본 논리력 스코어', '세션 기록 7일'], cta: '무료로 시작', highlight: false },
+              { plan: 'Pro', price: '₩9,900', period: '/월', features: ['무제한 씽킹 세션', '상세 논리력 분석', '무제한 세션 기록', '성장 추이 그래프', '개선 피드백'], cta: '지금 시작하기', highlight: true },
+              { plan: 'Team', price: '₩49,000', period: '/월 (5인)', features: ['Pro 기능 전체', '팀 논리력 비교', '관리자 대시보드', '맞춤 세션 설계', '전담 지원'], cta: '팀 플랜 문의', highlight: false },
             ].map((plan) => (
               <div
                 key={plan.plan}
@@ -843,95 +752,31 @@ export default function Landing() {
                   color: plan.highlight ? CREAM : BLACK,
                 }}
               >
-                <div
-                  style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: '8px',
-                    letterSpacing: '0.32em',
-                    textTransform: 'uppercase',
-                    opacity: 0.45,
-                    marginBottom: '1rem',
-                  }}
-                >
+                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.32em', textTransform: 'uppercase', opacity: 0.45, marginBottom: '1rem' }}>
                   {plan.plan}
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '4px',
-                    marginBottom: '2rem',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'Source Serif 4', Georgia, serif",
-                      fontWeight: 700,
-                      fontSize: '2.2rem',
-                    }}
-                  >
-                    {plan.price}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: '10px',
-                      opacity: 0.45,
-                    }}
-                  >
-                    {plan.period}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '2rem' }}>
+                  <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 700, fontSize: '2.2rem' }}>{plan.price}</span>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', opacity: 0.45 }}>{plan.period}</span>
                 </div>
-                <ul
-                  style={{
-                    listStyle: 'none',
-                    padding: 0,
-                    margin: '0 0 2rem 0',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                  }}
-                >
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        fontFamily: "'Space Mono', monospace",
-                        fontSize: '10px',
-                        opacity: 0.72,
-                      }}
-                    >
-                      <span style={{ opacity: 0.35 }}>—</span>
-                      {f}
+                    <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: "'Space Mono', monospace", fontSize: '10px', opacity: 0.72 }}>
+                      <span style={{ opacity: 0.35 }}>—</span>{f}
                     </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => navigate('/dashboard')}
                   style={{
-                    width: '100%',
-                    padding: '12px',
-                    fontFamily: "'Space Mono', monospace",
-                    fontWeight: 700,
-                    fontSize: '9px',
-                    letterSpacing: '0.22em',
-                    textTransform: 'uppercase',
+                    width: '100%', padding: '12px',
+                    fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '0.22em', textTransform: 'uppercase',
                     border: `1px solid ${plan.highlight ? CREAM : 'rgba(10,10,10,0.25)'}`,
-                    backgroundColor: 'transparent',
-                    color: plan.highlight ? CREAM : BLACK,
-                    cursor: 'pointer',
-                    transition: 'all 0.18s',
+                    backgroundColor: 'transparent', color: plan.highlight ? CREAM : BLACK, cursor: 'pointer', transition: 'all 0.18s',
                   }}
                   onMouseEnter={e => {
-                    if (plan.highlight) {
-                      e.currentTarget.style.backgroundColor = CREAM;
-                      e.currentTarget.style.color = BLACK;
-                    } else {
-                      e.currentTarget.style.backgroundColor = 'rgba(10,10,10,0.06)';
-                    }
+                    if (plan.highlight) { e.currentTarget.style.backgroundColor = CREAM; e.currentTarget.style.color = BLACK; }
+                    else { e.currentTarget.style.backgroundColor = 'rgba(10,10,10,0.06)'; }
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -949,47 +794,20 @@ export default function Landing() {
       {/* ── FOOTER ── */}
       <footer
         style={{
-          backgroundColor: BLACK,
-          color: CREAM,
-          padding: '2rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          backgroundColor: BLACK, color: CREAM, padding: '2rem 2rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderTop: `1px solid ${CREAM_DIM}`,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-            <polygon
-              points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
-              stroke={CREAM}
-              strokeWidth="1.3"
-              fill="none"
-            />
+            <polygon points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5" stroke={CREAM} strokeWidth="1.3" fill="none" />
           </svg>
-          <span
-            style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '9px',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              opacity: 0.45,
-              color: CREAM,
-            }}
-          >
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.45, color: CREAM }}>
             LOGOS © 2026
           </span>
         </div>
-        <div
-          style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '9px',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            opacity: 0.28,
-            color: CREAM,
-          }}
-        >
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.28, color: CREAM }}>
           생각하는 힘을 기르다
         </div>
       </footer>
