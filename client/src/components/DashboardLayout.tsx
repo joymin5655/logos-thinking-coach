@@ -120,7 +120,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-75 transition-opacity"
           >
-            <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)' }} />
+            <img src="/template-storage/logos-icon-cream_2342d216.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
             {!collapsed && (
               <span
                 style={{

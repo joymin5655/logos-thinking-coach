@@ -89,7 +89,7 @@ export default function Landing() {
             height: '100%',
           }}
         >
-          <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)' }} />
+          <img src="/template-storage/logos-icon-cream_2342d216.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
           <span
             style={{
               fontFamily: "'Space Mono', monospace",
@@ -528,7 +528,7 @@ export default function Landing() {
       {/* ── FOOTER ── */}
       <footer style={{ backgroundColor: BLACK, color: CREAM, padding: '2rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${CREAM_DIM}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/template-storage/logos-icon_64c3abdc.png" alt="LOGOS" style={{ width: '18px', height: '18px', objectFit: 'contain', filter: 'invert(1) sepia(1) saturate(0) brightness(1.8)', opacity: 0.45 }} />
+          <img src="/template-storage/logos-icon-cream_2342d216.png" alt="LOGOS" style={{ width: '18px', height: '18px', objectFit: 'contain', opacity: 0.45 }} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.45, color: CREAM }}>LOGOS © 2026</span>
         </div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.28, color: CREAM }}>생각하는 힘을 기르다</div>
