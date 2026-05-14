@@ -136,52 +136,77 @@ export default function ThinkingSession() {
     return (
       <DashboardLayout title="씽킹 세션" titleEn="Thinking Session">
         <div style={{ display: 'flex', height: 'calc(100vh - 56px)', backgroundColor: C.black, overflow: 'hidden' }}>
-          {/* 메인 영역 */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 56px', borderRight: `1px solid ${C.border}` }}>
-            <div style={{ maxWidth: '560px' }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.5em', color: C.creamDim, marginBottom: '32px', textTransform: 'uppercase' as const }}>
-                SESSION INIT · SOCRATIC METHOD
+
+          {/* 좌측 메인 영역 */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 48px', borderRight: `1px solid ${C.border}` }}>
+            {/* 통합 카드 */}
+            <div style={{
+              width: '100%', maxWidth: '520px',
+              border: `1px solid ${C.border}`,
+              backgroundColor: C.creamFaint2,
+            }}>
+              {/* 카드 헤더 */}
+              <div style={{
+                padding: '14px 20px',
+                borderBottom: `1px solid ${C.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.4em', color: C.creamDim, textTransform: 'uppercase' as const }}>SESSION INIT · SOCRATIC METHOD</span>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: C.creamFaint, border: `1px solid ${C.border}` }} />)}
+                </div>
               </div>
-              <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '32px', fontWeight: 600, color: C.cream, lineHeight: 1.2, marginBottom: '12px', margin: '0 0 12px 0' }}>
-                무엇을 생각하고 싶으신가요?
-              </h2>
-              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: C.creamDim, lineHeight: 1.8, marginBottom: '40px', margin: '0 0 40px 0' }}>
-                고민, 아이디어, 결정해야 할 것 — 무엇이든 입력하세요.<br />
-                소크라테스의 문답법으로 더 깊이 탐구합니다.
-              </p>
-              <textarea
-                value={topic}
-                onChange={e => setTopic(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startSession(); } }}
-                placeholder="예: 커리어를 전환해야 할지 고민됩니다..."
-                rows={4}
-                style={{
-                  width: '100%', boxSizing: 'border-box' as const,
-                  fontFamily: "'Space Mono', monospace", fontSize: '11px',
-                  color: C.cream, backgroundColor: C.creamFaint2,
-                  border: `1px solid ${C.border}`,
-                  padding: '18px 20px', resize: 'none' as const, outline: 'none',
-                  lineHeight: 1.7, borderRadius: '2px',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => { e.target.style.borderColor = C.borderMid; }}
-                onBlur={e => { e.target.style.borderColor = C.border; }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: C.creamDim }}>
+
+              {/* 카드 본문 */}
+              <div style={{ padding: '28px 24px 0' }}>
+                <h2 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '26px', fontWeight: 600, color: C.cream, lineHeight: 1.2, margin: '0 0 10px 0' }}>
+                  무엇을 생각하고 싶으신가요?
+                </h2>
+                <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: C.creamDim, lineHeight: 1.9, margin: '0 0 24px 0' }}>
+                  고민, 아이디어, 결정해야 할 것 — 무엇이든 입력하세요.<br />
+                  소크라테스의 문답법으로 더 깊이 탐구합니다.
+                </p>
+                <textarea
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startSession(); } }}
+                  placeholder="예: 커리어를 전환해야 할지 고민됩니다..."
+                  rows={4}
+                  style={{
+                    width: '100%', boxSizing: 'border-box' as const,
+                    fontFamily: "'Space Mono', monospace", fontSize: '10px',
+                    color: C.cream, backgroundColor: 'transparent',
+                    border: `1px solid ${C.border}`,
+                    padding: '14px 16px', resize: 'none' as const, outline: 'none',
+                    lineHeight: 1.7,
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => { e.target.style.borderColor = C.borderMid; }}
+                  onBlur={e => { e.target.style.borderColor = C.border; }}
+                />
+              </div>
+
+              {/* 카드 푸터 */}
+              <div style={{
+                padding: '12px 24px 16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderTop: `1px solid ${C.border}`,
+                marginTop: '16px',
+              }}>
+                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: C.creamDim }}>
                   {topic.length} / 200
                 </span>
                 <button
                   onClick={startSession}
                   disabled={!topic.trim()}
                   style={{
-                    fontFamily: "'Space Mono', monospace", fontSize: '8px', fontWeight: 700,
+                    fontFamily: "'Space Mono', monospace", fontSize: '7px', fontWeight: 700,
                     letterSpacing: '0.25em', textTransform: 'uppercase' as const,
-                    padding: '12px 32px',
+                    padding: '10px 28px',
                     backgroundColor: topic.trim() ? C.cream : C.creamFaint2,
                     color: C.black, border: 'none',
                     cursor: topic.trim() ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.18s', borderRadius: '2px',
+                    transition: 'all 0.18s',
                   }}
                   onMouseEnter={e => { if (topic.trim()) e.currentTarget.style.opacity = '0.85'; }}
                   onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
@@ -192,27 +217,25 @@ export default function ThinkingSession() {
             </div>
           </div>
 
-          {/* 우측 패널 */}
-          <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', backgroundColor: C.panel }}>
-            <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.3em', color: C.creamDim, textTransform: 'uppercase' as const, marginBottom: '16px' }}>
-                Session Structure
+          {/* 우측 패널 - 컴팩트 */}
+          <div style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', backgroundColor: C.panel, borderLeft: `1px solid ${C.border}` }}>
+            <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', color: C.creamDim, textTransform: 'uppercase' as const, marginBottom: '12px' }}>
+                Structure
               </div>
               {STAGES.map((s, i) => (
-                <div key={s} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 0', borderBottom: i < 3 ? `1px solid ${C.border}` : 'none' }}>
-                  <div style={{ width: '20px', height: '20px', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: C.creamDim }}>0{i + 1}</span>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', fontWeight: 700, color: C.creamMid, letterSpacing: '0.1em', marginBottom: '3px' }}>{s}</div>
-                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: C.creamDim, lineHeight: 1.5 }}>{STAGE_DESC[s]}</div>
+                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: i < 3 ? `1px solid ${C.border}` : 'none' }}>
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: C.creamDim, width: '14px', flexShrink: 0 }}>0{i + 1}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', fontWeight: 700, color: C.creamMid, letterSpacing: '0.08em' }}>{s}</div>
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '5px', color: C.creamDim, lineHeight: 1.5, marginTop: '2px' }}>{STAGE_DESC[s]}</div>
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ padding: '16px 20px', marginTop: 'auto', borderTop: `1px solid ${C.border}` }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', color: C.creamDim, textTransform: 'uppercase' as const, marginBottom: '8px' }}>Method</div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: C.creamDim, lineHeight: 1.7 }}>
+            <div style={{ padding: '12px 16px', marginTop: 'auto' }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '5px', letterSpacing: '0.3em', color: C.creamDim, textTransform: 'uppercase' as const, marginBottom: '6px' }}>Method</div>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', color: C.creamDim, lineHeight: 1.7 }}>
                 소크라테스 문답법<br />
                 Elenctic Method
               </div>
