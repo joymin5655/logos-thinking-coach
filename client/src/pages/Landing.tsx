@@ -19,7 +19,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import ThinkerModel from '@/components/ThinkerModel';
-import PixelDotGrid from '@/components/PixelDotGrid';
+import { ShaderAnimation } from '@/components/ShaderAnimation';
 
 // Exact background color from unicorn studio
 const BG = '#C8C8B6';
@@ -161,10 +161,23 @@ export default function Landing() {
           }}
         />
 
-        {/* ── MODEL + GLYPH DITHER (same container for 1:1 coordinate mapping) ──
+        {/* ── SHADER ANIMATION — 전체 히어로 배경 (동상 뒤) ──
+            원본 GLSL 셰이더: 모자이크 픽셀화 + 동심원 라인 효과
+            LOGOS 색상 팔레트 (#C8C8B6 배경, 어두운 올리브 라인) 적용 */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 5,
+            pointerEvents: 'none',
+          }}
+        >
+          <ShaderAnimation style={{ width: '100%', height: '100%' }} />
+        </div>
+
+        {/* ── 3D MODEL — 셰이더 위에 배치 ──
             Unicorn: Position X:52.1 Y:116 → center-right, extends above viewport
-            Scale:186.5 → very large, fills most of viewport height
-            PixelDotGrid samples ThinkerModel render at exact same coords */}
+            Scale:186.5 → very large, fills most of viewport height */}
         <div
           style={{
             position: 'absolute',
@@ -177,35 +190,7 @@ export default function Landing() {
             pointerEvents: 'none',
           }}
         >
-          {/* 3D Model: behind glass tiles (zIndex 1) */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 1,
-              pointerEvents: 'none',
-            }}
-          >
-            <ThinkerModel
-              className="w-full h-full"
-            />
-          </div>
-          {/* ASCII Glass Tiles: IN FRONT of model (zIndex 2), extends beyond container */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '18%',
-              left: '-18%',
-              width: '136%',
-              height: '64%',
-              zIndex: 2,
-              pointerEvents: 'none',
-            }}
-          >
-            <PixelDotGrid
-              className="w-full h-full"
-            />
-          </div>
+          <ThinkerModel className="w-full h-full" />
         </div>
 
         {/* ── MARQUEE TEXT ──
