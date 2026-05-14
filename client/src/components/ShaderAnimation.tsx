@@ -1,11 +1,11 @@
 /**
  * ShaderAnimation — GLSL 셰이더 기반 모자이크 + 동심원 라인 효과
  *
- * 원본 코드를 기반으로:
- *   - Three.js r89 CDN 대신 이미 설치된 three 패키지 사용
- *   - PlaneBufferGeometry → PlaneGeometry (r125+)
- *   - 색상 팔레트를 LOGOS 디자인 (#C8C8B6 배경, 어두운 올리브 톤)에 맞게 조정
- *   - 모자이크 스케일 및 라인 파라미터 튜닝
+ * 개선 사항:
+ *   - 해상도 2x (devicePixelRatio 완전 활용, antialias 활성화)
+ *   - 유리/크리스탈 효과: IOR 굴절, 프리즘 색 분산, 크롬 반사
+ *   - 모자이크 픽셀 크기 축소 (더 세밀한 그리드)
+ *   - 동심원 라인 수 증가 (5 → 8)
  */
 
 import { useEffect, useRef } from "react";
@@ -62,7 +62,7 @@ export function ShaderAnimation({ className, style }: ShaderAnimationProps) {
       }
     `;
 
-    // ── Fragment Shader (LOGOS 색상 팔레트 + 원본 동심원 라인 효과) ──
+    // ── Fragment Shader: 고해상도 + 유리/크리스탈 효과 ──
     const fragmentShader = `
       #define TWO_PI 6.2831853072
       #define PI 3.14159265359
@@ -80,49 +80,102 @@ export function ShaderAnimation({ className, style }: ShaderAnimationProps) {
         return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
       }
 
+      // 유리 IOR 굴절 — uv를 굴절 벡터로 왜곡
+      vec2 glassRefract(vec2 uv, float ior, float t) {
+        float angle = atan(uv.y, uv.x);
+        float r = length(uv);
+        // 굴절: 반지름에 따라 각도 왜곡
+        float refractAngle = angle + sin(r * 8.0 - t * 0.3) * 0.04 * ior;
+        return vec2(cos(refractAngle), sin(refractAngle)) * r;
+      }
+
+      // 동심원 라인 강도 계산
+      float concentricLines(vec2 uv, float t, float lineWidth, int count) {
+        float result = 0.0;
+        for (int i = 0; i < 8; i++) {
+          if (i >= count) break;
+          result += lineWidth * float(i * i + 1) / abs(
+            fract(t + float(i) * 0.013) * 1.0 - length(uv)
+          );
+        }
+        return result;
+      }
+
       void main(void) {
+        // 고해상도: 픽셀 좌표를 그대로 사용 (모자이크 없음 or 매우 세밀)
         vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
 
-        // 모자이크 픽셀화 (균일한 스케일로 동심원 패턴 유지)
-        vec2 fMosaicScal = vec2(4.0, 4.0);
-        vec2 vScreenSize = vec2(256.0, 256.0);
-        uv.x = floor(uv.x * vScreenSize.x / fMosaicScal.x) / (vScreenSize.x / fMosaicScal.x);
-        uv.y = floor(uv.y * vScreenSize.y / fMosaicScal.y) / (vScreenSize.y / fMosaicScal.y);
+        // 모자이크 픽셀 크기: 3px (배경이 잘 보이면서 세밀한 패턴)
+        float mosaicSize = 3.0;
+        float gridRes = 320.0;
+        uv.x = floor(uv.x * gridRes / mosaicSize) / (gridRes / mosaicSize);
+        uv.y = floor(uv.y * gridRes / mosaicSize) / (gridRes / mosaicSize);
 
-        // 동상 중심으로 이동 (uv 중심이 동상 위치 근처)
+        // 동상 중심 기준
         vec2 center = uv - vec2(0.15, 0.05);
 
-        float t = time * 0.06 + random(uv.x) * 0.4;
-        float lineWidth = 0.0009;
+        // 유리 굴절 적용 (IOR 1.52 = 유리)
+        vec2 refractedCenter = glassRefract(center, 1.52, time * 0.06);
 
-        vec3 color = vec3(0.0);
-        for (int j = 0; j < 3; j++) {
-          for (int i = 0; i < 5; i++) {
-            color[j] += lineWidth * float(i * i) / abs(
-              fract(t - 0.01 * float(j) + float(i) * 0.01) * 1.0 - length(center)
-            );
-          }
+        // 노이즈 제거 → 깔끔한 동심원 패턴
+        float t = time * 0.055;
+
+        // ── 채널별 프리즘 분산 (크로마틱 어베레이션) ──
+        // R 채널: 약간 바깥쪽 (낮은 굴절)
+        float dispR = 0.008;
+        // G 채널: 중간
+        float dispG = 0.0;
+        // B 채널: 약간 안쪽 (높은 굴절)
+        float dispB = -0.008;
+
+        vec2 centerR = refractedCenter + normalize(refractedCenter + vec2(0.001)) * dispR;
+        vec2 centerG = refractedCenter;
+        vec2 centerB = refractedCenter + normalize(refractedCenter + vec2(0.001)) * dispB;
+
+        float lineWidth = 0.0007;
+
+        float lineR = concentricLines(centerR, t - 0.008, lineWidth, 8);
+        float lineG = concentricLines(centerG, t,         lineWidth, 8);
+        float lineB = concentricLines(centerB, t + 0.008, lineWidth, 8);
+
+        // ── 크리스탈 반사 하이라이트 ──
+        // 동심원 교차점에서 밝은 스파클
+        float sparkle = 0.0;
+        float dist = length(refractedCenter);
+        for (int k = 0; k < 4; k++) {
+          float ring = fract(t + float(k) * 0.25) * 1.2;
+          float ringDist = abs(dist - ring);
+          sparkle += smoothstep(0.015, 0.0, ringDist) * (1.0 - float(k) * 0.2);
         }
 
-        // LOGOS 팔레트: 배경 #C8C8B6, 라인은 어두운 올리브/세피아 톤
+        // ── LOGOS 팔레트 기반 유리 색상 합성 ──
         vec3 bg = vec3(0.784, 0.784, 0.714); // #C8C8B6
 
-        // 원본 셰이더의 RGB 라인 가중치를 그대로 사용하되,
-        // 색조를 제거하고 단일 어두운 올리브 톤으로 변환
-        float lum = (color[0] + color[1] + color[2]) / 3.0;
-        // 어두운 올리브 라인: #262618 = (0.149, 0.149, 0.094)
-        vec3 lineCol = vec3(0.149, 0.149, 0.094);
-        // 밝은 하이라이트: warm cream
-        vec3 hlCol = vec3(0.98, 0.97, 0.92);
+        // 어두운 올리브 라인 (R/G/B 채널 분리로 프리즘 효과)
+        vec3 lineCol = vec3(0.149, 0.149, 0.094); // 어두운 올리브
 
-        float lineStrength = clamp(lum * 0.55, 0.0, 1.0);
-        float hlStrength = clamp(lum * 0.22, 0.0, 0.12);
+        // 프리즘 분산: R은 약간 따뜻하게, B는 약간 차갑게
+        float rStr = clamp(lineR * 0.50, 0.0, 1.0);
+        float gStr = clamp(lineG * 0.50, 0.0, 1.0);
+        float bStr = clamp(lineB * 0.50, 0.0, 1.0);
 
-        // bg에서 라인을 빼고 (dark), 하이라이트 더하기 (bright)
-        vec3 finalColor = mix(bg, lineCol, lineStrength) + hlCol * hlStrength;
-        finalColor = clamp(finalColor, 0.0, 1.0);
+        // 유리 색상: 배경에서 어두운 라인으로 mix, 채널별로 약간 다른 강도
+        vec3 glassColor;
+        glassColor.r = mix(bg.r, lineCol.r, rStr) + sparkle * 0.06;
+        glassColor.g = mix(bg.g, lineCol.g, gStr) + sparkle * 0.04;
+        glassColor.b = mix(bg.b, lineCol.b, bStr) + sparkle * 0.08;
 
-        gl_FragColor = vec4(finalColor, 1.0);
+        // 크리스탈 반사: 밝은 흰색-크림 하이라이트
+        vec3 crystalHL = vec3(0.98, 0.97, 0.95);
+        glassColor += crystalHL * sparkle * 0.14;
+
+        // 유리 엣지 프레넬 효과: 중심에서 멀수록 약간 더 밝게
+        float fresnel = smoothstep(0.0, 1.2, dist) * 0.06;
+        glassColor += vec3(fresnel * 0.8, fresnel * 0.85, fresnel);
+
+        glassColor = clamp(glassColor, 0.0, 1.0);
+
+        gl_FragColor = vec4(glassColor, 1.0);
       }
     `;
 
@@ -137,9 +190,10 @@ export function ShaderAnimation({ className, style }: ShaderAnimationProps) {
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    // ── Renderer ──
-    const renderer = new THREE.WebGLRenderer({ antialias: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    // ── Renderer: 고해상도 (devicePixelRatio 완전 활용) ──
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // 디바이스 픽셀 비율 최대 2.5까지 활용 (고해상도 디스플레이 대응)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
     container.appendChild(renderer.domElement);
 
     sceneRef.current = { camera, scene, renderer, uniforms, animationId: null };
@@ -148,6 +202,7 @@ export function ShaderAnimation({ className, style }: ShaderAnimationProps) {
     const onResize = () => {
       const rect = container.getBoundingClientRect();
       renderer.setSize(rect.width, rect.height);
+      // resolution uniform은 실제 픽셀 크기 (devicePixelRatio 반영)
       uniforms.resolution.value.x = renderer.domElement.width;
       uniforms.resolution.value.y = renderer.domElement.height;
     };
