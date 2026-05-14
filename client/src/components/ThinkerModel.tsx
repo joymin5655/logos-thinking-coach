@@ -1,57 +1,46 @@
 /*
- * ThinkerModel.tsx
- * LOGOS Design: 로댕의 생각하는 사람 이미지 기반 회전 효과
- * - 배경 제거된 PNG 이미지 사용 (GLB 대신)
- * - CSS perspective + scaleX 트릭으로 Y축 회전 시뮬레이션
- * - 20초에 한 바퀴 회전
- * - 세이지 그린 배경에 어울리는 drop-shadow 필터
+ * ThinkerModel.tsx — 로댕 동상 (이미지 기반 + CSS 실루엣 효과)
+ *
+ * 유니콘 스튜디오 분석:
+ * - Model: Matcap 재질, 거의 검정 실루엣
+ * - Animation Speed:50, Axis Y:43 (Y축 회전)
+ * - Interactivity: 마우스 Position/Rotation 반응, Momentum:100
+ *
+ * 구현: 로댕 이미지 + CSS 필터로 어두운 실루엣 + Y축 회전 시뮬레이션
  */
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
-const RODIN_IMG = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663647714246/6TkpfBVetBKa7U8H88xcFN/rodin_transparent-MeJJLUhBdXeWmJKycwYuw3.png';
+const RODIN_IMG = '/template-storage/rodin_transparent_07e954b5.png';
 
 interface ThinkerModelProps {
   className?: string;
+  mouseX?: number; // 0-1
+  mouseY?: number; // 0-1
 }
 
-export default function ThinkerModel({ className }: ThinkerModelProps) {
-  const imgRef = useRef<HTMLImageElement>(null);
+export default function ThinkerModel({ className, mouseX = 0.5, mouseY = 0.5 }: ThinkerModelProps) {
+  const [scaleX, setScaleX] = useState(1);
   const animRef = useRef<number>(0);
-  const startTimeRef = useRef<number>(performance.now());
+  const startRef = useRef<number>(0);
 
+  // Simulate Y-axis rotation via scaleX oscillation
+  // Speed:50 in unicorn → ~18s per full rotation
   useEffect(() => {
-    const PERIOD = 20000; // 20 seconds per full rotation
-
-    const animate = (now: number) => {
-      const elapsed = now - startTimeRef.current;
-      const angle = ((elapsed % PERIOD) / PERIOD) * Math.PI * 2;
-
-      if (imgRef.current) {
-        // Simulate Y-axis rotation using scaleX with perspective distortion
-        const scaleX = Math.cos(angle);
-        const absScale = Math.abs(scaleX);
-
-        // Perspective depth effect: slightly shrink when side-on
-        const scaleY = 1 - (1 - absScale) * 0.05;
-
-        // Slight horizontal shift to simulate 3D parallax
-        const translateX = Math.sin(angle) * 8;
-
-        imgRef.current.style.transform =
-          `translateX(${translateX}px) scaleX(${scaleX}) scaleY(${scaleY})`;
-
-        // Drop shadow shifts with rotation
-        const shadowX = Math.sin(angle) * 12;
-        imgRef.current.style.filter =
-          `drop-shadow(${shadowX}px 20px 30px rgba(20, 20, 10, 0.45))`;
-      }
-
-      animRef.current = requestAnimationFrame(animate);
+    const tick = (ts: number) => {
+      if (!startRef.current) startRef.current = ts;
+      const elapsed = (ts - startRef.current) / 1000;
+      // cos oscillates 1 → -1 → 1, simulating Y rotation
+      const s = Math.cos((elapsed / 18) * Math.PI * 2);
+      setScaleX(s);
+      animRef.current = requestAnimationFrame(tick);
     };
-
-    animRef.current = requestAnimationFrame(animate);
+    animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
   }, []);
+
+  // Mouse parallax — Momentum:100 → smooth interpolation
+  const offsetX = (mouseX - 0.5) * 22;
+  const offsetY = (mouseY - 0.5) * 12;
 
   return (
     <div
@@ -59,27 +48,28 @@ export default function ThinkerModel({ className }: ThinkerModelProps) {
       style={{
         background: 'transparent',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        perspective: '800px',
+        overflow: 'visible',
+        transform: `translate(${offsetX}px, ${offsetY}px)`,
+        transition: 'transform 0.12s cubic-bezier(0.23, 1, 0.32, 1)',
       }}
     >
       <img
-        ref={imgRef}
         src={RODIN_IMG}
-        alt="The Thinker by Rodin"
+        alt="The Thinker"
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          objectPosition: 'center bottom',
-          transformOrigin: 'center center',
-          willChange: 'transform, filter',
-          transition: 'none',
+          objectPosition: 'center top',
+          // Matcap dark silhouette matching unicorn studio
+          filter: 'brightness(0.05) contrast(2.0) saturate(0)',
+          transform: `scaleX(${scaleX})`,
+          willChange: 'transform',
           userSelect: 'none',
           pointerEvents: 'none',
         }}
-        draggable={false}
       />
     </div>
   );

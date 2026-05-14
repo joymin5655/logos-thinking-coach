@@ -89,7 +89,7 @@ export default function Subscription() {
         <div>
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-1"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Current Plan
           </div>
@@ -103,7 +103,7 @@ export default function Subscription() {
             <span
               className="text-[0.6rem] tracking-[0.15em] px-2 py-1"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 backgroundColor: 'rgba(44,44,30,0.08)',
                 color: 'rgba(44,44,30,0.6)',
               }}
@@ -113,7 +113,7 @@ export default function Subscription() {
           </div>
           <p
             className="text-xs opacity-50 mt-1"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             오늘 남은 세션: 2회 / 3회
           </p>
@@ -121,13 +121,13 @@ export default function Subscription() {
         <div className="text-right">
           <div
             className="text-xs opacity-40 mb-1"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             다음 갱신일
           </div>
           <div
             className="text-sm font-semibold"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             매일 자정 초기화
           </div>
@@ -142,7 +142,7 @@ export default function Subscription() {
             onClick={() => setBillingCycle(cycle)}
             className="px-5 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-200"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               backgroundColor: billingCycle === cycle ? '#1E1E14' : 'transparent',
               color: billingCycle === cycle ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
               border: '1px solid rgba(44,44,30,0.2)',
@@ -169,7 +169,7 @@ export default function Subscription() {
               <div
                 className="text-[0.6rem] tracking-[0.3em] uppercase mb-2"
                 style={{
-                  fontFamily: 'DM Sans, sans-serif',
+                  fontFamily: 'Outfit, sans-serif',
                   opacity: 0.5,
                 }}
               >
@@ -196,7 +196,7 @@ export default function Subscription() {
               )}
               <p
                 className="text-xs mt-2 opacity-60"
-                style={{ fontFamily: 'DM Sans, sans-serif' }}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 {plan.description}
               </p>
@@ -218,7 +218,7 @@ export default function Subscription() {
                   <span
                     className="text-xs"
                     style={{
-                      fontFamily: 'DM Sans, sans-serif',
+                      fontFamily: 'Outfit, sans-serif',
                       opacity: feature.included ? 0.8 : 0.3,
                     }}
                   >
@@ -234,7 +234,7 @@ export default function Subscription() {
               disabled={plan.current}
               className="w-full py-3 text-xs tracking-[0.2em] uppercase font-semibold border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 borderColor: plan.highlight ? '#EF9F27' : 'rgba(44,44,30,0.3)',
                 backgroundColor: plan.highlight ? '#EF9F27' : 'transparent',
                 color: plan.highlight ? '#1E1E14' : (plan.highlight ? '#C5C9B4' : '#1E1E14'),
@@ -250,7 +250,7 @@ export default function Subscription() {
       <div>
         <div
           className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-6"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
         >
           FAQ
         </div>
@@ -276,13 +276,13 @@ export default function Subscription() {
             >
               <div
                 className="text-sm font-semibold mb-2"
-                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', fontWeight: 600 }}
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', fontWeight: 600 }}
               >
                 {item.q}
               </div>
               <p
                 className="text-xs opacity-60 leading-relaxed"
-                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
               >
                 {item.a}
               </p>

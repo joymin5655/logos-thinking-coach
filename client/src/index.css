@@ -3,15 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 
- * LOGOS Design System — "박물관 밖의 철학" Sage Minimalism + Editorial
- * Color Philosophy: 로댕 이미지의 크림/베이지 배경 직접 이식
- * - Background: Cream/Beige (#E8E0D0, #D4C9B5)
- * - Text: Dark Olive (#2C2C1E)
- * - Accent: Amber (#EF9F27) — 깨달음의 순간에만
- * - Brand: Deep Purple (#534AB7) — 지성, 철학
- * - Secondary: Teal (#1D9E75) — 성장
- * Typography: Libre Baskerville (headlines) + Pretendard (body)
+/*
+ * LOGOS Design System — Sage Minimalism + Editorial
+ * 유니콘 스튜디오 정밀 재현: Background #C8C8B6, Text #262618
+ * Typography: Outfit (UI/마퀴) + Source Serif 4 (제목)
  */
 
 @theme inline {
@@ -56,49 +51,81 @@
 :root {
   --radius: 0.25rem;
 
-  /* LOGOS Brand Colors — Sage Green Palette */
-  --logos-sage: #C5C9B4;
-  --logos-sage-mid: #D8DBC8;
-  --logos-dark: #1E1E14;
+  /* LOGOS Brand Colors — Exact Unicorn Studio Values */
+  --logos-sage: #C8C8B6;
+  --logos-dark: #262618;
   --logos-dark-mid: #3A3A28;
   --logos-muted: #7A7D6E;
-  --logos-amber: #EF9F27;
-  --logos-purple: #534AB7;
-  --logos-teal: #1D9E75;
 
-  /* Semantic tokens */
-  --background: oklch(0.80 0.022 105);
-  --foreground: oklch(0.18 0.02 80);
-  --card: oklch(0.85 0.018 105);
-  --card-foreground: oklch(0.18 0.02 80);
-  --popover: oklch(0.96 0.008 80);
-  --popover-foreground: oklch(0.18 0.02 80);
-  --primary: oklch(0.38 0.12 280);
-  --primary-foreground: oklch(0.97 0 0);
-  --secondary: oklch(0.87 0.016 105);
-  --secondary-foreground: oklch(0.25 0.02 80);
-  --muted: oklch(0.83 0.020 105);
-  --muted-foreground: oklch(0.52 0.02 80);
+  /* Semantic tokens — Sage Green Light Theme */
+  --background: oklch(0.82 0.014 102);
+  --foreground: oklch(0.16 0.020 92);
+  --card: oklch(0.84 0.012 102);
+  --card-foreground: oklch(0.16 0.020 92);
+  --popover: oklch(0.86 0.010 102);
+  --popover-foreground: oklch(0.16 0.020 92);
+  --primary: oklch(0.16 0.020 92);
+  --primary-foreground: oklch(0.82 0.014 102);
+  --secondary: oklch(0.78 0.018 102);
+  --secondary-foreground: oklch(0.16 0.020 92);
+  --muted: oklch(0.79 0.016 102);
+  --muted-foreground: oklch(0.48 0.018 92);
   --accent: oklch(0.73 0.16 60);
   --accent-foreground: oklch(0.15 0.02 80);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.70 0.025 105);
-  --input: oklch(0.83 0.020 105);
-  --ring: oklch(0.38 0.12 280);
+  --border: oklch(0.72 0.022 102);
+  --input: oklch(0.79 0.016 102);
+  --ring: oklch(0.16 0.020 92);
   --chart-1: oklch(0.38 0.12 280);
   --chart-2: oklch(0.52 0.14 175);
   --chart-3: oklch(0.73 0.16 60);
   --chart-4: oklch(0.52 0.02 80);
   --chart-5: oklch(0.35 0.02 80);
-  --sidebar: oklch(0.12 0.015 85);
-  --sidebar-foreground: oklch(0.18 0.02 80);
-  --sidebar-primary: oklch(0.38 0.12 280);
-  --sidebar-primary-foreground: oklch(0.97 0 0);
-  --sidebar-accent: oklch(0.85 0.018 80);
-  --sidebar-accent-foreground: oklch(0.18 0.02 80);
-  --sidebar-border: oklch(0.78 0.02 80);
-  --sidebar-ring: oklch(0.38 0.12 280);
+  /* Sidebar: dark olive */
+  --sidebar: oklch(0.14 0.018 88);
+  --sidebar-foreground: oklch(0.82 0.014 102);
+  --sidebar-primary: oklch(0.82 0.014 102);
+  --sidebar-primary-foreground: oklch(0.14 0.018 88);
+  --sidebar-accent: oklch(0.20 0.018 88);
+  --sidebar-accent-foreground: oklch(0.82 0.014 102);
+  --sidebar-border: oklch(0.22 0.015 88);
+  --sidebar-ring: oklch(0.82 0.014 102);
+}
+
+.dark {
+  --background: oklch(0.14 0.018 88);
+  --foreground: oklch(0.82 0.014 102);
+  --card: oklch(0.18 0.016 88);
+  --card-foreground: oklch(0.82 0.014 102);
+  --popover: oklch(0.18 0.016 88);
+  --popover-foreground: oklch(0.82 0.014 102);
+  --primary: oklch(0.82 0.014 102);
+  --primary-foreground: oklch(0.14 0.018 88);
+  --secondary: oklch(0.22 0.015 88);
+  --secondary-foreground: oklch(0.75 0.012 102);
+  --muted: oklch(0.22 0.015 88);
+  --muted-foreground: oklch(0.55 0.015 95);
+  --accent: oklch(0.73 0.16 60);
+  --accent-foreground: oklch(0.14 0.018 88);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.82 0.014 102);
+  --chart-1: oklch(0.38 0.12 280);
+  --chart-2: oklch(0.52 0.14 175);
+  --chart-3: oklch(0.73 0.16 60);
+  --chart-4: oklch(0.52 0.02 80);
+  --chart-5: oklch(0.35 0.02 80);
+  --sidebar: oklch(0.14 0.018 88);
+  --sidebar-foreground: oklch(0.82 0.014 102);
+  --sidebar-primary: oklch(0.82 0.014 102);
+  --sidebar-primary-foreground: oklch(0.14 0.018 88);
+  --sidebar-accent: oklch(0.20 0.018 88);
+  --sidebar-accent-foreground: oklch(0.82 0.014 102);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.82 0.014 102);
 }
 
 @layer base {
@@ -107,7 +134,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+    font-family: 'Outfit', 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -121,10 +148,6 @@
   input[type="checkbox"]:not(:disabled),
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
-  }
-
-  h1, h2, h3 {
-    font-family: 'Libre Baskerville', Georgia, serif;
   }
 }
 
@@ -153,60 +176,7 @@
     .container {
       padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1440px;
+      max-width: 1280px;
     }
-  }
-
-  /* Marquee animation */
-  @keyframes marquee-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  @keyframes marquee-right {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
-  }
-
-  .marquee-left {
-    animation: marquee-left 40s linear infinite;
-  }
-
-  .marquee-right {
-    animation: marquee-right 50s linear infinite;
-  }
-
-  /* ASCII art flicker */
-  @keyframes ascii-flicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-
-  /* Fade in up */
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .fade-in-up {
-    animation: fade-in-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  }
-
-  /* Dashboard sidebar */
-  .logos-sidebar {
-    background-color: var(--logos-dark-olive);
-    color: var(--logos-cream);
-  }
-
-  /* Score ring animation */
-  @keyframes score-fill {
-    from { stroke-dashoffset: 251.2; }
-    to { stroke-dashoffset: var(--target-offset); }
   }
 }

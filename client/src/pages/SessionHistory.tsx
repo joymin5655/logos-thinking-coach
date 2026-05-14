@@ -95,7 +95,7 @@ export default function SessionHistory() {
             placeholder="세션 검색..."
             className="flex-1 bg-transparent outline-none text-sm"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               color: '#1E1E14',
             }}
           />
@@ -118,7 +118,7 @@ export default function SessionHistory() {
               onClick={() => setSelectedTag(tag)}
               className="px-3 py-1 text-xs tracking-[0.1em] transition-all duration-150"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 backgroundColor: selectedTag === tag ? '#1E1E14' : 'transparent',
                 color: selectedTag === tag ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
                 border: '1px solid',
@@ -134,7 +134,7 @@ export default function SessionHistory() {
       {/* Session Count */}
       <div
         className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-        style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+        style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
       >
         {filtered.length}개의 세션
       </div>
@@ -154,34 +154,34 @@ export default function SessionHistory() {
               <div className="flex items-start gap-6">
                 <span
                   className="text-xs opacity-25 w-5 shrink-0 mt-0.5"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
                   <div
                     className="text-sm font-semibold mb-1"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', fontWeight: 600 }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', fontWeight: 600 }}
                   >
                     {session.topic}
                   </div>
                   <div className="flex items-center gap-3">
                     <span
                       className="text-xs opacity-40"
-                      style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                      style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                     >
                       {session.date}
                     </span>
                     <span
                       className="text-xs opacity-40"
-                      style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                      style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                     >
                       {session.duration}
                     </span>
                     <span
                       className="text-[0.6rem] tracking-[0.1em] px-2 py-0.5"
                       style={{
-                        fontFamily: 'DM Sans, sans-serif',
+                        fontFamily: 'Outfit, sans-serif',
                         backgroundColor: 'rgba(44,44,30,0.06)',
                         color: 'rgba(44,44,30,0.6)',
                       }}
@@ -219,7 +219,7 @@ export default function SessionHistory() {
               >
                 <p
                   className="text-sm opacity-60 mb-4 leading-relaxed"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
                 >
                   {session.summary}
                 </p>
@@ -229,7 +229,7 @@ export default function SessionHistory() {
                       key={tag}
                       className="text-[0.6rem] tracking-[0.1em] px-2 py-1"
                       style={{
-                        fontFamily: 'DM Sans, sans-serif',
+                        fontFamily: 'Outfit, sans-serif',
                         backgroundColor: 'rgba(44,44,30,0.06)',
                         color: 'rgba(44,44,30,0.5)',
                       }}
@@ -241,14 +241,14 @@ export default function SessionHistory() {
                 <div className="flex gap-3">
                   <button
                     className="text-xs tracking-[0.15em] uppercase opacity-50 hover:opacity-80 transition-opacity"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                     onClick={() => navigate('/dashboard/analytics')}
                   >
                     분석 보기 →
                   </button>
                   <button
                     className="text-xs tracking-[0.15em] uppercase opacity-30 hover:opacity-60 transition-opacity"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                   >
                     삭제
                   </button>

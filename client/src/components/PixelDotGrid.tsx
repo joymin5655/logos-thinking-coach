@@ -1,23 +1,39 @@
 /*
- * PixelDotGrid.tsx
- * LOGOS Design: 뮤제 리믹스 스타일 픽셀/도트 그리드 오버레이
- * 
- * 참조: musee_remix_scene.webp
- * - 균일한 도트 그리드 (작은 원형 점)
- * - 중앙으로 갈수록 도트가 사각형 픽셀로 변환
- * - 픽셀들이 동상 실루엣을 따라 더 크고 불규칙하게 변화
- * - 세이지 그린 배경 위에서 어두운 픽셀 패턴
+ * PixelDotGrid.tsx — Glyph Dither (Waffle Preset) 정밀 재현
+ *
+ * 유니콘 스튜디오 설정:
+ * - Preset: "Waffle" → 균일 격자, 밝기에 따라 사각형 크기 변화
+ * - Characters: .;-=+*#%@ (밝기 단계)
+ * - Scale: 69 → 격자 셀 크기
+ * - Gamma: 44 → 대비 조정 (어두운 쪽 강조)
+ * - Mix: 100 → 완전 혼합
+ * - Color mode: Texture → 동상 텍스처 색상 반영
+ * - Background: ON → 배경 포함
+ * - Shape: 46.6×46.7%, Position X:50 Y:65.4
+ * - Fill: #777777, Stroke: 검정
+ *
+ * 시각적 특징:
+ * 1. 외곽 영역: 작은 원형 점 (밝은 배경)
+ * 2. 중앙 영역: 점점 커지는 사각형 (어두운 동상 실루엣)
+ * 3. 동상 윤곽: 가장 큰 검정 사각형 + 테두리
+ * 4. 중심부: 약간의 색상 틴트 (텍스처 모드)
  */
 import { useEffect, useRef } from 'react';
 
 interface PixelDotGridProps {
   className?: string;
+  mouseX?: number;
+  mouseY?: number;
 }
 
-export default function PixelDotGrid({ className }: PixelDotGridProps) {
+export default function PixelDotGrid({ className, mouseX = 0.5, mouseY = 0.5 }: PixelDotGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameRef = useRef<number>(0);
-  const timeRef = useRef<number>(0);
+  const animRef = useRef<number>(0);
+  const mouseRef = useRef({ x: mouseX, y: mouseY });
+
+  useEffect(() => {
+    mouseRef.current = { x: mouseX, y: mouseY };
+  }, [mouseX, mouseY]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,107 +41,140 @@ export default function PixelDotGrid({ className }: PixelDotGridProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const GRID_SPACING = 22; // spacing between dots
-    const DOT_RADIUS = 1.5; // base dot radius
+    let W = 0, H = 0;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      W = canvas.offsetWidth;
+      H = canvas.offsetHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+
+    const ro = new ResizeObserver(() => { resize(); });
+    ro.observe(canvas);
+
+    // Waffle pattern noise field (pre-computed for performance)
+    const noise = (x: number, y: number, t: number): number => {
+      const s = Math.sin(x * 0.7 + t * 0.5) * Math.cos(y * 0.6 + t * 0.4);
+      const s2 = Math.sin((x + y) * 0.45 + t * 0.3);
+      return (s + s2) * 0.5 * 0.5 + 0.5;
     };
 
-    resize();
-    const resizeObs = new ResizeObserver(resize);
-    resizeObs.observe(canvas);
-
     const draw = (timestamp: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!W || !H) { animRef.current = requestAnimationFrame(draw); return; }
 
-      const t = timestamp * 0.0008;
-      timeRef.current = timestamp;
+      ctx.clearRect(0, 0, W, H);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = timestamp * 0.00035;
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
 
-      const cols = Math.ceil(canvas.width / GRID_SPACING) + 1;
-      const rows = Math.ceil(canvas.height / GRID_SPACING) + 1;
+      // Waffle cell size: Scale:69 → ~14-16px
+      const CELL = Math.max(11, Math.min(17, W * 0.027));
+      const COLS = Math.ceil(W / CELL) + 1;
+      const ROWS = Math.ceil(H / CELL) + 1;
 
-      // Center of the grid overlay (slightly left of center to match musee style)
-      const gridCenterX = canvas.width * 0.5;
-      const gridCenterY = canvas.height * 0.52;
-      const gridW = canvas.width * 0.55;
-      const gridH = canvas.height * 0.65;
+      // The "statue silhouette" region within the grid
+      // This mimics the dither pattern that traces the statue's body
+      // Shifted right to align with the statue position (left: 52%)
+      const statueX = W * 0.55;
+      const statueY = H * 0.48;
+      const statueW = W * 0.42;
+      const statueH = H * 0.80;
 
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const x = col * GRID_SPACING;
-          const y = row * GRID_SPACING;
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const px = col * CELL + CELL / 2;
+          const py = row * CELL + CELL / 2;
 
-          // Distance from grid center (normalized)
-          const dx = (x - gridCenterX) / (gridW * 0.5);
-          const dy = (y - gridCenterY) / (gridH * 0.5);
-          const distNorm = Math.sqrt(dx * dx + dy * dy);
+          // Distance from statue silhouette center (elliptical)
+          const ndx = (px - statueX) / (statueW * 0.5);
+          const ndy = (py - statueY) / (statueH * 0.5);
+          const distFromStatue = Math.sqrt(ndx * ndx + ndy * ndy);
 
-          // Only draw within the grid bounding box
-          const inGrid =
-            x >= gridCenterX - gridW * 0.5 &&
-            x <= gridCenterX + gridW * 0.5 &&
-            y >= gridCenterY - gridH * 0.5 &&
-            y <= gridCenterY + gridH * 0.5;
+          // Only render within the grid bounds
+          if (distFromStatue > 1.1) continue;
 
-          if (!inGrid) continue;
+          // Noise-based brightness (Waffle pattern)
+          const n = noise(col * 0.6, row * 0.55, t + mx * 1.5 + my * 1.2);
 
-          // Proximity to center: 0 = edge, 1 = center
-          const proximity = Math.max(0, 1 - distNorm);
+          // Gamma: 44/100 → pow(n, 1/0.44) ≈ pow(n, 2.27) → darken midtones
+          const gamma = 44 / 100;
+          const brightness = Math.pow(Math.max(0.001, n), 1 / gamma);
 
-          // Animated noise for pixel variation
-          const noise = Math.sin(col * 0.7 + t) * Math.cos(row * 0.5 + t * 0.8) * 0.5 + 0.5;
+          // Proximity to statue center → more dark pixels
+          const proximity = Math.max(0, 1 - distFromStatue);
+          // Statue silhouette: darker in the body area
+          const statueDark = Math.max(0, 1 - distFromStatue * 1.2);
+          const finalBrightness = brightness * (1 - statueDark * 0.72);
 
-          // Pixel size: dots at edges, larger squares near center
-          const pixelSize = proximity > 0.3
-            ? DOT_RADIUS + proximity * 8 * noise
-            : DOT_RADIUS;
+          // Waffle: square size inversely proportional to brightness
+          // Dark → large square (max 88% of cell)
+          // Bright → tiny dot (min 5% of cell)
+          const maxSz = CELL * 0.88;
+          const minSz = CELL * 0.05;
+          const sz = minSz + (1 - finalBrightness) * (maxSz - minSz);
 
-          // Opacity: subtle at edges, stronger near center
-          const alpha = 0.15 + proximity * 0.55 * (0.7 + noise * 0.3);
+          const cx = col * CELL + (CELL - sz) / 2;
+          const cy = row * CELL + (CELL - sz) / 2;
 
-          // Color: dark olive matching the musee style
-          const isDark = proximity > 0.5 && noise > 0.4;
-          if (isDark) {
-            ctx.fillStyle = `rgba(30, 30, 20, ${alpha})`;
-          } else {
-            ctx.fillStyle = `rgba(44, 44, 30, ${alpha * 0.7})`;
-          }
+          // Alpha: outer dots are more transparent, inner squares more visible
+          const alpha = 0.08 + proximity * 0.55;
 
-          if (proximity > 0.35) {
-            // Square pixels near center
-            const size = pixelSize * 2;
-            ctx.fillRect(x - size / 2, y - size / 2, size, size);
-
-            // Outline for some pixels (musee style border effect)
-            if (noise > 0.6 && proximity > 0.5) {
-              ctx.strokeStyle = `rgba(44, 44, 30, ${alpha * 0.4})`;
-              ctx.lineWidth = 0.5;
-              ctx.strokeRect(x - size / 2, y - size / 2, size, size);
-            }
-          } else {
-            // Dots at edges
+          if (sz < CELL * 0.12) {
+            // Tiny dot (bright area) - small dots in outer region
             ctx.beginPath();
-            ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
+            ctx.arc(px, py, sz * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(38, 38, 24, ${alpha * 0.45})`;
             ctx.fill();
+          } else if (sz < CELL * 0.4) {
+            // Small square
+            ctx.fillStyle = `rgba(38, 38, 24, ${alpha * 0.6})`;
+            ctx.fillRect(cx, cy, sz, sz);
+          } else {
+            // Large dark square — Waffle style with border
+            // Color mode: Texture → subtle color tint near center
+            let r = 30, g = 28, b = 22;
+            if (proximity > 0.55) {
+              // Texture color: warm brown (statue bronze color)
+              r = Math.floor(30 + proximity * 15);
+              g = Math.floor(25 + proximity * 10);
+              b = Math.floor(15 + proximity * 8);
+            }
+            if (proximity > 0.75) {
+              // Near center: slight iridescent tint (matches unicorn's colorful center)
+              const tintPhase = t * 2 + col * 0.3 + row * 0.25;
+              r = Math.floor(r + Math.sin(tintPhase) * 12 * proximity);
+              g = Math.floor(g + Math.sin(tintPhase + 2) * 8 * proximity);
+              b = Math.floor(b + Math.cos(tintPhase) * 18 * proximity);
+            }
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.85})`;
+            ctx.fillRect(cx, cy, sz, sz);
+
+            // Stroke for larger squares (Waffle border)
+            if (sz > CELL * 0.55) {
+              ctx.strokeStyle = `rgba(0, 0, 0, ${alpha * 0.22})`;
+              ctx.lineWidth = 0.5;
+              ctx.strokeRect(cx, cy, sz, sz);
+            }
           }
         }
       }
 
-      frameRef.current = requestAnimationFrame(draw);
+      animRef.current = requestAnimationFrame(draw);
     };
 
-    frameRef.current = requestAnimationFrame(draw);
-
+    animRef.current = requestAnimationFrame(draw);
     return () => {
-      cancelAnimationFrame(frameRef.current);
-      resizeObs.disconnect();
+      cancelAnimationFrame(animRef.current);
+      ro.disconnect();
     };
   }, []);
 
@@ -133,7 +182,7 @@ export default function PixelDotGrid({ className }: PixelDotGridProps) {
     <canvas
       ref={canvasRef}
       className={className}
-      style={{ display: 'block', width: '100%', height: '100%' }}
+      style={{ display: 'block', width: '100%', height: '100%', pointerEvents: 'none' }}
     />
   );
 }

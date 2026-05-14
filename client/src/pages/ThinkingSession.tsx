@@ -162,7 +162,7 @@ export default function ThinkingSession() {
         <div className="max-w-2xl mx-auto py-16">
           <div
             className="text-[0.65rem] tracking-[0.4em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             New Session
           </div>
@@ -174,7 +174,7 @@ export default function ThinkingSession() {
           </h2>
           <p
             className="text-sm opacity-60 mb-12 leading-relaxed"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
           >
             고민, 아이디어, 결정해야 할 것 — 무엇이든 입력하세요.<br />
             소크라테스가 질문을 통해 당신의 생각을 깊이 있게 만들어드립니다.
@@ -188,7 +188,7 @@ export default function ThinkingSession() {
               className="w-full p-5 text-sm resize-none border-0 border-b-2 bg-transparent outline-none"
               rows={4}
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 color: '#1E1E14',
                 borderColor: 'rgba(44,44,30,0.2)',
                 lineHeight: 1.8,
@@ -201,7 +201,7 @@ export default function ThinkingSession() {
           <div className="flex items-center justify-between">
             <p
               className="text-xs opacity-40"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
             >
               오늘 남은 세션: 2회 (무료)
             </p>
@@ -210,7 +210,7 @@ export default function ThinkingSession() {
               disabled={!topic.trim()}
               className="px-8 py-3 text-sm tracking-[0.2em] uppercase font-semibold transition-all duration-200 disabled:opacity-30"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 backgroundColor: topic.trim() ? '#1E1E14' : 'rgba(44,44,30,0.3)',
                 color: '#C5C9B4',
               }}
@@ -235,7 +235,7 @@ export default function ThinkingSession() {
           </div>
           <div
             className="text-[0.65rem] tracking-[0.4em] uppercase opacity-50 mb-8"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Logic Score
           </div>
@@ -247,7 +247,7 @@ export default function ThinkingSession() {
           </h2>
           <p
             className="text-sm opacity-60 mb-12 leading-relaxed"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.8 }}
           >
             오늘의 사고 여정을 마쳤습니다.<br />
             당신은 스스로 생각하는 힘을 한 단계 키웠습니다.
@@ -272,7 +272,7 @@ export default function ThinkingSession() {
                 </div>
                 <div
                   className="text-xs opacity-50"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                 >
                   {item.label}
                 </div>
@@ -285,7 +285,7 @@ export default function ThinkingSession() {
               onClick={() => navigate('/dashboard/analytics')}
               className="px-6 py-3 text-xs tracking-[0.2em] uppercase border transition-all duration-200"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 borderColor: '#1E1E14',
                 color: '#1E1E14',
                 backgroundColor: 'transparent',
@@ -297,7 +297,7 @@ export default function ThinkingSession() {
               onClick={() => { setPhase('intro'); setTopic(''); setMessages([]); setStageIndex(0); setCurrentStage('표면'); setQuestionCount(0); }}
               className="px-6 py-3 text-xs tracking-[0.2em] uppercase transition-all duration-200"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 backgroundColor: '#1E1E14',
                 color: '#C5C9B4',
               }}
@@ -330,7 +330,7 @@ export default function ThinkingSession() {
                 <span
                   className="text-[0.55rem] tracking-[0.15em]"
                   style={{
-                    fontFamily: 'DM Sans, sans-serif',
+                    fontFamily: 'Outfit, sans-serif',
                     color: i <= stageIndex ? stageColors[stage] : 'rgba(44,44,30,0.3)',
                   }}
                 >
@@ -351,7 +351,7 @@ export default function ThinkingSession() {
         <div
           className="text-xs opacity-40 mb-8 pb-4 border-b"
           style={{
-            fontFamily: 'DM Sans, sans-serif',
+            fontFamily: 'Outfit, sans-serif',
             color: '#1E1E14',
             borderColor: 'rgba(44,44,30,0.12)',
           }}
@@ -371,7 +371,7 @@ export default function ThinkingSession() {
                 <div
                   className="text-[0.55rem] tracking-[0.2em] uppercase w-12 shrink-0 pt-0.5"
                   style={{
-                    fontFamily: 'DM Sans, sans-serif',
+                    fontFamily: 'Outfit, sans-serif',
                     color: msg.role === 'ai'
                       ? (msg.stage ? stageColors[msg.stage] : '#888780')
                       : 'rgba(44,44,30,0.4)',
@@ -385,7 +385,7 @@ export default function ThinkingSession() {
                     style={{
                       fontFamily: msg.role === 'ai'
                         ? "'Source Serif 4', Georgia, serif"
-                        : 'DM Sans, sans-serif',
+                        : 'Outfit, sans-serif',
                       color: '#1E1E14',
                       fontWeight: msg.role === 'ai' ? 400 : 400,
                       lineHeight: 1.8,
@@ -396,7 +396,7 @@ export default function ThinkingSession() {
                 </div>
                 <span
                   className="text-[0.55rem] opacity-30 shrink-0 pt-0.5"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                 >
                   {msg.timestamp}
                 </span>
@@ -409,7 +409,7 @@ export default function ThinkingSession() {
               <div className="flex items-start gap-4">
                 <div
                   className="text-[0.55rem] tracking-[0.2em] uppercase w-12 shrink-0"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: stageColors[currentStage] }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: stageColors[currentStage] }}
                 >
                   {currentStage}
                 </div>
@@ -451,7 +451,7 @@ export default function ThinkingSession() {
               className="flex-1 bg-transparent outline-none resize-none text-sm"
               rows={2}
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 color: '#1E1E14',
                 lineHeight: 1.75,
               }}
@@ -461,7 +461,7 @@ export default function ThinkingSession() {
               disabled={!inputValue.trim() || isTyping}
               className="shrink-0 px-4 py-2 text-xs tracking-[0.15em] uppercase transition-all duration-200 disabled:opacity-30"
               style={{
-                fontFamily: 'DM Sans, sans-serif',
+                fontFamily: 'Outfit, sans-serif',
                 backgroundColor: '#1E1E14',
                 color: '#C5C9B4',
               }}
@@ -471,7 +471,7 @@ export default function ThinkingSession() {
           </div>
           <p
             className="text-[0.6rem] opacity-30 mt-2"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Enter로 전송 · Shift+Enter로 줄바꿈
           </p>
@@ -483,7 +483,7 @@ export default function ThinkingSession() {
             onClick={handleAporia}
             className="px-5 py-2.5 text-xs tracking-[0.15em] uppercase border transition-all duration-200"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               borderColor: 'rgba(44,44,30,0.3)',
               color: 'rgba(44,44,30,0.6)',
               backgroundColor: 'transparent',
@@ -495,7 +495,7 @@ export default function ThinkingSession() {
             onClick={endSession}
             className="px-5 py-2.5 text-xs tracking-[0.15em] uppercase border transition-all duration-200"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               borderColor: 'rgba(44,44,30,0.3)',
               color: 'rgba(44,44,30,0.6)',
               backgroundColor: 'transparent',
@@ -507,7 +507,7 @@ export default function ThinkingSession() {
             onClick={sendMessage}
             className="ml-auto px-5 py-2.5 text-xs tracking-[0.15em] uppercase transition-all duration-200"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               backgroundColor: '#534AB7',
               color: '#C5C9B4',
             }}

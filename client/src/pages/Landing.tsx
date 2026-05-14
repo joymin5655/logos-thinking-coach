@@ -1,97 +1,140 @@
 /*
- * Landing.tsx
- * LOGOS Design: "뮤제 리믹스" 스타일
- * 
- * 참조: musee_remix_scene.webp
- * 
- * Layout:
- * - 세이지 그린 배경 (#C5C9B4)
- * - 동상 화면 중앙 상단에 크게 배치 (실루엣 느낌)
- * - 픽셀/도트 그리드가 동상 중앙을 가로지름
- * - 하단에 초대형 DM Sans 마퀴 텍스트 (화면 꽉 채움)
- * - 최소한의 UI: 좌상단 로고 + 우상단 단일 버튼
- * 
- * Typography:
- * - 마퀴/제목: DM Sans Bold (초대형)
- * - 서브/UI: Pretendard
- * - 강조: Source Serif 4 Italic
- * 
- * Colors:
- * - BG: #C5C9B4 (sage green)
- * - Text/Statue: #1E1E14 (very dark olive)
- * - Pixel grid: rgba(30,30,20, 0.15~0.7)
+ * Landing.tsx — LOGOS 랜딩 페이지
+ *
+ * 유니콘 스튜디오 정밀 재현:
+ * ─────────────────────────────────────────────
+ * Background: #C8C8B6 (정확한 값), Speed:25, Track mouse
+ * Model: venus_demilo → The Thinker GLB, Matcap, Scale:186.5
+ *   Position X:52.1 Y:116 Z:-58, Rotation X:180 Y:179
+ *   Animation Speed:50, Axis Y:43
+ *   Interactivity: Position/Rotation/Light:22, Momentum:100
+ * Glyph Dither: Waffle preset, .;-=+*#%@, Scale:69, Gamma:44
+ *   Mix:100, Color mode:Texture, Background:ON
+ *   Shape 46.6×46.7%, Position X:50 Y:65.4
+ * Text (Musee d'Or): Font Outfit Regular, Size:18.6, Line-height:83
+ *   Letterspacing:-4.5, Fill:#262618, Width:92.8%
+ *   Position X:50 Y:75.4
+ * Projection: Repeat Horiz., Speed X:50, Scale:1, Skew:100
  */
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import ThinkerModel from '@/components/ThinkerModel';
 import PixelDotGrid from '@/components/PixelDotGrid';
 
-// Musee-style: single long marquee text at bottom
-const MARQUEE_LINE = [
-  'THINK DEEPER',
-  '사고의 주체성',
-  'SOCRATIC METHOD',
-  '논리적 확신',
-  'APORIA',
-  '질문이 답이다',
-  'LOGOS',
-  'THINK DEEPER',
-  '사고의 주체성',
-  'SOCRATIC METHOD',
-];
+// Exact background color from unicorn studio
+const BG = '#C8C8B6';
+// Text fill: #262618 (from unicorn studio text settings)
+const TEXT = '#262618';
+const TEXT_MID = 'rgba(38,38,24,0.4)';
 
-const MARQUEE_LINE_2 = [
-  '생각하는 힘',
-  'CONVICTION',
-  '아포리아를 넘어서',
-  'DEPTH OF THOUGHT',
-  '소크라테스 씽킹 코치',
-  'QUESTION EVERYTHING',
-  '생각하는 힘',
-  'CONVICTION',
+// Marquee text — Outfit font, matching "Musee d'Or" style
+// Unicorn: single scrolling text "Musee d' Or" repeated
+const MARQUEE_TEXT = [
+  "LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · ",
+  "LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · ",
 ];
 
 export default function Landing() {
   const [, navigate] = useLocation();
-  const heroRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 });
+  // Smooth mouse with momentum (Momentum:100 in unicorn)
+  const smoothMouse = useRef({ x: 0.5, y: 0.5 });
+  const rafRef = useRef<number>(0);
 
-  // Colors
-  const BG = '#C5C9B4';
-  const TEXT = '#1E1E14';
-  const TEXT_MID = 'rgba(30,30,20,0.55)';
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    smoothMouse.current = { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('mousemove', handleMouseMove, { passive: true });
+    // Momentum interpolation loop
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    let cur = { x: 0.5, y: 0.5 };
+    const tick = () => {
+      // Momentum:100 → slow lerp factor (spring-like)
+      cur.x = lerp(cur.x, smoothMouse.current.x, 0.04);
+      cur.y = lerp(cur.y, smoothMouse.current.y, 0.04);
+      setMouse({ x: cur.x, y: cur.y });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      el.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [handleMouseMove]);
+
+  // Parallax offset for background (Track mouse: Speed:25)
+  const bgShiftX = (mouse.x - 0.5) * -12;
+  const bgShiftY = (mouse.y - 0.5) * -8;
 
   return (
     <div
-      className="min-h-screen flex flex-col overflow-hidden"
-      style={{ backgroundColor: BG, color: TEXT }}
+      ref={containerRef}
+      style={{
+        backgroundColor: BG,
+        color: TEXT,
+        minHeight: '100vh',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: "'Outfit', sans-serif",
+        cursor: 'default',
+      }}
     >
       {/* ── NAV ── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5"
-        style={{ backgroundColor: 'transparent' }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          padding: '22px 30px',
+          pointerEvents: 'none',
+        }}
       >
-        {/* Logo mark */}
-        <div className="flex items-center gap-2">
-          <img
-            src="/template-storage/logos-icon-192_bd75ec0c.png"
-            alt="LOGOS"
-            width="28"
-            height="28"
-            style={{ objectFit: 'contain' }}
-          />
-          <span
-            className="text-xs font-semibold tracking-[0.18em] uppercase"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT }}
-          >
-            LOGOS
-          </span>
+        {/* Pentagon logo — top left (matches unicorn studio pentagon icon) */}
+        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+            <polygon
+              points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
+              stroke={TEXT}
+              strokeWidth="1.3"
+              fill="none"
+            />
+          </svg>
         </div>
 
-        {/* Single CTA button — musee style "TICKETS" */}
+        {/* "TICKETS" equivalent — top right */}
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-xs tracking-[0.25em] uppercase transition-opacity hover:opacity-60"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT, fontWeight: 500 }}
+          style={{
+            pointerEvents: 'auto',
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 400,
+            fontSize: '11px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: TEXT,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: 1,
+            transition: 'opacity 0.18s',
+            padding: 0,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.45'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
         >
           시작하기
         </button>
@@ -99,210 +142,309 @@ export default function Landing() {
 
       {/* ── HERO ── */}
       <div
-        ref={heroRef}
-        className="relative flex-1 flex flex-col"
-        style={{ minHeight: '100vh', overflow: 'hidden' }}
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
       >
-        {/* Pixel/Dot Grid — behind statue, centered */}
+        {/* Background parallax layer (Track mouse: Speed:25) */}
         <div
-          className="absolute z-10 pointer-events-none"
           style={{
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(700px, 80vw)',
-            height: 'min(600px, 70vh)',
+            position: 'absolute',
+            inset: '-5%',
+            backgroundColor: BG,
+            transform: `translate(${bgShiftX}px, ${bgShiftY}px)`,
+            transition: 'transform 0.05s linear',
+            zIndex: 0,
+          }}
+        />
+
+        {/* ── MODEL (The Thinker) + GLYPH DITHER overlay ──
+            Unicorn: Position X:52.1 Y:116 → center-right, extends above viewport
+            Scale:186.5 → very large, fills most of viewport height
+            Glyph Dither: overlaid directly on statue body */}
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 15,
+            left: '52%',
+            top: '-2%',
+            transform: 'translateX(-50%)',
+            width: 'clamp(380px, 48vw, 720px)',
+            height: '108vh',
+            pointerEvents: 'none',
           }}
         >
-          <PixelDotGrid className="w-full h-full" />
-        </div>
-
-        {/* Thinker statue — center, above pixel grid */}
-        <div
-          className="absolute z-20"
-          style={{
-            left: '50%',
-            top: '45%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(420px, 52vw)',
-            height: 'min(620px, 78vh)',
-            background: 'transparent',
-            mixBlendMode: 'normal',
-          }}
-        >
-          <ThinkerModel className="w-full h-full" />
-        </div>
-
-        {/* Top-center label */}
-        <div
-          className="absolute z-30 pointer-events-none"
-          style={{ left: '50%', top: '7%', transform: 'translateX(-50%)', textAlign: 'center' }}
-        >
+          {/* Pixel grid overlay — covers statue body area (Y 30-80% of container) */}
           <div
-            className="text-[0.6rem] tracking-[0.45em] uppercase"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT_MID }}
+            style={{
+              position: 'absolute',
+              zIndex: 10,
+              left: '50%',
+              top: '45%',
+              transform: 'translate(-50%, -50%)',
+              width: '140%',
+              height: '65%',
+              pointerEvents: 'none',
+            }}
           >
-            소크라테스 씽킹 코치
+            <PixelDotGrid
+              className="w-full h-full"
+              mouseX={mouse.x}
+              mouseY={mouse.y}
+            />
           </div>
+          <ThinkerModel
+            className="w-full h-full"
+            mouseX={mouse.x}
+            mouseY={mouse.y}
+          />
         </div>
 
-        {/* ── MARQUEE ROW 1 — bottom large text (musee style) ── */}
-        {/* This is the hero text that bleeds off screen on both sides */}
+        {/* ── MARQUEE TEXT ──
+            Unicorn: Font Outfit Regular, Size:18.6 (relative → ~18% viewport height)
+            Line-height:83, Letterspacing:-4.5, Fill:#262618
+            Position Y:75.4% → text starts at 75% from top
+            Width:92.8% → nearly full width
+            Projection: Repeat Horiz., Speed X:50 → scrolling */}
         <div
-          className="absolute z-40 pointer-events-none overflow-hidden"
           style={{
-            bottom: '12%',
+            position: 'absolute',
+            zIndex: 30,
+            top: '63%',
             left: 0,
             right: 0,
-            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            lineHeight: 0.83,
           }}
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              animation: 'marquee-left 45s linear infinite',
-              gap: 0,
-            }}
-          >
-            {[...MARQUEE_LINE, ...MARQUEE_LINE].map((text, i) => (
-              <span
-                key={i}
-                style={{
-                  fontFamily: 'DM Sans, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 'clamp(52px, 8.5vw, 120px)',
-                  letterSpacing: '-0.02em',
-                  color: TEXT,
-                  paddingRight: '0.35em',
-                  lineHeight: 1,
-                }}
-              >
-                {text}
-                {i < MARQUEE_LINE.length * 2 - 1 && (
-                  <span style={{ opacity: 0.3, paddingLeft: '0.35em' }}>·</span>
-                )}
-              </span>
-            ))}
+          {/* Row 1 — scrolls left (Speed X:50) */}
+          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            <div
+              style={{
+                display: 'inline-block',
+                animation: 'logos-marquee-left 28s linear infinite',
+                willChange: 'transform',
+              }}
+            >
+              {[MARQUEE_TEXT[0], MARQUEE_TEXT[0]].map((t, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 'clamp(64px, 12.5vh, 148px)',
+                    letterSpacing: '-0.045em',
+                    color: TEXT,
+                    lineHeight: 0.83,
+                    display: 'inline-block',
+                  }}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* CTA — center bottom, above marquee */}
+        {/* Vertical side labels */}
         <div
-          className="absolute z-50 flex flex-col items-center gap-3"
-          style={{ bottom: '4%', left: '50%', transform: 'translateX(-50%)' }}
-        >
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-8 py-3 text-xs tracking-[0.25em] uppercase font-semibold transition-all duration-200"
-            style={{
-              fontFamily: 'DM Sans, sans-serif',
-              backgroundColor: TEXT,
-              color: BG,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#3A3A28';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = TEXT;
-            }}
-          >
-            생각을 시작하다
-          </button>
-        </div>
-
-        {/* Side labels */}
-        <div
-          className="absolute left-5 top-1/2 -translate-y-1/2 z-30 pointer-events-none"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          style={{
+            position: 'absolute',
+            left: 18,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 40,
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+            pointerEvents: 'none',
+          }}
         >
           <span
-            className="text-[0.55rem] tracking-[0.4em] uppercase"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT_MID }}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: '8px',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: TEXT_MID,
+            }}
           >
             Thinking Coach
           </span>
         </div>
         <div
-          className="absolute right-5 top-1/2 z-30 pointer-events-none"
           style={{
+            position: 'absolute',
+            right: 18,
+            top: '50%',
+            transform: 'translateY(-50%) rotate(180deg)',
+            zIndex: 40,
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
-            transform: 'translateY(-50%) rotate(180deg)',
+            pointerEvents: 'none',
           }}
         >
           <span
-            className="text-[0.55rem] tracking-[0.4em] uppercase"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: TEXT_MID }}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: '8px',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: TEXT_MID,
+            }}
           >
             2026 · LOGOS
           </span>
         </div>
+
+        {/* CTA button */}
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 50,
+            bottom: 'clamp(80px, 14vh, 130px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              fontSize: '10px',
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              color: BG,
+              backgroundColor: TEXT,
+              border: 'none',
+              padding: '14px 38px',
+              cursor: 'pointer',
+              transition: 'opacity 0.18s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.72'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+          >
+            생각을 시작하다
+          </button>
+        </div>
       </div>
 
       {/* ── SECTION 2 — About (dark) ── */}
-      <section
-        className="py-36 px-8"
-        style={{ backgroundColor: '#1E1E14', color: '#C5C9B4' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-start">
+      <section style={{ backgroundColor: '#1A1A10', color: '#C8C8B6', padding: '10rem 2rem' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '5rem',
+              alignItems: 'start',
+            }}
+          >
             <div>
               <div
-                className="text-[0.6rem] tracking-[0.45em] uppercase mb-8 opacity-40"
-                style={{ fontFamily: 'DM Sans, sans-serif' }}
+                style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 300,
+                  fontSize: '9px',
+                  letterSpacing: '0.42em',
+                  textTransform: 'uppercase',
+                  opacity: 0.38,
+                  marginBottom: '2rem',
+                }}
               >
                 About LOGOS
               </div>
               <h2
-                className="text-4xl md:text-5xl font-bold leading-tight mb-10"
                 style={{
                   fontFamily: "'Source Serif 4', Georgia, serif",
-                  letterSpacing: '-0.02em',
-                  fontWeight: 700,
+                  fontWeight: 600,
+                  fontSize: 'clamp(2rem, 4vw, 3.4rem)',
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1.12,
+                  marginBottom: '2.5rem',
                 }}
               >
-                AI가 답을 주는<br />시대의 역설
+                소크라테스가<br />AI가 되다
               </h2>
               <p
-                className="text-sm leading-relaxed opacity-65 mb-5"
-                style={{ fontFamily: 'DM Sans, sans-serif', lineHeight: 1.85 }}
+                style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 300,
+                  fontSize: '15px',
+                  lineHeight: 1.75,
+                  opacity: 0.68,
+                  maxWidth: '420px',
+                }}
               >
-                모든 AI가 즉답을 제공하는 세상에서, LOGOS는 반대로 질문합니다.
-                소크라테스가 아테네 광장에서 했던 것처럼 — 당신이 스스로 생각하게 만드는 것이 우리의 유일한 목표입니다.
-              </p>
-              <p
-                className="text-sm leading-relaxed opacity-65"
-                style={{ fontFamily: 'DM Sans, sans-serif', lineHeight: 1.85 }}
-              >
-                답을 찾는 것이 아니라, 올바른 질문을 발견하는 여정. 그것이 진정한 지적 성장입니다.
+                LOGOS는 2,400년 전 아테네의 소크라테스 문답법을 현대 AI로 재현합니다.
+                당신의 논리에서 빈틈을 찾아내고, 더 깊이 생각하도록 이끕니다.
               </p>
             </div>
-            <div className="space-y-10 pt-16">
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2.5rem',
+                paddingTop: '3.5rem',
+              }}
+            >
               {[
-                { label: '01', title: '사고의 주체성 회복', desc: 'AI가 답을 주는 시대에 스스로 생각하는 힘을 기릅니다.' },
-                { label: '02', title: '논리적 확신', desc: '남의 논리가 아닌, 질문을 통해 스스로 발견한 결론에 도달합니다.' },
-                { label: '03', title: '성장의 시각화', desc: '추상적인 사고 과정을 논리력 스코어로 수치화합니다.' },
+                { num: '01', title: '소크라테스 문답', desc: '질문을 통해 논리의 빈틈을 스스로 발견하게 합니다.' },
+                { num: '02', title: '논리력 스코어링', desc: '세션 후 논리적 일관성, 근거 충분성을 수치로 분석합니다.' },
+                { num: '03', title: '성장 추적', desc: '매 세션의 변화를 시각화하여 사고력 성장을 확인합니다.' },
               ].map((item) => (
-                <div key={item.label} className="flex gap-6 items-start">
+                <div
+                  key={item.num}
+                  style={{
+                    display: 'flex',
+                    gap: '1.5rem',
+                    alignItems: 'flex-start',
+                    paddingBottom: '2.5rem',
+                    borderBottom: '1px solid rgba(200,200,182,0.1)',
+                  }}
+                >
                   <span
-                    className="text-xs tracking-[0.3em] opacity-25 mt-0.5 shrink-0"
-                    style={{ fontFamily: 'DM Sans, sans-serif' }}
+                    style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 300,
+                      fontSize: '10px',
+                      letterSpacing: '0.22em',
+                      opacity: 0.32,
+                      paddingTop: '4px',
+                      minWidth: '24px',
+                    }}
                   >
-                    {item.label}
+                    {item.num}
                   </span>
                   <div>
-                    <h3
-                      className="text-base font-semibold mb-2"
-                      style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600 }}
+                    <div
+                      style={{
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        letterSpacing: '0.02em',
+                        marginBottom: '0.5rem',
+                      }}
                     >
                       {item.title}
-                    </h3>
-                    <p
-                      className="text-sm opacity-55 leading-relaxed"
-                      style={{ fontFamily: 'DM Sans, sans-serif', lineHeight: 1.8 }}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 300,
+                        fontSize: '13px',
+                        opacity: 0.55,
+                        lineHeight: 1.6,
+                      }}
                     >
                       {item.desc}
-                    </p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -311,96 +453,140 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── SECTION 3 — 4단계 (sage green) ── */}
-      <section
-        className="py-36 px-8"
-        style={{ backgroundColor: BG, color: TEXT }}
-      >
-        <div className="max-w-5xl mx-auto">
+      {/* ── SECTION 3 — Features ── */}
+      <section style={{ backgroundColor: '#141410', color: '#C8C8B6', padding: '10rem 2rem' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div
-            className="text-[0.6rem] tracking-[0.45em] uppercase mb-8 opacity-40"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
-          >
-            Socratic Progression
-          </div>
-          <h2
-            className="text-4xl md:text-5xl font-bold mb-20"
             style={{
-              fontFamily: "'Source Serif 4', Georgia, serif",
-              letterSpacing: '-0.02em',
-              fontWeight: 700,
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: '9px',
+              letterSpacing: '0.42em',
+              textTransform: 'uppercase',
+              opacity: 0.32,
+              marginBottom: '2rem',
             }}
           >
-            4단계 사고 심화
+            Features
+          </div>
+          <h2
+            style={{
+              fontFamily: "'Source Serif 4', Georgia, serif",
+              fontWeight: 600,
+              fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+              letterSpacing: '-0.02em',
+              marginBottom: '5rem',
+              maxWidth: '520px',
+            }}
+          >
+            논리의 빈틈을<br />스스로 발견하다
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1px',
+              backgroundColor: 'rgba(200,200,182,0.07)',
+            }}
+          >
             {[
-              { level: 'Level 1', stage: '표면', question: '왜 그렇게 생각하세요?', desc: '현상 파악' },
-              { level: 'Level 2', stage: '전제', question: '그게 항상 사실일까요?', desc: '고정관념 도전' },
-              { level: 'Level 3', stage: '본질', question: '진짜 문제는 무엇인가요?', desc: '핵심 직면' },
-              { level: 'Level 4', stage: '통합', question: '지금 발견한 게 무엇인가요?', desc: '납득과 정리' },
-            ].map((item, i) => (
+              {
+                icon: '◎',
+                title: '소크라테스 코칭',
+                desc: '반박 질문, 가정 도전, 증거 요구를 통해 논리를 단련합니다.',
+              },
+              {
+                icon: '◈',
+                title: '실시간 논리 분석',
+                desc: '대화 중 논리적 오류와 빈틈을 즉시 감지하고 피드백합니다.',
+              },
+              {
+                icon: '◉',
+                title: '성장 대시보드',
+                desc: '논리력 스코어, 세션 기록, 성장 그래프를 한눈에 확인합니다.',
+              },
+            ].map((f) => (
               <div
-                key={item.level}
-                className="pl-6 py-4"
+                key={f.title}
                 style={{
-                  borderLeft: i > 0 ? '1px solid rgba(30,30,20,0.15)' : 'none',
-                  paddingLeft: i === 0 ? 0 : '1.5rem',
+                  padding: '3rem 2.5rem',
+                  backgroundColor: '#141410',
+                  borderTop: '1px solid rgba(200,200,182,0.08)',
                 }}
               >
                 <div
-                  className="text-[0.55rem] tracking-[0.4em] uppercase opacity-35 mb-3"
-                  style={{ fontFamily: 'DM Sans, sans-serif' }}
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontSize: '22px',
+                    marginBottom: '1.5rem',
+                    opacity: 0.55,
+                  }}
                 >
-                  {item.level}
+                  {f.icon}
                 </div>
                 <div
-                  className="text-2xl font-bold mb-3"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 700 }}
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 500,
+                    fontSize: '15px',
+                    letterSpacing: '0.01em',
+                    marginBottom: '0.75rem',
+                  }}
                 >
-                  {item.stage}
+                  {f.title}
                 </div>
-                <p
-                  className="text-sm italic opacity-65 mb-2 leading-relaxed"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                <div
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 300,
+                    fontSize: '13px',
+                    opacity: 0.5,
+                    lineHeight: 1.65,
+                  }}
                 >
-                  "{item.question}"
-                </p>
-                <p
-                  className="text-xs opacity-45"
-                  style={{ fontFamily: 'DM Sans, sans-serif' }}
-                >
-                  {item.desc}
-                </p>
+                  {f.desc}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 4 — Pricing (very dark) ── */}
-      <section
-        className="py-36 px-8"
-        style={{ backgroundColor: '#141410', color: '#C5C9B4' }}
-      >
-        <div className="max-w-4xl mx-auto">
+      {/* ── SECTION 4 — Pricing ── */}
+      <section style={{ backgroundColor: '#121210', color: '#C8C8B6', padding: '10rem 2rem' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div
-            className="text-[0.6rem] tracking-[0.45em] uppercase mb-8 opacity-35"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: '9px',
+              letterSpacing: '0.42em',
+              textTransform: 'uppercase',
+              opacity: 0.32,
+              marginBottom: '2rem',
+            }}
           >
             Subscription
           </div>
           <h2
-            className="text-4xl md:text-5xl font-bold mb-16"
             style={{
               fontFamily: "'Source Serif 4', Georgia, serif",
+              fontWeight: 600,
+              fontSize: 'clamp(2rem, 4vw, 3.2rem)',
               letterSpacing: '-0.02em',
-              fontWeight: 700,
+              marginBottom: '4rem',
             }}
           >
             생각의 깊이에<br />투자하세요
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(197,201,180,0.1)' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1px',
+              backgroundColor: 'rgba(200,200,182,0.08)',
+            }}
+          >
             {[
               {
                 plan: 'Free',
@@ -429,59 +615,108 @@ export default function Landing() {
             ].map((plan) => (
               <div
                 key={plan.plan}
-                className="p-8"
                 style={{
-                  backgroundColor: plan.highlight ? '#C5C9B4' : '#141410',
-                  color: plan.highlight ? '#141410' : '#C5C9B4',
+                  padding: '2.5rem',
+                  backgroundColor: plan.highlight ? '#C8C8B6' : '#121210',
+                  color: plan.highlight ? '#121210' : '#C8C8B6',
                 }}
               >
                 <div
-                  className="text-[0.6rem] tracking-[0.35em] uppercase mb-4 opacity-50"
-                  style={{ fontFamily: 'DM Sans, sans-serif' }}
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 300,
+                    fontSize: '9px',
+                    letterSpacing: '0.32em',
+                    textTransform: 'uppercase',
+                    opacity: 0.45,
+                    marginBottom: '1rem',
+                  }}
                 >
                   {plan.plan}
                 </div>
-                <div className="flex items-baseline gap-1 mb-8">
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '4px',
+                    marginBottom: '2rem',
+                  }}
+                >
                   <span
-                    className="text-4xl font-bold"
-                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 700 }}
+                    style={{
+                      fontFamily: "'Source Serif 4', Georgia, serif",
+                      fontWeight: 700,
+                      fontSize: '2.2rem',
+                    }}
                   >
                     {plan.price}
                   </span>
-                  <span className="text-sm opacity-50" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                  <span
+                    style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontWeight: 300,
+                      fontSize: '12px',
+                      opacity: 0.45,
+                    }}
+                  >
                     {plan.period}
                   </span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul
+                  style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: '0 0 2rem 0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}
+                >
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <span className="opacity-35" style={{ fontFamily: 'DM Sans, sans-serif' }}>—</span>
-                      <span style={{ fontFamily: 'DM Sans, sans-serif', opacity: 0.75 }}>{f}</span>
+                    <li
+                      key={f}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontFamily: "'Outfit', sans-serif",
+                        fontWeight: 300,
+                        fontSize: '13px',
+                        opacity: 0.72,
+                      }}
+                    >
+                      <span style={{ opacity: 0.35 }}>—</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="w-full py-3 text-xs tracking-[0.25em] uppercase font-semibold border transition-all duration-200"
                   style={{
-                    fontFamily: 'DM Sans, sans-serif',
-                    borderColor: plan.highlight ? '#141410' : 'rgba(197,201,180,0.3)',
+                    width: '100%',
+                    padding: '12px',
+                    fontFamily: "'Outfit', sans-serif",
+                    fontWeight: 500,
+                    fontSize: '10px',
+                    letterSpacing: '0.22em',
+                    textTransform: 'uppercase',
+                    border: `1px solid ${plan.highlight ? '#121210' : 'rgba(200,200,182,0.28)'}`,
                     backgroundColor: 'transparent',
-                    color: plan.highlight ? '#141410' : '#C5C9B4',
+                    color: plan.highlight ? '#121210' : '#C8C8B6',
+                    cursor: 'pointer',
+                    transition: 'all 0.18s',
                   }}
-                  onMouseEnter={(e) => {
-                    const btn = e.currentTarget;
+                  onMouseEnter={e => {
                     if (plan.highlight) {
-                      btn.style.backgroundColor = '#141410';
-                      btn.style.color = '#C5C9B4';
+                      e.currentTarget.style.backgroundColor = '#121210';
+                      e.currentTarget.style.color = '#C8C8B6';
                     } else {
-                      btn.style.backgroundColor = 'rgba(197,201,180,0.1)';
+                      e.currentTarget.style.backgroundColor = 'rgba(200,200,182,0.08)';
                     }
                   }}
-                  onMouseLeave={(e) => {
-                    const btn = e.currentTarget;
-                    btn.style.backgroundColor = 'transparent';
-                    btn.style.color = plan.highlight ? '#141410' : '#C5C9B4';
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = plan.highlight ? '#121210' : '#C8C8B6';
                   }}
                 >
                   {plan.cta}
@@ -494,32 +729,55 @@ export default function Landing() {
 
       {/* ── FOOTER ── */}
       <footer
-        className="py-10 px-8 flex items-center justify-between"
-        style={{ backgroundColor: BG, color: TEXT }}
+        style={{
+          backgroundColor: BG,
+          color: TEXT,
+          padding: '2.5rem 2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
       >
-        <div className="flex items-center gap-2.5">
-          <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
-            <polygon points="14,2 26,9.5 26,18.5 14,26 2,18.5 2,9.5" stroke={TEXT} strokeWidth="1.5" fill="none" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
+            <polygon
+              points="11,1.5 20.5,7.5 17.5,18.5 4.5,18.5 1.5,7.5"
+              stroke={TEXT}
+              strokeWidth="1.3"
+              fill="none"
+            />
           </svg>
           <span
-            className="text-xs tracking-[0.2em] uppercase opacity-50"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 300,
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              opacity: 0.45,
+            }}
           >
             LOGOS © 2026
           </span>
         </div>
         <div
-          className="text-xs tracking-[0.15em] uppercase opacity-35"
-          style={{ fontFamily: 'DM Sans, sans-serif' }}
+          style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 300,
+            fontSize: '10px',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            opacity: 0.32,
+          }}
         >
           생각하는 힘을 기르다
         </div>
       </footer>
 
-      {/* ── CSS ANIMATIONS ── */}
+      {/* ── KEYFRAMES ── */}
       <style>{`
-        @keyframes marquee-left {
-          0% { transform: translateX(0); }
+        @keyframes logos-marquee-left {
+          0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
       `}</style>

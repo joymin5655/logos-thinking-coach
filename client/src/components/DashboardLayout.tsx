@@ -112,7 +112,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             {!collapsed && (
               <span
                 className="text-sm font-bold tracking-[0.15em] uppercase"
-                style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
               >
                 LOGOS
               </span>
@@ -165,13 +165,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                   <div>
                     <div
                       className="text-xs font-semibold"
-                      style={{ fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
                       {item.label}
                     </div>
                     <div
                       className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40"
-                      style={{ fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
                       {item.labelEn}
                     </div>
@@ -198,13 +198,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               <div>
                 <div
                   className="text-xs font-semibold"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
                 >
                   사용자
                 </div>
                 <div
                   className="text-[0.6rem] opacity-40"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
                 >
                   Free Plan
                 </div>
@@ -229,7 +229,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               {titleEn && (
                 <div
                   className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-0.5"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                 >
                   {titleEn}
                 </div>
@@ -247,7 +247,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               <button
                 className="text-xs tracking-[0.15em] uppercase px-4 py-2 transition-all duration-200"
                 style={{
-                  fontFamily: 'DM Sans, sans-serif',
+                  fontFamily: 'Outfit, sans-serif',
                   color: '#C5C9B4',
                   backgroundColor: '#1E1E14',
                 }}

@@ -68,7 +68,7 @@ export default function Analytics() {
     borderRadius: 0,
     color: '#C5C9B4',
     fontSize: 11,
-    fontFamily: 'DM Sans, sans-serif',
+    fontFamily: 'Outfit, sans-serif',
   };
 
   return (
@@ -88,7 +88,7 @@ export default function Analytics() {
           >
             <div
               className="text-[0.55rem] tracking-[0.3em] uppercase opacity-40 mb-3"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
             >
               {stat.labelEn}
             </div>
@@ -110,7 +110,7 @@ export default function Analytics() {
             </div>
             <div
               className="text-xs opacity-60 mt-1"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
             >
               {stat.label}
             </div>
@@ -126,7 +126,7 @@ export default function Analytics() {
             onClick={() => setPeriod(p)}
             className="px-5 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-200"
             style={{
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: 'Outfit, sans-serif',
               backgroundColor: period === p ? '#1E1E14' : 'transparent',
               color: period === p ? '#C5C9B4' : 'rgba(44,44,30,0.5)',
               border: '1px solid rgba(44,44,30,0.2)',
@@ -144,7 +144,7 @@ export default function Analytics() {
       >
         <div
           className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
         >
           Score Trend
         </div>
@@ -161,13 +161,13 @@ export default function Analytics() {
                 <CartesianGrid stroke="rgba(44,44,30,0.06)" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Outfit, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[50, 100]}
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Outfit, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -181,13 +181,13 @@ export default function Analytics() {
                 <CartesianGrid stroke="rgba(44,44,30,0.06)" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Outfit, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[40, 100]}
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Outfit, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -208,7 +208,7 @@ export default function Analytics() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Skill Radar
           </div>
@@ -224,7 +224,7 @@ export default function Analytics() {
                 <PolarGrid stroke="rgba(44,44,30,0.1)" />
                 <PolarAngleAxis
                   dataKey="subject"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.5)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.5)', fontFamily: 'Outfit, sans-serif' }}
                 />
                 <Radar
                   name="Score"
@@ -246,7 +246,7 @@ export default function Analytics() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             AI Feedback
           </div>
@@ -261,7 +261,7 @@ export default function Analytics() {
               <div key={fb.type}>
                 <div
                   className="text-[0.6rem] tracking-[0.25em] uppercase mb-3 font-semibold"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: fb.color }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: fb.color }}
                 >
                   {fb.type}
                 </div>
@@ -271,7 +271,7 @@ export default function Analytics() {
                       <span style={{ color: fb.color, marginTop: 2 }}>—</span>
                       <span
                         className="text-xs leading-relaxed opacity-70"
-                        style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
+                        style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
                       >
                         {item}
                       </span>

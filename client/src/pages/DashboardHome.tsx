@@ -82,7 +82,7 @@ function ScoreRing({ score }: { score: number }) {
         </div>
         <div
           className="text-[0.55rem] tracking-[0.2em] uppercase opacity-50"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
         >
           Score
         </div>
@@ -100,7 +100,7 @@ export default function DashboardHome() {
       <div className="mb-10">
         <div
           className="text-[0.65rem] tracking-[0.4em] uppercase opacity-40 mb-2"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
         >
           Good Morning
         </div>
@@ -112,7 +112,7 @@ export default function DashboardHome() {
         </h2>
         <p
           className="text-sm opacity-50"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', lineHeight: 1.75 }}
         >
           일 3회 무료 세션 중 <strong>2회</strong> 남았습니다
         </p>
@@ -133,7 +133,7 @@ export default function DashboardHome() {
           >
             <div
               className="text-[0.55rem] tracking-[0.3em] uppercase opacity-40 mb-3"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
             >
               {stat.labelEn}
             </div>
@@ -146,14 +146,14 @@ export default function DashboardHome() {
               </span>
               <span
                 className="text-xs opacity-50"
-                style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
               >
                 {stat.unit}
               </span>
             </div>
             <div
               className="text-xs opacity-60 mt-1"
-              style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
             >
               {stat.label}
             </div>
@@ -170,7 +170,7 @@ export default function DashboardHome() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Current Score
           </div>
@@ -185,7 +185,7 @@ export default function DashboardHome() {
                 <div key={item.label} className="flex items-center gap-3">
                   <span
                     className="text-[0.6rem] w-16 opacity-60"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                   >
                     {item.label}
                   </span>
@@ -197,7 +197,7 @@ export default function DashboardHome() {
                   </div>
                   <span
                     className="text-[0.6rem] opacity-60 w-6 text-right"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                   >
                     {item.value}
                   </span>
@@ -214,7 +214,7 @@ export default function DashboardHome() {
         >
           <div
             className="text-[0.6rem] tracking-[0.3em] uppercase opacity-40 mb-4"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             Weekly Progress
           </div>
@@ -226,7 +226,7 @@ export default function DashboardHome() {
           </div>
           <p
             className="text-xs opacity-50 mb-6"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
           >
             논리력 스코어 변화
           </p>
@@ -235,7 +235,7 @@ export default function DashboardHome() {
               <LineChart data={SCORE_DATA}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'DM Sans, sans-serif' }}
+                  tick={{ fontSize: 10, fill: 'rgba(44,44,30,0.4)', fontFamily: 'Outfit, sans-serif' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -246,7 +246,7 @@ export default function DashboardHome() {
                     borderRadius: 0,
                     color: '#C5C9B4',
                     fontSize: 11,
-                    fontFamily: 'DM Sans, sans-serif',
+                    fontFamily: 'Outfit, sans-serif',
                   }}
                   labelStyle={{ color: 'rgba(232,224,208,0.6)' }}
                 />
@@ -272,7 +272,7 @@ export default function DashboardHome() {
         <div>
           <div
             className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-2"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4' }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4' }}
           >
             New Session
           </div>
@@ -284,7 +284,7 @@ export default function DashboardHome() {
           </h3>
           <p
             className="text-sm opacity-60"
-            style={{ fontFamily: 'DM Sans, sans-serif', color: '#C5C9B4', lineHeight: 1.75 }}
+            style={{ fontFamily: 'Outfit, sans-serif', color: '#C5C9B4', lineHeight: 1.75 }}
           >
             고민을 입력하면 소크라테스가 질문을 던집니다
           </p>
@@ -293,7 +293,7 @@ export default function DashboardHome() {
           onClick={() => navigate('/dashboard/session')}
           className="px-8 py-4 text-sm tracking-[0.2em] uppercase font-semibold shrink-0 transition-all duration-200"
           style={{
-            fontFamily: 'DM Sans, sans-serif',
+            fontFamily: 'Outfit, sans-serif',
             backgroundColor: '#EF9F27',
             color: '#1E1E14',
           }}
@@ -312,7 +312,7 @@ export default function DashboardHome() {
       <div>
         <div
           className="text-[0.6rem] tracking-[0.35em] uppercase opacity-40 mb-4"
-          style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+          style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
         >
           Recent Sessions
         </div>
@@ -327,20 +327,20 @@ export default function DashboardHome() {
               <div className="flex items-center gap-6">
                 <span
                   className="text-xs opacity-30 w-4"
-                  style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
                   <div
                     className="text-sm font-semibold mb-0.5"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14', fontWeight: 600 }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14', fontWeight: 600 }}
                   >
                     {session.topic}
                   </div>
                   <div
                     className="text-xs opacity-50"
-                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#1E1E14' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', color: '#1E1E14' }}
                   >
                     {session.date} · {session.duration} · {session.level} 단계
                   </div>
