@@ -161,10 +161,10 @@ export default function Landing() {
           }}
         />
 
-        {/* ── MODEL (The Thinker) + GLYPH DITHER overlay ──
+        {/* ── MODEL + GLYPH DITHER (same container for 1:1 coordinate mapping) ──
             Unicorn: Position X:52.1 Y:116 → center-right, extends above viewport
             Scale:186.5 → very large, fills most of viewport height
-            Glyph Dither: overlaid directly on statue body */}
+            PixelDotGrid samples ThinkerModel render at exact same coords */}
         <div
           style={{
             position: 'absolute',
@@ -172,21 +172,20 @@ export default function Landing() {
             left: '52%',
             top: '-2%',
             transform: 'translateX(-50%)',
-            width: 'clamp(380px, 48vw, 720px)',
-            height: '108vh',
+            width: 'clamp(340px, 44vw, 660px)',
+            height: '105vh',
             pointerEvents: 'none',
           }}
         >
-          {/* Pixel grid overlay — covers statue body area (Y 30-80% of container) */}
+          {/* Glyph Dither: behind model, extends 30% beyond container edges */}
           <div
             style={{
               position: 'absolute',
-              zIndex: 10,
-              left: '50%',
-              top: '45%',
-              transform: 'translate(-50%, -50%)',
-              width: '140%',
-              height: '65%',
+              top: '20%',
+              left: '-15%',
+              width: '130%',
+              height: '60%',
+              zIndex: 1,
               pointerEvents: 'none',
             }}
           >
@@ -196,11 +195,21 @@ export default function Landing() {
               mouseY={mouse.y}
             />
           </div>
-          <ThinkerModel
-            className="w-full h-full"
-            mouseX={mouse.x}
-            mouseY={mouse.y}
-          />
+          {/* 3D Model: above dither (zIndex 2) */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          >
+            <ThinkerModel
+              className="w-full h-full"
+              mouseX={mouse.x}
+              mouseY={mouse.y}
+            />
+          </div>
         </div>
 
         {/* ── MARQUEE TEXT ──

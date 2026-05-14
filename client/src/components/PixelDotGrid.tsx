@@ -1,24 +1,23 @@
 /*
- * PixelDotGrid.tsx — Glyph Dither (Waffle Preset) 정밀 재현
+ * PixelDotGrid.tsx — Glyph Dither (Waffle Preset) — 10배 해상도, 사각형 전용
  *
- * 유니콘 스튜디오 설정:
- * - Preset: "Waffle" → 균일 격자, 밝기에 따라 사각형 크기 변화
- * - Characters: .;-=+*#%@ (밝기 단계)
- * - Scale: 69 → 격자 셀 크기
- * - Gamma: 44 → 대비 조정 (어두운 쪽 강조)
- * - Mix: 100 → 완전 혼합
- * - Color mode: Texture → 동상 텍스처 색상 반영
- * - Background: ON → 배경 포함
+ * 유니콘 스튜디오 설정값:
+ * - Preset: "Waffle" → 사각형 격자, 밝기에 따라 크기 변화
+ * - Scale: 69 → 격자 셀 크기 (10배 해상도 → ~1.5px 셀)
+ * - Gamma: 44 → 대비 조정
+ * - Mix: 100, Color mode: Texture
  * - Shape: 46.6×46.7%, Position X:50 Y:65.4
- * - Fill: #777777, Stroke: 검정
  *
- * 시각적 특징:
- * 1. 외곽 영역: 작은 원형 점 (밝은 배경)
- * 2. 중앙 영역: 점점 커지는 사각형 (어두운 동상 실루엣)
- * 3. 동상 윤곽: 가장 큰 검정 사각형 + 테두리
- * 4. 중심부: 약간의 색상 틴트 (텍스처 모드)
+ * 핵심:
+ * 1. 해상도 10배: CELL = 1.5px
+ * 2. 사각형만: fillRect() 전용
+ * 3. 3D 렌더 이미지 픽셀 샘플링 → 조각상 형태 Dither
+ *    - ThinkerModel의 offscreen canvas에서 직접 픽셀 읽기
+ *    - PixelDotGrid canvas와 ThinkerModel canvas가 같은 크기 컨테이너에 있으므로
+ *      좌표가 1:1 매핑됨
  */
 import { useEffect, useRef } from 'react';
+import { latestRenderCanvas } from './ThinkerModel';
 
 interface PixelDotGridProps {
   className?: string;
@@ -30,6 +29,9 @@ export default function PixelDotGrid({ className, mouseX = 0.5, mouseY = 0.5 }: 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const mouseRef = useRef({ x: mouseX, y: mouseY });
+  // Cache imageData to avoid re-reading every frame
+  const cachedImageData = useRef<{ data: ImageData; w: number; h: number } | null>(null);
+  const lastSampleTime = useRef(0);
 
   useEffect(() => {
     mouseRef.current = { x: mouseX, y: mouseY };
@@ -50,120 +52,140 @@ export default function PixelDotGrid({ className, mouseX = 0.5, mouseY = 0.5 }: 
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cachedImageData.current = null; // reset cache on resize
     };
     resize();
 
-    const ro = new ResizeObserver(() => { resize(); });
+    const ro = new ResizeObserver(() => resize());
     ro.observe(canvas);
 
-    // Waffle pattern noise field (pre-computed for performance)
-    const noise = (x: number, y: number, t: number): number => {
-      const s = Math.sin(x * 0.7 + t * 0.5) * Math.cos(y * 0.6 + t * 0.4);
-      const s2 = Math.sin((x + y) * 0.45 + t * 0.3);
-      return (s + s2) * 0.5 * 0.5 + 0.5;
-    };
+    // Offscreen sampling canvas
+    const samplerCanvas = document.createElement('canvas');
+    const samplerCtx = samplerCanvas.getContext('2d', { willReadFrequently: true })!;
 
     const draw = (timestamp: number) => {
       if (!W || !H) { animRef.current = requestAnimationFrame(draw); return; }
 
       ctx.clearRect(0, 0, W, H);
 
-      const t = timestamp * 0.00035;
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
+      const t = timestamp * 0.00018;
 
-      // Waffle cell size: Scale:69 → ~14-16px
-      const CELL = Math.max(11, Math.min(17, W * 0.027));
+      // ── CELL SIZE ──
+      // 레퍼런스: 셌이지 ~8-12px, 조각상 실루엣을 따라 큰 사각형
+      // 사용자 요청 '10배 해상도' → 원본 ~140px 셌이지의 1/10 = 14px
+      const CELL = 14;
       const COLS = Math.ceil(W / CELL) + 1;
       const ROWS = Math.ceil(H / CELL) + 1;
 
-      // The "statue silhouette" region within the grid
-      // This mimics the dither pattern that traces the statue's body
-      // Shifted right to align with the statue position (left: 52%)
-      const statueX = W * 0.55;
-      const statueY = H * 0.48;
-      const statueW = W * 0.42;
-      const statueH = H * 0.80;
+      // ── 3D 렌더 이미지 샘플링 (60fps → 30fps로 줄여서 성능 최적화) ──
+      const src = latestRenderCanvas;
+      if (src && src.width > 0 && src.height > 0 && timestamp - lastSampleTime.current > 33) {
+        lastSampleTime.current = timestamp;
+        samplerCanvas.width = src.width;
+        samplerCanvas.height = src.height;
+        samplerCtx.clearRect(0, 0, src.width, src.height);
+        samplerCtx.drawImage(src, 0, 0);
+        try {
+          const imgData = samplerCtx.getImageData(0, 0, src.width, src.height);
+          cachedImageData.current = { data: imgData, w: src.width, h: src.height };
+        } catch {
+          // cross-origin or security error
+        }
+      }
+
+      const cache = cachedImageData.current;
+
+      // Gamma: 44/100 → pow(n, 1/0.44) ≈ pow(n, 2.27)
+      const gamma = 44 / 100;
 
       for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
-          const px = col * CELL + CELL / 2;
-          const py = row * CELL + CELL / 2;
+          const px = col * CELL + CELL * 0.5;
+          const py = row * CELL + CELL * 0.5;
 
-          // Distance from statue silhouette center (elliptical)
-          const ndx = (px - statueX) / (statueW * 0.5);
-          const ndy = (py - statueY) / (statueH * 0.5);
-          const distFromStatue = Math.sqrt(ndx * ndx + ndy * ndy);
+          let brightness: number = 0;
+          let cr = 20, cg = 20, cb = 14;
+          let hasStatueData = false;
 
-          // Only render within the grid bounds
-          if (distFromStatue > 1.1) continue;
+          if (cache) {
+            // Map PixelDotGrid canvas coords → ThinkerModel render coords
+            // Both are in the same container, same size
+            // PixelDotGrid div: top:20%, left:-15%, width:130%, height:60%
+            // So the grid extends beyond the model container
+            // We need to map back to model container coords:
+            // gridX = px / W → maps to model container x: (gridX - (-0.15)) / 1.30 = (gridX + 0.15) / 1.30
+            // gridY = py / H → maps to model container y: (gridY - 0.20) / 0.60
+            const gridNX = px / W;
+            const gridNY = py / H;
 
-          // Noise-based brightness (Waffle pattern)
-          const n = noise(col * 0.6, row * 0.55, t + mx * 1.5 + my * 1.2);
+            // Map to model container normalized coords
+            const modelNX = (gridNX + 0.15) / 1.30;
+            const modelNY = (gridNY - 0.20) / 0.60;
 
-          // Gamma: 44/100 → pow(n, 1/0.44) ≈ pow(n, 2.27) → darken midtones
-          const gamma = 44 / 100;
-          const brightness = Math.pow(Math.max(0.001, n), 1 / gamma);
+            // Map to render canvas pixel coords
+            const ix = Math.floor(modelNX * cache.w);
+            const iy = Math.floor(modelNY * cache.h);
 
-          // Proximity to statue center → more dark pixels
-          const proximity = Math.max(0, 1 - distFromStatue);
-          // Statue silhouette: darker in the body area
-          const statueDark = Math.max(0, 1 - distFromStatue * 1.2);
-          const finalBrightness = brightness * (1 - statueDark * 0.72);
+            if (ix >= 0 && iy >= 0 && ix < cache.w && iy < cache.h) {
+              const idx = (iy * cache.w + ix) * 4;
+              const r = cache.data.data[idx];
+              const g = cache.data.data[idx + 1];
+              const b = cache.data.data[idx + 2];
+              const a = cache.data.data[idx + 3];
 
-          // Waffle: square size inversely proportional to brightness
-          // Dark → large square (max 88% of cell)
-          // Bright → tiny dot (min 5% of cell)
+              if (a > 5) {
+                hasStatueData = true;
+                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                // Invert: dark statue → large squares
+                brightness = 1 - lum;
+                brightness = Math.pow(Math.max(0.001, brightness), 1 / gamma);
+
+                // Texture color
+                if (brightness > 0.35) {
+                  const tintPhase = t * 1.2 + col * 0.04 + row * 0.04;
+                  cr = Math.floor(r * 0.3 + Math.sin(tintPhase) * 18 * brightness + 12);
+                  cg = Math.floor(g * 0.25 + Math.sin(tintPhase + 2.1) * 10 * brightness + 10);
+                  cb = Math.floor(b * 0.4 + Math.cos(tintPhase) * 22 * brightness + 6);
+                } else {
+                  cr = 15; cg = 15; cb = 10;
+                }
+              }
+            }
+          }
+
+          if (!hasStatueData) {
+            // Background dot grid — uniform small squares
+            brightness = 0.20;
+            cr = 40; cg = 40; cb = 28;
+          }
+
+          // ── SQUARE SIZE: Waffle preset ──
           const maxSz = CELL * 0.88;
-          const minSz = CELL * 0.05;
-          const sz = minSz + (1 - finalBrightness) * (maxSz - minSz);
+          const minSz = CELL * 0.04;
+          const sz = minSz + brightness * (maxSz - minSz);
 
-          const cx = col * CELL + (CELL - sz) / 2;
-          const cy = row * CELL + (CELL - sz) / 2;
+          if (sz < CELL * 0.05) continue;
 
-          // Alpha: outer dots are more transparent, inner squares more visible
-          const alpha = 0.08 + proximity * 0.55;
+          const cx = col * CELL + (CELL - sz) * 0.5;
+          const cy = row * CELL + (CELL - sz) * 0.5;
 
-          if (sz < CELL * 0.12) {
-            // Tiny dot (bright area) - small dots in outer region
-            ctx.beginPath();
-            ctx.arc(px, py, sz * 0.5, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(38, 38, 24, ${alpha * 0.45})`;
-            ctx.fill();
-          } else if (sz < CELL * 0.4) {
-            // Small square
-            ctx.fillStyle = `rgba(38, 38, 24, ${alpha * 0.6})`;
-            ctx.fillRect(cx, cy, sz, sz);
-          } else {
-            // Large dark square — Waffle style with border
-            // Color mode: Texture → subtle color tint near center
-            let r = 30, g = 28, b = 22;
-            if (proximity > 0.55) {
-              // Texture color: warm brown (statue bronze color)
-              r = Math.floor(30 + proximity * 15);
-              g = Math.floor(25 + proximity * 10);
-              b = Math.floor(15 + proximity * 8);
-            }
-            if (proximity > 0.75) {
-              // Near center: slight iridescent tint (matches unicorn's colorful center)
-              const tintPhase = t * 2 + col * 0.3 + row * 0.25;
-              r = Math.floor(r + Math.sin(tintPhase) * 12 * proximity);
-              g = Math.floor(g + Math.sin(tintPhase + 2) * 8 * proximity);
-              b = Math.floor(b + Math.cos(tintPhase) * 18 * proximity);
-            }
-            r = Math.max(0, Math.min(255, r));
-            g = Math.max(0, Math.min(255, g));
-            b = Math.max(0, Math.min(255, b));
+          cr = Math.max(0, Math.min(255, cr));
+          cg = Math.max(0, Math.min(255, cg));
+          cb = Math.max(0, Math.min(255, cb));
 
-            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.85})`;
-            ctx.fillRect(cx, cy, sz, sz);
+          const alpha = hasStatueData
+            ? 0.50 + brightness * 0.45
+            : 0.32;
 
-            // Stroke for larger squares (Waffle border)
-            if (sz > CELL * 0.55) {
-              ctx.strokeStyle = `rgba(0, 0, 0, ${alpha * 0.22})`;
-              ctx.lineWidth = 0.5;
-              ctx.strokeRect(cx, cy, sz, sz);
-            }
+          // ── DRAW SQUARE (no circles) ──
+          ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${alpha})`;
+          ctx.fillRect(cx, cy, sz, sz);
+
+          // Stroke for large squares
+          if (sz > CELL * 0.60 && brightness > 0.60) {
+            ctx.strokeStyle = `rgba(0, 0, 0, ${alpha * 0.22})`;
+            ctx.lineWidth = 0.3;
+            ctx.strokeRect(cx, cy, sz, sz);
           }
         }
       }
