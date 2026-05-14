@@ -1,11 +1,15 @@
 /**
- * ThinkerModel — Unicorn Studio 설정값 재현
+ * ThinkerModel — 실제 3D 조각상 (Meshy AI GLB)
  *
- * Model: The Thinker (Meshy AI GLB)
- * Material: Matcap (검정 광택)
- * Animation: Y축 회전 Speed 50, Axis Y:43
- * Glyph Dither: Waffle preset, Scale 69, Gamma 44, Color mode Texture
- * Background: #C8C8B6
+ * 조명 설정:
+ *   - Key Light: 강한 흰색 좌상단 (intensity 3.5)
+ *   - Fill Light: 부드러운 청색 우측 (intensity 0.8)
+ *   - Rim Light: 강한 황금색 후면 하단 (intensity 2.0)
+ *   - Ambient: 매우 약한 (intensity 0.15)
+ *   - Shadow: PCFSoftShadowMap
+ *
+ * Material: MeshStandardMaterial (metalness 0.9, roughness 0.15)
+ *   → 실제 금속/대리석 느낌의 3D 입체감
  */
 
 import { useEffect, useRef } from "react";
@@ -15,66 +19,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // Expose offscreen canvas for PixelDotGrid sampling
 export let latestRenderCanvas: HTMLCanvasElement | null = null;
 
-// ── CONSTANTS ──────────────────────────────────────────────────────────────
 const GLB_URL = "/template-storage/thinker_meshy_7020fc79.glb";
-const TEXTURE_URL = "/template-storage/thinker_texture_a4910afa.png";
-
-// Glyph Dither Waffle settings (Unicorn Studio values)
-const GLYPH_SCALE = 69;   // Scale 69 → cell size in px (relative to 1000px width)
-const GLYPH_GAMMA = 44;   // Gamma 44 → contrast/threshold
-const GLYPH_MIX = 1.0;    // Mix 100
-
-// ── MATCAP TEXTURE (dark glossy black) ─────────────────────────────────────
-function createMatcapTexture(): THREE.Texture {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-
-  // Unicorn Studio Matcap 50: dark glossy black with strong white highlight
-  // Reference: venus_demilo appears as very dark/black with bright specular
-  
-  // Base: very dark
-  ctx.fillStyle = "#050505";
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Main specular (top-left, large bright white)
-  const spec = ctx.createRadialGradient(size * 0.32, size * 0.28, 0, size * 0.32, size * 0.28, size * 0.5);
-  spec.addColorStop(0, "rgba(255,255,255,1.0)");
-  spec.addColorStop(0.15, "rgba(240,245,255,0.95)");
-  spec.addColorStop(0.35, "rgba(180,190,220,0.6)");
-  spec.addColorStop(0.6, "rgba(80,100,140,0.2)");
-  spec.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = spec;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Secondary specular (center-right, subtle)
-  const spec2 = ctx.createRadialGradient(size * 0.65, size * 0.45, 0, size * 0.65, size * 0.45, size * 0.25);
-  spec2.addColorStop(0, "rgba(160,170,200,0.5)");
-  spec2.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = spec2;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Rim light (bottom-right, blue-ish)
-  const rim = ctx.createRadialGradient(size * 0.78, size * 0.82, 0, size * 0.78, size * 0.82, size * 0.28);
-  rim.addColorStop(0, "rgba(60,80,160,0.45)");
-  rim.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = rim;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
 
 // ── COMPONENT ──────────────────────────────────────────────────────────────
 interface ThinkerModelProps {
@@ -96,10 +41,11 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
       powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = false;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.8;
+    renderer.toneMappingExposure = 1.4;
 
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -125,27 +71,61 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     camera.lookAt(0, 0.2, 0);
 
     // ── LIGHTS ──
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    keyLight.position.set(2, 3, 3);
+    // Very subtle ambient
+    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+
+    // Key Light: strong white, top-left-front → creates main shadow
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
+    keyLight.position.set(-2.5, 4.0, 3.0);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.1;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.camera.left = -3;
+    keyLight.shadow.camera.right = 3;
+    keyLight.shadow.camera.top = 4;
+    keyLight.shadow.camera.bottom = -3;
+    keyLight.shadow.bias = -0.001;
+    keyLight.shadow.radius = 4;
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 0.4);
-    fillLight.position.set(-2, 1, 2);
+
+    // Fill Light: soft cool blue from right, reduces harsh shadows
+    const fillLight = new THREE.DirectionalLight(0x8ab4f8, 0.7);
+    fillLight.position.set(3.0, 1.0, 2.0);
     scene.add(fillLight);
 
-    // ── MATCAP ──
-    const matcapTex = createMatcapTexture();
-    const matcapMat = new THREE.MeshMatcapMaterial({
-      matcap: matcapTex,
-      side: THREE.FrontSide,
+    // Rim Light: warm golden from behind-bottom → separates from background
+    const rimLight = new THREE.DirectionalLight(0xffd580, 2.2);
+    rimLight.position.set(0.5, -1.5, -3.0);
+    scene.add(rimLight);
+
+    // Top accent: subtle warm white from above
+    const topLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+    topLight.position.set(0, 5, 1);
+    scene.add(topLight);
+
+    // ── MATERIAL: MeshStandardMaterial for real 3D lighting ──
+    const material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0x1a1a1a),       // Very dark base
+      metalness: 0.85,                          // High metalness → strong reflections
+      roughness: 0.18,                          // Low roughness → glossy surface
+      envMapIntensity: 1.2,
     });
+
+    // Simple environment map for reflections using a neutral grey scene
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const neutralEnvScene = new THREE.Scene();
+    neutralEnvScene.background = new THREE.Color(0x303040);
+    const envRT = pmremGenerator.fromScene(neutralEnvScene);
+    scene.environment = envRT.texture;
+    pmremGenerator.dispose();
 
     // ── LOAD GLB ──
     const group = new THREE.Group();
     scene.add(group);
 
-    // Rotation: Unicorn Studio Y:43 means ~43° offset, Speed 50
-    // We'll rotate continuously on Y axis
     let rotY = 0;
     let modelLoaded = false;
 
@@ -155,13 +135,13 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
       (gltf) => {
         const model = gltf.scene;
 
-        // Apply matcap to all meshes
+        // Apply standard material to all meshes
         model.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            mesh.material = matcapMat;
-            mesh.castShadow = false;
-            mesh.receiveShadow = false;
+            mesh.material = material;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
           }
         });
 
@@ -173,7 +153,6 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
         const scale = 2.2 / maxDim;
         model.scale.setScalar(scale);
         model.position.sub(center.multiplyScalar(scale));
-        // Shift up slightly so base is near bottom
         model.position.y -= size.y * scale * 0.05;
 
         group.add(model);
@@ -182,7 +161,7 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
       undefined,
       (err) => {
         console.error("GLB load error:", err);
-        // Fallback: use LatheGeometry statue shape
+        // Fallback: LatheGeometry
         const points: THREE.Vector2[] = [];
         const profile = [
           [0.0, -1.0], [0.15, -0.95], [0.18, -0.7], [0.16, -0.5],
@@ -192,8 +171,9 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
         ];
         for (const [x, y] of profile) points.push(new THREE.Vector2(x, y));
         const geo = new THREE.LatheGeometry(points, 32);
-        const mesh = new THREE.Mesh(geo, matcapMat);
+        const mesh = new THREE.Mesh(geo, material);
         mesh.scale.set(1, 1.5, 1);
+        mesh.castShadow = true;
         group.add(mesh);
         modelLoaded = true;
       }
@@ -202,13 +182,11 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     // ── ANIMATE ──
     let animId: number;
     let lastTime = 0;
-
-    // Unicorn Studio: Speed 50, Axis Y:43 → ~0.5 rad/s Y rotation
-    const ROT_SPEED = 0.004; // radians per frame at 60fps
+    const ROT_SPEED = 0.004;
 
     const animate = (time: number) => {
       animId = requestAnimationFrame(animate);
-      const dt = Math.min((time - lastTime) / 16.67, 3); // normalized to 60fps
+      const dt = Math.min((time - lastTime) / 16.67, 3);
       lastTime = time;
 
       if (modelLoaded) {
@@ -243,8 +221,7 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
-      matcapTex.dispose();
-      matcapMat.dispose();
+      material.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }

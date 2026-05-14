@@ -1,19 +1,12 @@
 /**
- * PixelDotGrid — Glyph Dither Waffle
+ * PixelDotGrid — ASCII 글라스 타일
  *
- * Unicorn Studio 설정값:
- *   Preset: Waffle
- *   Scale: 69  → cell size proportional to viewport
- *   Gamma: 44  → contrast/threshold for brightness mapping
- *   Mix: 100
- *   Color mode: Texture (samples 3D render colors)
- *   Shape: 46.6×46.7%, Position X:50 Y:65.4
- *
- * 동작:
- *   - latestRenderCanvas(ThinkerModel offscreen)를 매 프레임 샘플링
- *   - 각 셀의 밝기(brightness)에 따라 사각형 크기 결정
- *   - 어두운 영역 → 큰 사각형, 밝은 영역 → 작은 점
- *   - 색상은 해당 셀의 텍스처 색상 사용
+ * 특징:
+ *   - 반투명 유리 질감 타일 (배경색 비침, 테두리 하이라이트)
+ *   - 각 타일 안에 ASCII 문자 표시 (밝기에 따라 .,:;+*#@)
+ *   - 동상 오프스크린 렌더를 샘플링하여 밝기/색상 결정
+ *   - 동상 앞에 배치 (z-index 상위)
+ *   - 타일이 동상 회전에 따라 실시간 업데이트
  */
 
 import { useEffect, useRef } from 'react';
@@ -23,6 +16,10 @@ interface PixelDotGridProps {
   className?: string;
   style?: React.CSSProperties;
 }
+
+// ASCII ramp: dark → light (밝을수록 복잡한 문자)
+const ASCII_RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$';
+const ASCII_LEN = ASCII_RAMP.length;
 
 export default function PixelDotGrid({ className, style }: PixelDotGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,7 +49,7 @@ export default function PixelDotGrid({ className, style }: PixelDotGridProps) {
     const ro = new ResizeObserver(() => resize());
     ro.observe(canvas);
 
-    // Offscreen sampling canvas (low-res for performance)
+    // Offscreen sampling canvas
     const samplerCanvas = document.createElement('canvas');
     const samplerCtx = samplerCanvas.getContext('2d', { willReadFrequently: true })!;
 
@@ -61,17 +58,15 @@ export default function PixelDotGrid({ className, style }: PixelDotGridProps) {
 
       ctx.clearRect(0, 0, W, H);
 
-      // ── CELL SIZE ──
-      // Unicorn Studio Scale 69 on 1000px wide ≈ 14px cells
-      const CELL = Math.max(10, Math.round(W / 70));
+      // ── CELL SIZE: 18px for readable ASCII chars ──
+      const CELL = Math.max(14, Math.round(W / 55));
       const COLS = Math.ceil(W / CELL) + 1;
       const ROWS = Math.ceil(H / CELL) + 1;
 
-      // ── SAMPLE 3D RENDER (every ~33ms = 30fps) ──
+      // ── SAMPLE 3D RENDER every ~33ms ──
       const src = latestRenderCanvas;
       if (src && src.width > 0 && src.height > 0 && timestamp - lastSampleTime.current > 33) {
         lastSampleTime.current = timestamp;
-        // Sample at grid resolution for performance
         samplerCanvas.width = COLS;
         samplerCanvas.height = ROWS;
         samplerCtx.clearRect(0, 0, COLS, ROWS);
@@ -86,13 +81,11 @@ export default function PixelDotGrid({ className, style }: PixelDotGridProps) {
 
       const cache = cachedImageData.current;
 
-      // Gamma 44 → pow exponent
-      const GAMMA_EXP = 1.0 / (44 / 100 * 2.0 + 0.3); // ≈ 1.14
-
       for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
           let brightness = 0;
-          let r = 40, g = 40, b = 28;
+          let r = 200, g = 200, b = 180;
+          let alpha = 0;
           let hasModel = false;
 
           if (cache) {
@@ -102,42 +95,79 @@ export default function PixelDotGrid({ className, style }: PixelDotGridProps) {
             const pb = cache.data.data[idx + 2];
             const pa = cache.data.data[idx + 3];
 
-            if (pa > 10) {
+            if (pa > 8) {
               hasModel = true;
               r = pr; g = pg; b = pb;
-              const lum = (0.299 * pr + 0.587 * pg + 0.114 * pb) / 255;
-              // Waffle: dark = large square (inverted)
-              brightness = Math.pow(Math.max(0.001, 1.0 - lum), GAMMA_EXP);
+              brightness = (0.299 * pr + 0.587 * pg + 0.114 * pb) / 255;
             }
           }
 
-          if (!hasModel) {
-            // Background: tiny uniform dots
-            brightness = 0.12;
-            r = 50; g = 50; b = 38;
+          const cx = col * CELL;
+          const cy = row * CELL;
+          const pad = 1.5; // gap between tiles
+
+          if (hasModel) {
+            // ── GLASS TILE (동상 영역) ──
+            // 배경색 #C8C8B6를 기반으로 반투명 유리 효과
+            const bgR = 200, bgG = 200, bgB = 182; // #C8C8B6
+
+            // 타일 기본 색: 배경색 + 모델 색상 혼합 (반투명)
+            const mixR = Math.round(bgR * 0.6 + r * 0.4);
+            const mixG = Math.round(bgG * 0.6 + g * 0.4);
+            const mixB = Math.round(bgB * 0.6 + b * 0.4);
+            const tileAlpha = 0.45 + brightness * 0.25;
+
+            // 1. 반투명 유리 기반 레이어
+            ctx.fillStyle = `rgba(${mixR},${mixG},${mixB},${tileAlpha})`;
+            ctx.fillRect(cx + pad, cy + pad, CELL - pad * 2, CELL - pad * 2);
+
+            // 2. 상단 하이라이트 (유리 반사 - 더 강하게)
+            const hlGrad = ctx.createLinearGradient(cx + pad, cy + pad, cx + pad, cy + CELL * 0.55);
+            hlGrad.addColorStop(0, `rgba(255,255,255,0.70)`);
+            hlGrad.addColorStop(0.4, `rgba(255,255,255,0.25)`);
+            hlGrad.addColorStop(1, `rgba(255,255,255,0)`);
+            ctx.fillStyle = hlGrad;
+            ctx.fillRect(cx + pad, cy + pad, CELL - pad * 2, CELL * 0.55);
+
+            // 3. 좌측 엣지 하이라이트 (유리 두께감)
+            ctx.fillStyle = `rgba(255,255,255,0.45)`;
+            ctx.fillRect(cx + pad, cy + pad, 2, CELL - pad * 2);
+
+            // 4. 하단 그림자 (유리 깊이감)
+            ctx.fillStyle = `rgba(0,0,0,0.12)`;
+            ctx.fillRect(cx + pad, cy + CELL - pad - 3, CELL - pad * 2, 3);
+
+            // 5. 테두리 (얇은 흰색 + 어두운 테두리)
+            ctx.strokeStyle = `rgba(255,255,255,0.55)`;
+            ctx.lineWidth = 0.8;
+            ctx.strokeRect(cx + pad + 0.4, cy + pad + 0.4, CELL - pad * 2 - 0.8, CELL - pad * 2 - 0.8);
+
+            // 6. ASCII 문자 (밝기에 따라 문자 선택)
+            const charIdx = Math.floor(brightness * (ASCII_LEN - 1));
+            const char = ASCII_RAMP[charIdx];
+            if (char && char !== ' ') {
+              const fontSize = Math.max(7, CELL * 0.50);
+              ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              // 어두운 타일 → 밝은 텍스트, 밝은 타일 → 어두운 텍스트
+              if (brightness < 0.4) {
+                ctx.fillStyle = `rgba(220,220,200,0.85)`;
+              } else {
+                ctx.fillStyle = `rgba(30,30,20,0.75)`;
+              }
+              ctx.fillText(char, cx + CELL / 2, cy + CELL / 2);
+            }
+
+          } else {
+            // ── BACKGROUND DOTS (동상 밖 영역) ──
+            // 작은 점만 표시
+            const dotSize = CELL * 0.08;
+            const dotX = cx + CELL / 2 - dotSize / 2;
+            const dotY = cy + CELL / 2 - dotSize / 2;
+            ctx.fillStyle = `rgba(50,50,38,0.22)`;
+            ctx.fillRect(dotX, dotY, dotSize, dotSize);
           }
-
-          // ── SQUARE SIZE ──
-          const maxSz = CELL * 0.90;
-          const minSz = CELL * 0.06;
-          const sz = minSz + brightness * (maxSz - minSz);
-
-          if (sz < 0.8) continue;
-
-          const cx = col * CELL + (CELL - sz) * 0.5;
-          const cy = row * CELL + (CELL - sz) * 0.5;
-
-          // Clamp colors
-          const cr = Math.max(0, Math.min(255, r));
-          const cg = Math.max(0, Math.min(255, g));
-          const cb = Math.max(0, Math.min(255, b));
-
-          const alpha = hasModel
-            ? Math.min(1, 0.45 + brightness * 0.50)
-            : 0.28;
-
-          ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha})`;
-          ctx.fillRect(cx, cy, sz, sz);
         }
       }
 

@@ -177,32 +177,32 @@ export default function Landing() {
             pointerEvents: 'none',
           }}
         >
-          {/* Glyph Dither: behind model, extends 30% beyond container edges */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '20%',
-              left: '-15%',
-              width: '130%',
-              height: '60%',
-              zIndex: 1,
-              pointerEvents: 'none',
-            }}
-          >
-            <PixelDotGrid
-              className="w-full h-full"
-            />
-          </div>
-          {/* 3D Model: above dither (zIndex 2) */}
+          {/* 3D Model: behind glass tiles (zIndex 1) */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
-              zIndex: 2,
+              zIndex: 1,
               pointerEvents: 'none',
             }}
           >
             <ThinkerModel
+              className="w-full h-full"
+            />
+          </div>
+          {/* ASCII Glass Tiles: IN FRONT of model (zIndex 2), extends beyond container */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '18%',
+              left: '-18%',
+              width: '136%',
+              height: '64%',
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          >
+            <PixelDotGrid
               className="w-full h-full"
             />
           </div>
