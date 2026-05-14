@@ -191,8 +191,6 @@ export default function Landing() {
           >
             <PixelDotGrid
               className="w-full h-full"
-              mouseX={mouse.x}
-              mouseY={mouse.y}
             />
           </div>
           {/* 3D Model: above dither (zIndex 2) */}
@@ -206,8 +204,6 @@ export default function Landing() {
           >
             <ThinkerModel
               className="w-full h-full"
-              mouseX={mouse.x}
-              mouseY={mouse.y}
             />
           </div>
         </div>
