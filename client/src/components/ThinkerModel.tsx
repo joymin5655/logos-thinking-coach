@@ -15,6 +15,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 // Expose offscreen canvas for PixelDotGrid sampling
 export let latestRenderCanvas: HTMLCanvasElement | null = null;
@@ -136,6 +137,7 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     let modelLoaded = false;
 
     const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
     loader.load(
       GLB_URL,
       (gltf) => {
