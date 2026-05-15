@@ -232,6 +232,30 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             </span>
           </div>
 
+          {/* 이메일 — 우측 고정 (PITCH 15) */}
+          <a
+            href="mailto:sbm8011@gmail.com"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 20px',
+              flexShrink: 0,
+              borderLeft: `1px solid ${CREAM_DIM}`,
+              height: '100%',
+              fontFamily: "var(--font-mono)",
+              fontSize: '9px',
+              letterSpacing: '0.12em',
+              color: CREAM_MID,
+              textDecoration: 'none',
+              transition: 'color 0.18s',
+              order: 2,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = ACCENT; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = CREAM_MID; }}
+          >
+            sbm8011@gmail.com
+          </a>
+
           {/* 마퀴 — 중앙 flex 1, 양쪽 페이드 마스크 */}
           <div
             style={{
