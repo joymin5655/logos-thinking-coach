@@ -29,6 +29,14 @@ const SCENARIOS = [
   },
 ];
 
+// Market 4 stats (PITCH 8)
+const MARKET_STATS = [
+  { value: '404조원',   label: '글로벌 에듀테크 시장',    sub: '2025년 규모',           color: SEMANTIC_DARK.draw },
+  { value: '연 45% ↑',  label: 'AI 교육 시장 성장률',     sub: '2030년 전망',           color: SEMANTIC_DARK.warning },
+  { value: '29.2조원',  label: '국내 사교육 시장',        sub: '2024년 규모',           color: SEMANTIC_DARK.info },
+  { value: '#1',        label: '분석적 사고',             sub: 'WEF 핵심 역량',          color: SEMANTIC_DARK.win },
+];
+
 // Problem — 3 인용 (PITCH 3 / GRANT Q2)
 const CITATIONS = [
   {
@@ -115,6 +123,26 @@ export default function About() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* MARKET — 4 stats (PITCH 8) */}
+          <div style={{ marginBottom: '4rem' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '1rem' }}>Market Opportunity</div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.4vw, 1.8rem)', letterSpacing: '-0.02em', marginBottom: '2rem', color: BLACK }}>
+              구조적으로 커지는 수요
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1px', backgroundColor: 'rgba(10,10,10,0.15)' }}>
+              {MARKET_STATS.map((m) => (
+                <div key={m.label} style={{ padding: '1.5rem 1.25rem', backgroundColor: '#ffffff70' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.28em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '0.75rem' }}>{m.sub}</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)', color: m.color, letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '0.4rem' }}>{m.value}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: BLACK, opacity: 0.7, letterSpacing: '0.02em', lineHeight: 1.4 }}>{m.label}</div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.7, color: BLACK, opacity: 0.55, marginTop: '1rem', maxWidth: '720px' }}>
+              국내에 B2C 대상 소크라테스형 AI 서비스는 현재 전무합니다. LOGOS가 선점할 수 있는 완전한 공백 시장입니다.
+            </p>
           </div>
 
           {/* FOUNDER STORY */}
