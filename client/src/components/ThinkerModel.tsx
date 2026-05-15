@@ -19,7 +19,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // Expose offscreen canvas for PixelDotGrid sampling
 export let latestRenderCanvas: HTMLCanvasElement | null = null;
 
-const GLB_URL = "/template-storage/thinker_meshy_7020fc79.glb";
+const GLB_URL = "/thinker.glb";
 
 // ── COMPONENT ──────────────────────────────────────────────────────────────
 interface ThinkerModelProps {

@@ -28,6 +28,8 @@ interface NavItem {
   label: string;
   labelEn: string;
   icon: React.ReactNode;
+  /** Spec의 Session 1/2/3 인덱스 (3 코어 세션만 표기) */
+  session?: '01' | '02' | '03';
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -42,13 +44,38 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    path: '/dashboard/argue',
+    label: '오늘의 논증',
+    labelEn: 'Daily Argue',
+    session: '01',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M5 8H11M8 5V11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     path: '/dashboard/session',
-    label: '씽킹 세션',
-    labelEn: 'Session',
+    label: '소크라테스 코칭',
+    labelEn: 'Coaching',
+    session: '02',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
         <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
         <path d="M8 5V8L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    path: '/dashboard/arena',
+    label: '토론 아레나',
+    labelEn: 'Arena',
+    session: '03',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <path d="M3 13L8 3L13 13" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+        <path d="M5.5 9H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -99,7 +126,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
   return (
     <div
       className="flex h-screen overflow-hidden"
-      style={{ backgroundColor: BLACK, fontFamily: "'Space Mono', monospace" }}
+      style={{ backgroundColor: BLACK, fontFamily: "var(--font-mono)" }}
     >
       {/* ── Sidebar ── */}
       <aside
@@ -111,20 +138,20 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
           borderRight: `1px solid ${CREAM_DIM}`,
         }}
       >
-        {/* Logo */}
+        {/* Logo — height 60px (top bar와 정렬) */}
         <div
-          className="flex items-center gap-3 px-4 py-4"
-          style={{ borderBottom: `1px solid ${CREAM_DIM}` }}
+          className="flex items-center gap-3 px-4"
+          style={{ height: 60, borderBottom: `1px solid ${CREAM_DIM}`, boxSizing: 'border-box' }}
         >
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-75 transition-opacity"
           >
-            <img src="/template-storage/logos-icon-cream_2342d216.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+            <img src="/logo.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
             {!collapsed && (
               <span
                 style={{
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontWeight: 700,
                   fontSize: '11px',
                   letterSpacing: '0.22em',
@@ -181,20 +208,28 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               >
                 <span className="shrink-0">{item.icon}</span>
                 {!collapsed && (
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontFamily: "'Space Mono', monospace",
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: 6,
+                        fontFamily: "var(--font-mono)",
                         fontSize: '10px',
                         fontWeight: 700,
                         letterSpacing: '0.06em',
                       }}
                     >
-                      {item.label}
+                      {item.session && (
+                        <span style={{ fontSize: '7px', fontWeight: 400, letterSpacing: '0.2em', opacity: 0.5 }}>
+                          {item.session}
+                        </span>
+                      )}
+                      <span>{item.label}</span>
                     </div>
                     <div
                       style={{
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: "var(--font-mono)",
                         fontSize: '7px',
                         letterSpacing: '0.22em',
                         textTransform: 'uppercase',
@@ -223,7 +258,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 backgroundColor: 'transparent',
                 border: `1px solid ${CREAM_DIM}`,
                 color: CREAM_MID,
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: '8px',
               }}
             >
@@ -233,7 +268,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               <div>
                 <div
                   style={{
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: '9px',
                     fontWeight: 700,
                     color: CREAM_MID,
@@ -244,7 +279,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 </div>
                 <div
                   style={{
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: '7px',
                     letterSpacing: '0.15em',
                     textTransform: 'uppercase',
@@ -269,8 +304,10 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
         {/* Top bar */}
         {(title || titleEn) && (
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-8 py-4"
+            className="sticky top-0 z-10 flex items-center justify-between px-8"
             style={{
+              height: 60,
+              boxSizing: 'border-box',
               backgroundColor: NEAR_BK,
               borderBottom: `1px solid ${CREAM_DIM}`,
             }}
@@ -279,13 +316,14 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               {titleEn && (
                 <div
                   style={{
-                    fontFamily: "'Space Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: '7px',
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
                     color: CREAM_MID,
                     opacity: 0.45,
-                    marginBottom: '3px',
+                    marginBottom: '2px',
+                    lineHeight: 1,
                   }}
                 >
                   {titleEn}
@@ -294,11 +332,12 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               {title && (
                 <h1
                   style={{
-                    fontFamily: "'Source Serif 4', Georgia, serif",
+                    fontFamily: "var(--font-serif)",
                     fontWeight: 600,
-                    fontSize: '18px',
+                    fontSize: '16px',
                     color: CREAM,
                     letterSpacing: '-0.01em',
+                    lineHeight: 1.15,
                   }}
                 >
                   {title}
@@ -308,7 +347,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             <div className="flex items-center gap-3">
               <button
                 style={{
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: '8px',
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
@@ -329,7 +368,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             </div>
           </div>
         )}
-        <div className="p-8">
+        <div className="p-6">
           {children}
         </div>
       </main>

@@ -10,6 +10,7 @@ import {
   PolarGrid, PolarAngleAxis,
 } from 'recharts';
 import { useState } from 'react';
+import { SEMANTIC, scoreColor } from '@/lib/colors';
 
 const CREAM      = '#F0EBE0';
 const CREAM_MID  = 'rgba(240,235,224,0.55)';
@@ -46,7 +47,7 @@ const RADAR_DATA = [
 const FEEDBACK = [
   {
     type: '강점',
-    color: 'rgba(240,235,224,0.9)',
+    color: SEMANTIC.win,
     items: [
       '논리 구조가 명확하게 발전하고 있습니다.',
       '근거 제시 능력이 지난 주 대비 12% 향상되었습니다.',
@@ -54,7 +55,7 @@ const FEEDBACK = [
   },
   {
     type: '개선 포인트',
-    color: 'rgba(240,235,224,0.5)',
+    color: SEMANTIC.warning,
     items: [
       '일관성 유지에 더 집중해보세요. 중간에 전제가 바뀌는 경향이 있습니다.',
       '반론을 적극적으로 고려하면 사고 깊이가 더 높아질 수 있습니다.',
@@ -76,35 +77,35 @@ export default function Analytics() {
     borderRadius: 0,
     color: CREAM,
     fontSize: 10,
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--font-mono)",
   };
 
-  const labelStyle = { fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '8px' };
-  const headStyle  = { fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '20px', fontWeight: 600, color: CREAM, marginBottom: '4px' };
+  const labelStyle = { fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '8px' };
+  const headStyle  = { fontFamily: "var(--font-serif)", fontSize: '26px', fontWeight: 600, color: CREAM, marginBottom: '4px' };
 
   return (
     <DashboardLayout title="논리력 분석" titleEn="Analytics">
       {/* Header Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
         {[
-          { label: '현재 스코어', labelEn: 'Current',  value: '82', change: '+8',  positive: true },
-          { label: '최고 스코어', labelEn: 'Best',     value: '82', change: '',    positive: true },
-          { label: '평균 스코어', labelEn: 'Average',  value: '72', change: '+4',  positive: true },
-          { label: '총 세션',    labelEn: 'Sessions', value: '24', change: '',    positive: true },
+          { label: '현재 스코어', labelEn: 'Current',  value: '82', change: '+8',  color: scoreColor(82) },
+          { label: '최고 스코어', labelEn: 'Best',     value: '82', change: '',    color: SEMANTIC.insight },
+          { label: '평균 스코어', labelEn: 'Average',  value: '72', change: '+4',  color: scoreColor(72) },
+          { label: '총 세션',    labelEn: 'Sessions', value: '24', change: '',    color: SEMANTIC.info },
         ].map((stat) => (
           <div key={stat.label} className="p-5" style={cardStyle}>
             <div style={labelStyle}>{stat.labelEn}</div>
             <div className="flex items-baseline gap-2">
-              <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '28px', fontWeight: 600, color: CREAM }}>
+              <span style={{ fontFamily: "var(--font-serif)", fontSize: '34px', fontWeight: 600, color: stat.color }}>
                 {stat.value}
               </span>
               {stat.change && (
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', fontWeight: 700, color: CREAM_MID }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, color: SEMANTIC.win }}>
                   {stat.change}
                 </span>
               )}
             </div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, marginTop: '4px' }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID, marginTop: '4px' }}>
               {stat.label}
             </div>
           </div>
@@ -118,8 +119,8 @@ export default function Analytics() {
             key={p}
             onClick={() => setPeriod(p)}
             style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '8px',
+              fontFamily: "var(--font-mono)",
+              fontSize: '11px',
               letterSpacing: '0.2em',
               textTransform: 'uppercase' as const,
               padding: '7px 18px',
@@ -144,20 +145,27 @@ export default function Analytics() {
             {period === 'weekly' ? (
               <LineChart data={WEEKLY_DATA}>
                 <CartesianGrid stroke={CREAM_DIM} strokeDasharray="3 3" />
-                <XAxis dataKey="day" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "'Space Mono', monospace" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[50, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "'Space Mono', monospace" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[50, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="score"       stroke={CREAM}                   strokeWidth={1.5} dot={{ fill: CREAM, r: 2.5, strokeWidth: 0 }} name="종합" />
-                <Line type="monotone" dataKey="logic"       stroke="rgba(240,235,224,0.4)"   strokeWidth={1}   strokeDasharray="4 2" dot={false} name="논리구조" />
-                <Line type="monotone" dataKey="consistency" stroke="rgba(240,235,224,0.25)"  strokeWidth={1}   strokeDasharray="4 2" dot={false} name="일관성" />
+                <Line type="monotone" dataKey="score"       stroke={SEMANTIC.draw}    strokeWidth={1.8} dot={{ fill: SEMANTIC.draw, r: 2.5, strokeWidth: 0 }} name="종합" />
+                <Line type="monotone" dataKey="logic"       stroke={SEMANTIC.win}     strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="논리구조" />
+                <Line type="monotone" dataKey="consistency" stroke={SEMANTIC.info}    strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="일관성" />
+                <Line type="monotone" dataKey="evidence"    stroke={SEMANTIC.warning} strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="근거" />
               </LineChart>
             ) : (
               <BarChart data={MONTHLY_DATA}>
                 <CartesianGrid stroke={CREAM_DIM} strokeDasharray="3 3" />
-                <XAxis dataKey="week" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "'Space Mono', monospace" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[40, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "'Space Mono', monospace" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[40, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="score" fill={CREAM} fillOpacity={0.7} radius={[1, 1, 0, 0]} name="스코어" />
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stopColor={SEMANTIC.insight} />
+                    <stop offset="100%" stopColor={SEMANTIC.draw} />
+                  </linearGradient>
+                </defs>
+                <Bar dataKey="score" fill="url(#barFill)" radius={[1, 1, 0, 0]} name="스코어" />
               </BarChart>
             )}
           </ResponsiveContainer>
@@ -174,8 +182,8 @@ export default function Analytics() {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={RADAR_DATA}>
                 <PolarGrid stroke={CREAM_DIM} />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "'Space Mono', monospace" }} />
-                <Radar name="Score" dataKey="A" stroke={CREAM} fill={CREAM} fillOpacity={0.08} strokeWidth={1.2} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} />
+                <Radar name="Score" dataKey="A" stroke={SEMANTIC.draw} fill={SEMANTIC.draw} fillOpacity={0.18} strokeWidth={1.5} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -188,14 +196,14 @@ export default function Analytics() {
           <div className="space-y-6" style={{ marginTop: '16px' }}>
             {FEEDBACK.map((fb) => (
               <div key={fb.type}>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: fb.color, fontWeight: 700, marginBottom: '10px' }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: fb.color, fontWeight: 700, marginBottom: '10px' }}>
                   {fb.type}
                 </div>
                 <ul className="space-y-2">
                   {fb.items.map((item, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span style={{ color: CREAM_MID, marginTop: 1, flexShrink: 0 }}>—</span>
-                      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: CREAM_MID, lineHeight: 1.8 }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, lineHeight: 1.8 }}>
                         {item}
                       </span>
                     </li>

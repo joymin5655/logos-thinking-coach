@@ -51,6 +51,12 @@
 :root {
   --radius: 0.25rem;
 
+  /* Font stacks — Pretendard included so Korean glyphs render consistently
+   * whether inline fontFamily or body cascade is used. */
+  --font-mono: 'Space Mono', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
+  --font-serif: 'Source Serif 4', 'Pretendard Variable', 'Pretendard', Georgia, serif;
+  --font-display: 'Outfit', 'Pretendard Variable', 'Pretendard', sans-serif;
+
   /* LOGOS Brand Colors — Exact Unicorn Studio Values */
   --logos-sage: #C8C8B6;
   --logos-dark: #262618;
@@ -134,9 +140,31 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Space Mono', 'Outfit', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
+    font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  /* Global UI scale — text/icons +30%. Statue subtree opts out via .ui-scale-reset. */
+  :root {
+    --ui-scale: 1.3;
+  }
+  #root {
+    zoom: var(--ui-scale);
+  }
+  .ui-scale-reset {
+    zoom: calc(1 / var(--ui-scale));
+  }
+  /* Fit one actual viewport while zoom is applied to ancestor. */
+  .fit-viewport {
+    height: calc(100dvh / var(--ui-scale));
+  }
+  @keyframes logos-marquee-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

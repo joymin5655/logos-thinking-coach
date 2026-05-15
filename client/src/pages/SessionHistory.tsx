@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
+import { scoreColor } from '@/lib/colors';
 
 const SESSIONS = [
   {
@@ -100,7 +101,7 @@ export default function SessionHistory() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="세션 검색..."
             className="flex-1 bg-transparent outline-none"
-            style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: CREAM }}
+            style={{ fontFamily: "var(--font-mono)", fontSize: '14px', color: CREAM }}
           />
           {searchQuery && (
             <button
@@ -119,8 +120,8 @@ export default function SessionHistory() {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '7px',
+                fontFamily: "var(--font-mono)",
+                fontSize: '11px',
                 letterSpacing: '0.12em',
                 padding: '4px 10px',
                 backgroundColor: selectedTag === tag ? CREAM : 'transparent',
@@ -137,7 +138,7 @@ export default function SessionHistory() {
       </div>
 
       {/* Session Count */}
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '16px' }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '16px' }}>
         {filtered.length}개의 세션
       </div>
 
@@ -152,24 +153,24 @@ export default function SessionHistory() {
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <div className="flex items-start gap-6">
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: CREAM_MID, width: '20px', flexShrink: 0, marginTop: '2px' }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, width: '20px', flexShrink: 0, marginTop: '2px' }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', fontWeight: 700, color: CREAM, marginBottom: '5px' }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: '14px', fontWeight: 700, color: CREAM, marginBottom: '5px' }}>
                     {session.topic}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>{session.date}</span>
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: CREAM_MID }}>{session.duration}</span>
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.1em', padding: '2px 6px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID }}>{session.date}</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID }}>{session.duration}</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.1em', padding: '2px 6px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
                       {session.level} 단계
                     </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-4 shrink-0 ml-4">
-                <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: '20px', fontWeight: 600, color: CREAM }}>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: '28px', fontWeight: 600, color: scoreColor(session.score) }}>
                   {session.score}
                 </div>
                 <svg
@@ -183,19 +184,19 @@ export default function SessionHistory() {
 
             {expandedId === session.id && (
               <div className="pb-6 pl-11">
-                <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '14px' }}>
+                <p style={{ fontFamily: "var(--font-mono)", fontSize: '13px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '14px' }}>
                   {session.summary}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {session.tags.map((tag) => (
-                    <span key={tag} style={{ fontFamily: "'Space Mono', monospace", fontSize: '6px', letterSpacing: '0.1em', padding: '3px 8px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
+                    <span key={tag} style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.1em', padding: '3px 8px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
                       #{tag}
                     </span>
                   ))}
                 </div>
                 <div className="flex gap-4">
                   <button
-                    style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}
+                    style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}
                     onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
                     onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; }}
                     onClick={() => navigate('/dashboard/analytics')}
@@ -203,7 +204,7 @@ export default function SessionHistory() {
                     분석 보기 →
                   </button>
                   <button
-                    style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.35 }}
+                    style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.35 }}
                     onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
                     onMouseLeave={e => { e.currentTarget.style.opacity = '0.35'; }}
                   >
