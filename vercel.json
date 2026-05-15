@@ -6,7 +6,7 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/((?!assets/|favicon|logo|robots|sitemap).*)", "destination": "/index.html" }
+    { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
     {
