@@ -29,6 +29,22 @@ const SCENARIOS = [
   },
 ];
 
+// Roadmap 5단계 (PITCH 12)
+const ROADMAP = [
+  { q: '2026 Q2', phase: '기반 정비',     items: ['프롬프트 설계', 'Recovery Logic', '프로토타입'],                         color: SEMANTIC_DARK.lose },
+  { q: '2026 Q3', phase: 'MVP 출시',     items: ['3개 세션 론칭', '초기 100명',     '완주율 측정'],                        color: SEMANTIC_DARK.warning },
+  { q: '2026 Q4', phase: '검증',         items: ['완주율 60%+',  '리텐션 40%+',    '유료 전환 실험'],                     color: SEMANTIC_DARK.draw },
+  { q: '2027 Q1', phase: '성장',         items: ['유저 1,000명', 'User vs User',   'MRR 확인'],                            color: SEMANTIC_DARK.info },
+  { q: '2027 Q2+', phase: '확장',        items: ['모바일 앱',    'B2B Team',       '투자 유치 준비'],                      color: SEMANTIC_DARK.win },
+];
+
+// Team 3인 (PITCH 13)
+const TEAM = [
+  { role: '대표 / 서비스 기획', en: 'Founder · Service Design',   focus: '에듀테크 비즈니스 설계', tag: 'Recovery Logic 설계 주도' },
+  { role: '프로덕트 기획',       en: 'Product Design',              focus: 'UX 및 사용자 경험 설계', tag: '세션 플로우 구조화' },
+  { role: '마케팅 기획',         en: 'Marketing / Growth',          focus: '커뮤니티 빌딩·그로스',   tag: '베타 유저 확보 전략' },
+];
+
 // Market 4 stats (PITCH 8)
 const MARKET_STATS = [
   { value: '404조원',   label: '글로벌 에듀테크 시장',    sub: '2025년 규모',           color: SEMANTIC_DARK.draw },
@@ -142,6 +158,51 @@ export default function About() {
             </div>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.7, color: BLACK, opacity: 0.55, marginTop: '1rem', maxWidth: '720px' }}>
               국내에 B2C 대상 소크라테스형 AI 서비스는 현재 전무합니다. LOGOS가 선점할 수 있는 완전한 공백 시장입니다.
+            </p>
+          </div>
+
+          {/* ROADMAP — 5 stages (PITCH 12) */}
+          <div style={{ marginBottom: '4rem' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '1rem' }}>Roadmap</div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.4vw, 1.8rem)', letterSpacing: '-0.02em', marginBottom: '2rem', color: BLACK }}>
+              2026 Q2부터 단계적 검증으로 확장합니다
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1px', backgroundColor: 'rgba(10,10,10,0.15)' }}>
+              {ROADMAP.map((r) => (
+                <div key={r.q} style={{ padding: '1.25rem 1rem', backgroundColor: '#ffffff70', borderTop: `2px solid ${r.color}` }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.22em', color: r.color, marginBottom: '0.4rem' }}>{r.q}</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: '15px', color: BLACK, marginBottom: '0.75rem', letterSpacing: '-0.005em' }}>{r.phase}</div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {r.items.map((it) => (
+                      <li key={it} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: BLACK, opacity: 0.7, lineHeight: 1.55, paddingLeft: '10px', position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 0, color: r.color }}>·</span>
+                        {it}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TEAM — 3인 (PITCH 13) */}
+          <div style={{ marginBottom: '4rem' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '1rem' }}>Team</div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.4vw, 1.8rem)', letterSpacing: '-0.02em', marginBottom: '2rem', color: BLACK }}>
+              왜 지금, 왜 이 팀인가
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              {TEAM.map((m, i) => (
+                <div key={m.role} style={{ padding: '1.5rem 1.25rem', backgroundColor: '#ffffff70', borderLeft: `2px solid ${[SEMANTIC_DARK.draw, SEMANTIC_DARK.info, SEMANTIC_DARK.win][i]}` }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.25em', textTransform: 'uppercase', color: [SEMANTIC_DARK.draw, SEMANTIC_DARK.info, SEMANTIC_DARK.win][i], fontWeight: 700, marginBottom: '0.4rem' }}>{m.en}</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: '15px', color: BLACK, marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>{m.role}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: BLACK, opacity: 0.7, lineHeight: 1.65, marginBottom: '0.4rem' }}>{m.focus}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: BLACK, opacity: 0.5, letterSpacing: '0.02em' }}>· {m.tag}</div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.7, color: BLACK, opacity: 0.55, marginTop: '1.25rem', maxWidth: '720px' }}>
+              현재 진행 중: Recovery Logic 핵심 알고리즘 설계 완료 · 소크라테스 프롬프트 프레임워크 초안 완성.
             </p>
           </div>
 
