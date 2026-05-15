@@ -153,6 +153,11 @@ export default function Argue() {
   if (phase === 'pick') {
     return (
       <DashboardLayout title="오늘의 논증" titleEn="Daily Argument">
+        <div className="mb-3">
+          <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 8, letterSpacing: '0.32em', textTransform: 'uppercase', color: SEMANTIC.draw, marginBottom: 4 }}>
+            Daily Practice · 매일 10-20분
+          </div>
+        </div>
         <div className="mb-8">
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: 12 }}>
             Today’s Topic · {topic.category}
@@ -192,7 +197,7 @@ export default function Argue() {
         </div>
 
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: CREAM_MID, letterSpacing: '0.1em', borderTop: `1px solid ${CREAM_DIM}`, paddingTop: 14 }}>
-          소요 시간 약 5분 · 라운드 {ROUNDS_TOTAL}회 · 스코어는 완료 후에 공개됩니다.
+          매일 10-20분 · 소크라테스 반문 {ROUNDS_TOTAL}라운드 · 최종 정리는 사용자가 직접 · 스코어는 완료 후에 공개됩니다.
         </div>
       </DashboardLayout>
     );

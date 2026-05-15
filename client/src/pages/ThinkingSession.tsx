@@ -307,8 +307,11 @@ export default function ThinkingSession() {
         <div style={{ display: 'flex', height: 'calc(100vh - 56px)', backgroundColor: C.black, overflow: 'hidden' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 56px', borderRight: `1px solid ${C.border}` }}>
             <div style={{ maxWidth: '480px' }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.5em', color: C.creamDim, marginBottom: '24px', textTransform: 'uppercase' as const }}>
-                SESSION COMPLETE
+              <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: '10px', letterSpacing: '0.4em', color: SEMANTIC.win, marginBottom: '8px', textTransform: 'uppercase' as const }}>
+                ✓ Conviction Reached
+              </div>
+              <div style={{ fontFamily: "var(--font-serif)", fontSize: '22px', fontWeight: 600, color: C.cream, lineHeight: 1.3, marginBottom: '28px', letterSpacing: '-0.01em' }}>
+                납득에 도달했습니다
               </div>
               <div style={{ fontFamily: "var(--font-serif)", fontSize: '80px', fontWeight: 600, color: scoreColor(78), lineHeight: 1, marginBottom: '4px' }}>78</div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', color: C.creamDim, marginBottom: '40px', textTransform: 'uppercase' as const }}>Logic Score</div>

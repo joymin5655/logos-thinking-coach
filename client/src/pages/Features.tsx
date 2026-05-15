@@ -32,9 +32,12 @@ export default function Features() {
             <div style={{ flex: 1, height: 1, backgroundColor: CREAM, opacity: 0.15 }} />
           </div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.42em', textTransform: 'uppercase', opacity: 0.32, marginBottom: '1rem', color: CREAM }}>Features</div>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 'clamp(1.8rem, 3.4vw, 2.8rem)', letterSpacing: '-0.02em', marginBottom: '2.5rem', maxWidth: '520px', color: CREAM }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 'clamp(1.8rem, 3.4vw, 2.8rem)', letterSpacing: '-0.02em', marginBottom: '1rem', maxWidth: '520px', color: CREAM }}>
             논리의 빈틈을<br />스스로 발견하다
           </h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', color: SEMANTIC.draw, fontWeight: 700, marginBottom: '2.5rem' }}>
+            · 3 sessions, one rule — AI는 질문만 합니다 ·
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', backgroundColor: CREAM_DIM }}>
             {FEATURES.map((f) => (
               <div key={f.title} style={{ padding: '2rem 1.75rem', backgroundColor: '#0F0F0F', borderTop: `2px solid ${f.color}` }}>
