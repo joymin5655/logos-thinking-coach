@@ -175,6 +175,10 @@ async function flushOnce(): Promise<boolean> {
     const chunk = todo.slice(i, i + BATCH).filter((e) => findRecord(store, e));
     if (!chunk.length) continue;
     const seen = new Map(chunk.map((e) => [e.id, versions.get(e.id) ?? 0]));
+    // versions는 탭마다 따로라, 다른 탭에서 바뀐 것은 보낸 내용과 지금 내용을 비교해 잡는다
+    const sent = new Map(chunk.map((e) => [e.id, JSON.stringify(findRecord(store, e))]));
+    const changed = (e: OutboxEntry) =>
+      (versions.get(e.id) ?? 0) !== seen.get(e.id) || JSON.stringify(findRecord(loadStore(), e)) !== sent.get(e.id);
     const rows = chunk.map((e) => toRow(e.kind, findRecord(store, e)!));
     const done = new Set<string>();
     const error = await upsertRows(client, rows);
@@ -191,12 +195,12 @@ async function flushOnce(): Promise<boolean> {
         } else failed = true;
       }
       if (failed) {
-        writeOutbox(readOutbox().filter((e) => !done.has(e.id) || (versions.get(e.id) ?? 0) !== seen.get(e.id)));
+        writeOutbox(readOutbox().filter((e) => !done.has(e.id) || changed(e)));
         return false; // 나머지는 그대로 둔다
       }
     }
     // 보내는 동안 또 바뀐 기록은 outbox에 남겨 다음 flush에서 다시 보낸다
-    writeOutbox(readOutbox().filter((e) => !done.has(e.id) || (versions.get(e.id) ?? 0) !== seen.get(e.id)));
+    writeOutbox(readOutbox().filter((e) => !done.has(e.id) || changed(e)));
   }
   return true;
 }

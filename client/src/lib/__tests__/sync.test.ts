@@ -12,12 +12,13 @@ const fake = vi.hoisted(() => {
   (globalThis as Record<string, unknown>).window = new EventTarget();
   (globalThis as Record<string, unknown>).document = { visibilityState: 'visible', addEventListener: () => {}, documentElement: {} };
   type Row = { id: string; kind: string; data: unknown };
-  const state = { rows: new Map<string, Row>(), failUpsert: false, upserts: [] as Row[][] };
+  const state = { rows: new Map<string, Row>(), failUpsert: false, upserts: [] as Row[][], onUpsert: null as null | (() => void) };
   const client = {
     from: () => ({
       upsert: async (rows: Row[]) => {
         if (state.failUpsert) return { error: { message: 'offline' } };
         state.upserts.push(rows);
+        state.onUpsert?.();
         rows.forEach((r) => state.rows.set(r.id, r));
         return { error: null };
       },
@@ -41,7 +42,7 @@ import {
   OUTBOX_KEY, flush, mergeRecords, onSignIn, pendingCount, pullAll, signOutFlow, toRow,
 } from '../sync';
 import {
-  addDiagnostic, clearLocal, emptyStore, loadStore, updateStore, upsertArena, upsertSession,
+  STORE_KEY, addDiagnostic, clearLocal, emptyStore, loadStore, updateStore, upsertArena, upsertSession,
   type ArenaRecord, type DiagnosticRecord, type Score, type SessionRecord,
 } from '../store';
 
@@ -62,6 +63,7 @@ beforeEach(() => {
   fake.state.rows.clear();
   fake.state.upserts.length = 0;
   fake.state.failUpsert = false;
+  fake.state.onUpsert = null;
   localStorage.removeItem(OUTBOX_KEY);
   clearLocal();
   vi.mocked(toast).mockClear();
@@ -176,6 +178,19 @@ describe('outbox', () => {
     expect(await flush()).toBe(true);
     expect(pendingCount()).toBe(0);
     expect([...fake.state.rows.keys()].sort()).toEqual(['a1', 's1']);
+  });
+  it('업로드 중 다른 탭이 같은 기록을 바꾸면 outbox에 남긴다', async () => {
+    await onSignIn('u1');
+    upsertSession(sess('s1'));
+    fake.state.onUpsert = () => {
+      // 다른 탭: 이 탭의 versions를 거치지 않고 저장소만 바뀐다
+      const raw = JSON.parse(localStorage.getItem(STORE_KEY)!);
+      raw.sessions[0].topic = 'other-tab';
+      localStorage.setItem(STORE_KEY, JSON.stringify(raw));
+      fake.state.onUpsert = null;
+    };
+    expect(await flush()).toBe(true);
+    expect(outbox().map((e) => e.id)).toEqual(['s1']);
   });
   it('1초 디바운스 뒤에 자동으로 보낸다', async () => {
     await onSignIn('u1');
