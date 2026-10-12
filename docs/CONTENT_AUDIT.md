@@ -29,7 +29,7 @@
 | A3 | "AI 시대, 답을 주지 않는 유일한 서비스" | △ | — | 영문 슬로건은 있으나 **한글 본문 부재** |
 | A4 | `<title>` / og:meta | ✅ | `client/index.html` | "LOGOS — 소크라테스 씽킹 코치" |
 | A5 | Q1 한 줄 (58자, "면접·발표에서 말문이…") | ❌ | — | 카피 어디에도 없음 |
-| A6 | `sbm8011@gmail.com` | ❌ | — | 푸터·About 모두 노출 X |
+| A6 | `contact@lo9os.org` | ❌ | — | 푸터·About 모두 노출 X |
 
 ## B. 문제 정의 (5)
 
@@ -159,7 +159,7 @@ PITCH 13 기반 — 3인 카드 (대표 / 프로덕트 / 마케팅)
 - **예상:** 40분
 
 ### P1-5. Footer 이메일 + Q1 한 줄
-- MarketingLayout 푸터에 `sbm8011@gmail.com` 추가
+- MarketingLayout 푸터에 `contact@lo9os.org` 추가
 - Landing 또는 About에 Q1 58자 핵심 카피 추가
 - **예상:** 15분
 

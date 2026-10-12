@@ -6,7 +6,7 @@ export const privacy = {
   draftNote: '이 문서는 법률 검토를 받기 전의 초안이에요. 검토 과정에서 내용이 바뀔 수 있어요.',
   effective: '시행일: 2026-10-13',
   contactLabel: '문의',
-  contactEmail: 'sbm8011@gmail.com',
+  contactEmail: 'contact@lo9os.org',
 
   s1Title: '1. 운영자와 문의처',
   s1p1: 'LOGOS(이하 "서비스")의 개인정보 처리자는 서비스 운영자예요. 개인정보와 관련한 문의, 열람·삭제 요청은 아래 이메일로 보내 주세요.',

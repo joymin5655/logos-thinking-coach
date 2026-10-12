@@ -257,7 +257,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
 
           {/* 이메일 — 우측 고정 (PITCH 15) */}
           <a
-            href="mailto:sbm8011@gmail.com"
+            href="mailto:contact@lo9os.org"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -276,7 +276,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             onMouseEnter={(e) => { e.currentTarget.style.color = ACCENT; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = FG_MID; }}
           >
-            sbm8011@gmail.com
+            contact@lo9os.org
           </a>
 
           {/* 마퀴 — 중앙 flex 1, 양쪽 페이드 마스크 */}

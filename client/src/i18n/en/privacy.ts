@@ -6,7 +6,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   draftNote: 'This document is a draft that has not yet been legally reviewed. It may change during review.',
   effective: 'Effective date: 2026-10-13',
   contactLabel: 'Contact',
-  contactEmail: 'sbm8011@gmail.com',
+  contactEmail: 'contact@lo9os.org',
 
   s1Title: '1. Controller and contact',
   s1p1: 'The controller of personal data for LOGOS ("the Service") is the Service operator. Send questions and access or deletion requests to the email address below.',
