@@ -11,7 +11,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
   TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, sans } from '@/components/logos-ui';
-import { coach, errorMessage, type Position } from '@/lib/api';
+import { coach, errorMessage, handleAuthError, type Position } from '@/lib/api';
 import { todaysTopic } from '@/lib/topics';
 import { computeStreak, newId, recordActivity, toISODate, upsertSession, loadStore, type SessionRecord, type Turn } from '@/lib/store';
 
@@ -85,7 +85,7 @@ export default function Argue() {
       history.pop();
     }
     try {
-      const res = await coach({ action: 'argue.turn', topic: topic.title, position, round: nextRound, history, message });
+      const res = await coach({ action: 'argue.turn', sid: base.id, topic: topic.title, position, round: nextRound, history, message });
       const latest = recRef.current;
       if (!latest || latest.id !== base.id) return;
       commit({
@@ -96,6 +96,7 @@ export default function Argue() {
       setRound(nextRound);
       setPhase((p) => (p === 'reason' ? 'argue' : p));
     } catch (e) {
+      if (handleAuthError(e, navigate)) return;
       setFailed({ error: errorMessage(e), message });
     } finally {
       setLoading(false);
@@ -119,8 +120,8 @@ export default function Argue() {
     commit({ ...cur, finalSummary: finalText });
     const latest = recRef.current!;
     const [before, after] = await Promise.allSettled([
-      latest.scoreBefore ? Promise.resolve(null) : coach({ action: 'score', text: latest.firstClaim ?? '', context: topic.title }),
-      latest.scoreAfter ? Promise.resolve(null) : coach({ action: 'score', text: finalText, context: topic.title }),
+      latest.scoreBefore ? Promise.resolve(null) : coach({ action: 'score', sid: latest.id, kind: 'argue', text: latest.firstClaim ?? '', context: topic.title }),
+      latest.scoreAfter ? Promise.resolve(null) : coach({ action: 'score', sid: latest.id, kind: 'argue', text: finalText, context: topic.title }),
     ]);
     const next: SessionRecord = { ...recRef.current! };
     const pick = (r: typeof before) => (r.status === 'fulfilled' ? r.value : null);
@@ -128,6 +129,11 @@ export default function Argue() {
     const a = pick(after);
     if (b) next.scoreBefore = { consistency: b.consistency, evidence: b.evidence, defense: b.defense, total: b.total, rationale: b.rationale };
     if (a) { next.scoreAfter = { consistency: a.consistency, evidence: a.evidence, defense: a.defense, total: a.total, rationale: a.rationale }; next.promptVersion = a.promptVersion; }
+    const authErr = [before, after].find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (authErr && handleAuthError(authErr.reason, navigate)) {
+      commit(next);
+      return;
+    }
     if (next.scoreBefore && next.scoreAfter) {
       next.completedAt = new Date().toISOString();
       next.stageReached = '통합';

@@ -2,30 +2,38 @@
  * DashboardLayout.tsx
  * LOGOS Design: 대시보드 레이아웃 — 랜딩페이지 팔레트 통일
  *
- * Palette (랜딩페이지와 동일):
- *   Sidebar BG  : #0A0A0A (BLACK)
- *   Main BG     : #111111 (NEAR BLACK)
- *   Text        : #F0EBE0 (CREAM)
- *   Text dim    : rgba(240,235,224,0.55) (CREAM_MID)
- *   Border      : rgba(240,235,224,0.15) (CREAM_DIM)
- *   Active      : #F0EBE0 (CREAM) border-left + bg tint
- *   Accent      : #C8C0A8 (ACCENT)
+ * 색은 모두 CSS 변수(index.css의 --l-*)라 라이트/다크를 따른다.
+ *   Sidebar BG  : --l-bg        Main BG : --l-panel
+ *   Text        : --l-fg        Text dim: --l-fg-mid
+ *   Border      : --l-border    Tint    : --l-faint
+ *   Accent      : --l-accent
  * Typography: Space Mono
  */
 import { useLocation } from 'wouter';
 import { useState } from 'react';
+import PrefsToggle from '@/components/PrefsToggle';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/lib/auth';
+import { usePending } from '@/lib/sync';
+import { useLocale, useT } from '@/i18n';
+import type { nav as NavDict } from '@/i18n/ko/nav';
 
-// ── 팔레트 (랜딩페이지와 동일) ──
-const BLACK    = '#0A0A0A';
-const NEAR_BK  = '#111111';
-const CREAM    = '#F0EBE0';
-const CREAM_MID = 'rgba(240,235,224,0.55)';
-const CREAM_DIM = 'rgba(240,235,224,0.15)';
-const ACCENT   = '#C8C0A8';
+// ── 팔레트 (값은 CSS 변수) ──
+const BLACK    = 'var(--l-bg)';
+const NEAR_BK  = 'var(--l-panel)';
+const CREAM    = 'var(--l-fg)';
+const CREAM_MID = 'var(--l-fg-mid)';
+const CREAM_DIM = 'var(--l-border)';
+const TINT     = 'var(--l-faint)';
+const ACCENT   = 'var(--l-accent)';
+const ON_CREAM = 'var(--l-on-fg)';
 
 interface NavItem {
   path: string;
-  label: string;
+  labelKey: Exclude<keyof typeof NavDict, 'newSession' | 'userMenu' | 'defaultName' | 'plan' | 'settings' | 'privacy' | 'admin' | 'signOut' | 'signIn' | 'pending' | 'collapse'>;
+  /** 한국어 화면에서만 보이는 영문 보조 표기(디자인 요소) */
   labelEn: string;
   icon: React.ReactNode;
   /** Spec의 Session 1/2/3 인덱스 (3 코어 세션만 표기) */
@@ -35,7 +43,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     path: '/dashboard',
-    label: '홈',
+    labelKey: 'home',
     labelEn: 'Home',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -45,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/diagnostic',
-    label: '3분 진단',
+    labelKey: 'diagnostic',
     labelEn: 'Diagnostic',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -56,7 +64,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/argue',
-    label: '오늘의 논증',
+    labelKey: 'argue',
     labelEn: 'Daily Argue',
     session: '01',
     icon: (
@@ -68,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/session',
-    label: '소크라테스 코칭',
+    labelKey: 'session',
     labelEn: 'Coaching',
     session: '02',
     icon: (
@@ -80,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/arena',
-    label: '토론 아레나',
+    labelKey: 'arena',
     labelEn: 'Arena',
     session: '03',
     icon: (
@@ -92,7 +100,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/analytics',
-    label: '논리력 분석',
+    labelKey: 'analytics',
     labelEn: 'Analytics',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -103,7 +111,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/history',
-    label: '세션 기록',
+    labelKey: 'history',
     labelEn: 'History',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -114,7 +122,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/dashboard/subscription',
-    label: '구독',
+    labelKey: 'subscription',
     labelEn: 'Subscription',
     icon: (
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -132,6 +140,15 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title, titleEn }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
+  const t = useT('nav');
+  const { locale } = useLocale();
+  const { user, isAdmin, signOut } = useAuth();
+  const pending = usePending();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const meta = (user?.user_metadata ?? {}) as { full_name?: string; name?: string; avatar_url?: string };
+  const name = meta.full_name || meta.name || user?.email?.split('@')[0] || t('defaultName');
+  const avatarUrl = meta.avatar_url;
+  const initial = name.slice(0, 1).toUpperCase();
   const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   return (
@@ -175,6 +192,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={t('collapse')}
             className="ml-auto transition-opacity"
             style={{ color: CREAM_MID, opacity: 0.4 }}
             onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
@@ -201,13 +219,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-150"
                 style={{
                   color: isActive ? CREAM : CREAM_MID,
-                  backgroundColor: isActive ? 'rgba(240,235,224,0.06)' : 'transparent',
+                  backgroundColor: isActive ? TINT : 'transparent',
                   borderLeft: isActive ? `2px solid ${CREAM}` : `2px solid transparent`,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.color = CREAM;
-                    e.currentTarget.style.backgroundColor = 'rgba(240,235,224,0.04)';
+                    e.currentTarget.style.backgroundColor = TINT;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -236,20 +254,22 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                           {item.session}
                         </span>
                       )}
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                     </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: '7px',
-                        letterSpacing: '0.22em',
-                        textTransform: 'uppercase',
-                        opacity: 0.35,
-                        marginTop: '1px',
-                      }}
-                    >
-                      {item.labelEn}
-                    </div>
+                    {locale === 'ko' && (
+                      <div
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: '7px',
+                          letterSpacing: '0.22em',
+                          textTransform: 'uppercase',
+                          opacity: 0.35,
+                          marginTop: '1px',
+                        }}
+                      >
+                        {item.labelEn}
+                      </div>
+                    )}
                   </div>
                 )}
               </button>
@@ -260,50 +280,81 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
         {/* User section */}
         <div
           className="px-4 py-4"
-          style={{ borderTop: `1px solid ${CREAM_DIM}` }}
+          style={{ borderTop: `1px solid ${CREAM_DIM}`, display: 'grid', gap: 12 }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0"
+          {!collapsed && <PrefsToggle />}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t('userMenu')}
+                  className="flex items-center gap-3 text-left w-full"
+                  style={{ color: CREAM_MID, minWidth: 0 }}
+                >
+                  <span
+                    className="w-6 h-6 flex items-center justify-center shrink-0 overflow-hidden"
+                    style={{ border: `1px solid ${CREAM_DIM}`, fontFamily: "var(--font-mono)", fontSize: '10px', fontWeight: 700 }}
+                  >
+                    {avatarUrl && !avatarFailed ? (
+                      <img src={avatarUrl} alt="" width={24} height={24} referrerPolicy="no-referrer" onError={() => setAvatarFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      initial
+                    )}
+                  </span>
+                  {!collapsed && (
+                    <span style={{ minWidth: 0, flex: 1 }}>
+                      <span
+                        style={{
+                          display: 'block', fontFamily: "var(--font-mono)", fontSize: '10px', fontWeight: 700,
+                          color: CREAM, letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {name}
+                      </span>
+                      <span
+                        style={{
+                          display: 'block', fontFamily: "var(--font-mono)", fontSize: '8px', letterSpacing: '0.15em',
+                          textTransform: 'uppercase', color: CREAM_MID, marginTop: '1px',
+                        }}
+                      >
+                        {t('plan')}
+                      </span>
+                      {pending > 0 && (
+                        <span style={{ display: 'block', fontFamily: "var(--font-mono)", fontSize: '8px', color: 'var(--l-amber)', marginTop: '2px' }}>
+                          {t('pending', { n: pending })}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="min-w-48">
+                <DropdownMenuItem onSelect={() => navigate('/dashboard/settings')}>{t('settings')}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => navigate('/privacy')}>{t('privacy')}</DropdownMenuItem>
+                {isAdmin && <DropdownMenuItem onSelect={() => navigate('/admin')}>{t('admin')}</DropdownMenuItem>}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => {
+                    void signOut().then((done) => done && navigate('/'));
+                  }}
+                >
+                  {t('signOut')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate(`/login?next=${encodeURIComponent(location)}`)}
               style={{
-                backgroundColor: 'transparent',
-                border: `1px solid ${CREAM_DIM}`,
-                color: CREAM_MID,
-                fontFamily: "var(--font-mono)",
-                fontSize: '8px',
+                fontFamily: "var(--font-mono)", fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: ON_CREAM, backgroundColor: CREAM, border: 'none', padding: '8px 10px', cursor: 'pointer',
               }}
             >
-              U
-            </div>
-            {!collapsed && (
-              <div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: CREAM_MID,
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  사용자
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: '7px',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    color: CREAM_MID,
-                    opacity: 0.4,
-                    marginTop: '1px',
-                  }}
-                >
-                  Free Plan
-                </div>
-              </div>
-            )}
-          </div>
+              {collapsed ? '→' : t('signIn')}
+            </button>
+          )}
         </div>
       </aside>
 
@@ -363,7 +414,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
-                  color: BLACK,
+                  color: ON_CREAM,
                   backgroundColor: CREAM,
                   border: 'none',
                   padding: '7px 14px',
@@ -374,7 +425,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = CREAM; }}
                 onClick={() => navigate('/dashboard/session')}
               >
-                + 새 세션
+                {t('newSession')}
               </button>
             </div>
           </div>

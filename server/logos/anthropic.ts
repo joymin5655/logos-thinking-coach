@@ -23,11 +23,13 @@ interface CallOptions<S extends z.ZodType> {
   schema: S;
   effort: "low" | "medium";
   maxTokens: number;
+  /** 사용량 로깅용(출력 토큰 수만 전달한다) */
+  onUsage?: (outputTokens: number) => void;
 }
 
 export async function callStructured<S extends z.ZodType>(
   client: LlmClient,
-  { model, system, user, schema, effort, maxTokens }: CallOptions<S>,
+  { model, system, user, schema, effort, maxTokens, onUsage }: CallOptions<S>,
 ): Promise<z.infer<S>> {
   // system은 고정 텍스트로 두고 가변 값(단계·anchor)은 user에 넣어 캐시가 유지되게 한다.
   const common = {
@@ -48,6 +50,8 @@ export async function callStructured<S extends z.ZodType>(
         })
       : await client.messages.parse(common);
 
+  const out = (message as { usage?: { output_tokens?: unknown } }).usage?.output_tokens;
+  if (typeof out === "number") onUsage?.(out);
   if (message.stop_reason === "refusal") throw new CoachError("refusal");
   if (message.stop_reason === "max_tokens") throw new CoachError("max_tokens");
   const parsed = message.parsed_output;

@@ -12,7 +12,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
   TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, ReportBlocks, Survey, sans } from '@/components/logos-ui';
-import { coach, errorMessage, type Control, type Stage, type ScoreRes, type SessionReportRes } from '@/lib/api';
+import { coach, errorMessage, handleAuthError, type Control, type Stage, type ScoreRes, type SessionReportRes } from '@/lib/api';
 import { newId, recordActivity, upsertSession, useStore, type SessionRecord, type Turn } from '@/lib/store';
 
 const STAGES: Stage[] = ['표면', '도전', '핵심', '통합'];
@@ -114,7 +114,7 @@ export default function ThinkingSession() {
 
   // 첫 주장 채점은 대화와 병렬로 미리 해 둔다. 실패하면 마지막 정리 때 다시 시도한다.
   const scoreAnchorInBackground = (claim: string, topicText: string, sessionId: string) => {
-    coach({ action: 'score', text: claim, context: topicText })
+    coach({ action: 'score', sid: sessionId, kind: 'session', text: claim, context: topicText })
       .then((s) => {
         if (recRef.current?.id === sessionId && !recRef.current.scoreBefore) patch({ scoreBefore: toScore(s) });
       })
@@ -144,7 +144,7 @@ export default function ThinkingSession() {
     }
     try {
       const res = await coach({
-        action: 'session.turn', topic: base.topic, stage: stageOf(cur), history, message, control, anchor: base.anchor,
+        action: 'session.turn', sid: base.id, topic: base.topic, stage: stageOf(cur), history, message, control, anchor: base.anchor,
       });
       // await 중 백그라운드 scoreBefore 패치가 들어왔을 수 있으므로 base가 아니라 최신 기록에 이어 붙인다
       const latest = recRef.current;
@@ -157,6 +157,7 @@ export default function ThinkingSession() {
       });
       if (control === 'THINK') setThinkOffer(true);
     } catch (e) {
+      if (handleAuthError(e, navigate)) return;
       setFailed({ error: errorMessage(e), retry: { message, control } });
     } finally {
       setLoading(false);
@@ -183,15 +184,19 @@ export default function ThinkingSession() {
     const latest = recRef.current!;
     const claim = latest.firstClaim ?? latest.anchor ?? '';
     const [before, after, report] = await Promise.allSettled([
-      latest.scoreBefore ? Promise.resolve(null) : coach({ action: 'score', text: claim, context: latest.topic }),
-      latest.scoreAfter ? Promise.resolve(null) : coach({ action: 'score', text: finalText, context: latest.topic }),
-      latest.report ? Promise.resolve(null) : coach({ action: 'session.report', topic: latest.topic, history: toHistory(latest.turns, 24) }),
+      latest.scoreBefore ? Promise.resolve(null) : coach({ action: 'score', sid: latest.id, kind: 'session', text: claim, context: latest.topic }),
+      latest.scoreAfter ? Promise.resolve(null) : coach({ action: 'score', sid: latest.id, kind: 'session', text: finalText, context: latest.topic }),
+      latest.report ? Promise.resolve(null) : coach({ action: 'session.report', sid: latest.id, topic: latest.topic, history: toHistory(latest.turns, 24) }),
     ]);
     const next: SessionRecord = { ...recRef.current! };
     if (before.status === 'fulfilled' && before.value) next.scoreBefore = toScore(before.value);
     if (after.status === 'fulfilled' && after.value) { next.scoreAfter = toScore(after.value); next.promptVersion = after.value.promptVersion; }
     if (report.status === 'fulfilled' && report.value) next.report = toReport(report.value);
     const firstErr = [before, after, report].find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (firstErr && handleAuthError(firstErr.reason, navigate)) {
+      commit(next);
+      return;
+    }
     if (!firstErr && next.scoreBefore && next.scoreAfter && next.report) {
       next.completedAt = new Date().toISOString();
       commit(next);

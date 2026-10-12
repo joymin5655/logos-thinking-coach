@@ -1,7 +1,8 @@
 /*
  * store.ts — LOGOS 로컬 기록 (localStorage 'logos.v1', 버전 있음)
  *
- * 서버에는 아무것도 저장하지 않는다. 기록은 이 기기에만 남고, 파일럿용으로 JSON 내보내기만 가능하다.
+ * 이 파일은 로컬 캐시만 다룬다(supabase를 import하지 않는다). 로그인 사용자의 서버 동기화는 sync.ts가
+ * onRecordChange 구독으로 따로 처리한다. 파일럿용 JSON 내보내기도 가능하다.
  * 아래 순수 함수(streak·완주율·상승폭·재방문)는 today/now를 인자로 받아 테스트 가능하게 둔다.
  */
 import { useSyncExternalStore } from 'react';
@@ -56,7 +57,28 @@ export type SessionRecord = {
   promptVersion: string;
 };
 
-export type DiagnosticRecord = { at: string; prompt: string; text: string; score: Score };
+export type DiagnosticRecord = { id?: string; at: string; prompt: string; text: string; score: Score };
+
+export type ArenaRecord = {
+  id: string;
+  topicId: string;
+  side: 'pro' | 'con';
+  startedAt: string;
+  completedAt?: string;
+  turns: { role: 'user' | 'assistant'; content: string; at: string }[];
+  result?: {
+    consistency: number;
+    evidence: number;
+    defense: number;
+    total: number;
+    verdict: 'win' | 'draw' | 'lose';
+    rationale: string;
+    lessons: { quote: string; lesson: string }[];
+  };
+  promptVersion?: string;
+};
+
+export type RecordKind = 'session' | 'argue' | 'arena' | 'diagnostic';
 
 export type Streak = { days: string[]; freezesUsed: Record<string, string> };
 
@@ -67,6 +89,9 @@ export type LogosStore = {
   sessions: SessionRecord[];
   diagnostics: DiagnosticRecord[];
   streak: Streak;
+  /** 이 캐시가 속한 계정(uid). null·없음 = 비회원 기록. */
+  ownerId?: string | null;
+  arenas?: ArenaRecord[];
 };
 
 /* ───────── 날짜 유틸 (로컬 YYYY-MM-DD) ───────── */
@@ -173,6 +198,7 @@ export function activeDays(store: LogosStore): Set<string> {
   const set = new Set(store.streak.days);
   for (const s of store.sessions) set.add(localDate(s.startedAt));
   for (const d of store.diagnostics) set.add(localDate(d.at));
+  for (const a of store.arenas ?? []) set.add(localDate(a.startedAt));
   return set;
 }
 
@@ -241,6 +267,8 @@ export function emptyStore(now = new Date()): LogosStore {
     sessions: [],
     diagnostics: [],
     streak: { days: [], freezesUsed: {} },
+    ownerId: null,
+    arenas: [],
   };
 }
 
@@ -278,7 +306,29 @@ export function loadStore(): LogosStore {
   if (raw) {
     try {
       const v: unknown = JSON.parse(raw);
-      if (isStore(v)) parsed = { ...v, streak: { days: v.streak.days, freezesUsed: v.streak.freezesUsed ?? {} } };
+      if (isStore(v)) {
+        let needsId = false;
+        const diagnostics = v.diagnostics.map((d) => {
+          if (d.id) return d;
+          needsId = true;
+          return { ...d, id: randomId() };
+        });
+        parsed = {
+          ...v,
+          diagnostics,
+          ownerId: v.ownerId ?? null,
+          arenas: Array.isArray(v.arenas) ? v.arenas : [],
+          streak: { days: v.streak.days, freezesUsed: v.streak.freezesUsed ?? {} },
+        };
+        if (needsId) {
+          // 예전 진단 기록에 id를 한 번만 부여해 저장한다(매번 달라지면 동기화 id가 흔들린다)
+          try {
+            localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
+          } catch {
+            /* 저장 불가 환경 */
+          }
+        }
+      }
     } catch {
       /* 손상된 값은 무시 */
     }
@@ -336,12 +386,57 @@ const emptyStoreStable = emptyStore();
 
 /* ───────── 변경 헬퍼 ───────── */
 
+type RecordChangeListener = (kind: RecordKind, id: string) => void;
+const recordListeners = new Set<RecordChangeListener>();
+
+/** 기록이 만들어지거나 바뀔 때마다 호출된다(동기화 outbox용). 해제 함수를 돌려준다. */
+export function onRecordChange(cb: RecordChangeListener) {
+  recordListeners.add(cb);
+  return () => {
+    recordListeners.delete(cb);
+  };
+}
+
+const notifyRecord: RecordChangeListener = (kind, id) => recordListeners.forEach((fn) => fn(kind, id));
+
 export function upsertSession(rec: SessionRecord) {
   updateStore((s) => {
     const i = s.sessions.findIndex((x) => x.id === rec.id);
     const sessions = i >= 0 ? s.sessions.map((x, j) => (j === i ? rec : x)) : [...s.sessions, rec];
     return { ...s, sessions };
   });
+  notifyRecord(rec.kind, rec.id);
+}
+
+export function upsertArena(rec: ArenaRecord) {
+  updateStore((s) => {
+    const arenas = s.arenas ?? [];
+    const i = arenas.findIndex((x) => x.id === rec.id);
+    return { ...s, arenas: i >= 0 ? arenas.map((x, j) => (j === i ? rec : x)) : [...arenas, rec] };
+  });
+  notifyRecord('arena', rec.id);
+}
+
+/** 아레나 전적(판정별 횟수). 판정이 난 판만 센다. */
+export function arenaRecord(arenas: ArenaRecord[] = []): { w: number; d: number; l: number } {
+  const r = { w: 0, d: 0, l: 0 };
+  for (const a of arenas) {
+    const v = a.result?.verdict;
+    if (v === 'win') r.w += 1;
+    else if (v === 'draw') r.d += 1;
+    else if (v === 'lose') r.l += 1;
+  }
+  return r;
+}
+
+/** 서버에서 받은 데이터로 로컬 캐시를 통째로 바꾼다(변경 알림 없음 — 동기화 전용). */
+export function replaceAll(data: LogosStore) {
+  writeStore({ ...data, arenas: data.arenas ?? [], ownerId: data.ownerId ?? null });
+}
+
+/** 로컬 캐시를 비운다(로그아웃·다른 계정 전환). 새 participantId가 만들어진다. */
+export function clearLocal() {
+  writeStore(emptyStore());
 }
 
 /** 오늘을 기록한 날로 추가하고 streak.freezesUsed를 다시 계산해 저장한다. */
@@ -357,8 +452,10 @@ export function recordActivity(now = new Date()) {
 }
 
 export function addDiagnostic(rec: DiagnosticRecord) {
-  updateStore((s) => ({ ...s, diagnostics: [...s.diagnostics, rec] }));
-  recordActivity(new Date(rec.at));
+  const withId = rec.id ? rec : { ...rec, id: newId() };
+  updateStore((s) => ({ ...s, diagnostics: [...s.diagnostics, withId] }));
+  recordActivity(new Date(withId.at));
+  notifyRecord('diagnostic', withId.id!);
 }
 
 /* ───────── 내보내기 ───────── */
@@ -380,6 +477,7 @@ export function buildExport(store: LogosStore, now = new Date()) {
     },
     sessions: store.sessions,
     diagnostics: store.diagnostics,
+    arenas: store.arenas ?? [],
     streak: store.streak,
   };
 }

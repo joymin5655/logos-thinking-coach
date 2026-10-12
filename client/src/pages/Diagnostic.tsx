@@ -3,14 +3,16 @@
  * 첫 방문에 기준점을 만들고, 4주 뒤 같은 루브릭으로 다시 재서 변화를 본다.
  * 타이머는 부드러운 안내일 뿐 입력을 막지 않는다.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
   TypingDots, ErrorLine, CharCount, RubricBars, BigScore, sans } from '@/components/logos-ui';
-import { coach, errorMessage } from '@/lib/api';
-import { addDiagnostic, daysUntilRediagnosis, nextDiagnosticDate, toISODate, useStore, type DiagnosticRecord } from '@/lib/store';
+import { coach, errorMessage, handleAuthError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { useT } from '@/i18n';
+import { addDiagnostic, daysUntilRediagnosis, newId, nextDiagnosticDate, toISODate, useStore, type DiagnosticRecord } from '@/lib/store';
 
 export const DIAGNOSTIC_PROMPTS = [
   '"재택근무는 팀의 생산성을 떨어뜨린다."',
@@ -31,6 +33,9 @@ const fmtDate = (iso: string) => {
 export default function Diagnostic() {
   const [, navigate] = useLocation();
   const store = useStore();
+  const ta = useT('auth');
+  const { user } = useAuth();
+  const sidRef = useRef(newId()); // 재시도는 같은 sid로 보내 한도가 두 번 깎이지 않게 한다
   const last = store.diagnostics[store.diagnostics.length - 1];
   const prev = store.diagnostics[store.diagnostics.length - 2];
   const prompt = DIAGNOSTIC_PROMPTS[store.diagnostics.length % DIAGNOSTIC_PROMPTS.length];
@@ -55,14 +60,16 @@ export default function Diagnostic() {
     setLoading(true);
     setError('');
     try {
-      const s = await coach({ action: 'score', text: t, context: prompt.slice(0, 200) });
+      const s = await coach({ action: 'score', sid: sidRef.current, kind: 'diagnostic', text: t, context: prompt.slice(0, 200) });
       const rec: DiagnosticRecord = {
-        at: new Date().toISOString(), prompt, text: t,
+        id: sidRef.current, at: new Date().toISOString(), prompt, text: t,
         score: { consistency: s.consistency, evidence: s.evidence, defense: s.defense, total: s.total, rationale: s.rationale },
       };
       addDiagnostic(rec);
+      sidRef.current = newId();
       setResult(rec);
     } catch (e) {
+      if (handleAuthError(e, navigate)) return;
       setError(errorMessage(e));
     } finally {
       setLoading(false);
@@ -91,6 +98,13 @@ export default function Diagnostic() {
             </div>
             <RubricBars after={shown.score} before={before?.score} />
             <p style={{ margin: 0, fontFamily: sans, fontSize: 13, color: T.creamMid, borderLeft: `2px solid ${T.border}`, paddingLeft: 12, lineHeight: 1.7 }}>{shown.score.rationale}</p>
+            {!user && (
+              <div style={{ border: `1px solid ${T.borderMid}`, padding: 14, display: 'grid', gap: 10 }}>
+                <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: T.cream }}>{ta('ctaSave')}</span>
+                <span style={{ fontFamily: sans, fontSize: 13, color: T.creamMid, lineHeight: 1.6 }}>{ta('ctaSaveLead')}</span>
+                <button type="button" className="lg-btn" style={{ ...btnGhost, justifySelf: 'start' }} onClick={() => navigate('/login?next=/dashboard')}>{ta('ctaButton')}</button>
+              </div>
+            )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>
                 재진단 예정 · {fmtDate(nextDiagnosticDate(shown.at))}{due !== null && due > 0 && !result ? ` (${due}일 후)` : ''}

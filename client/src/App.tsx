@@ -16,6 +16,30 @@ import Analytics from "./pages/Analytics";
 import SessionHistory from "./pages/SessionHistory";
 import Subscription from "./pages/Subscription";
 import Diagnostic from "./pages/Diagnostic";
+import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
+import Settings from "./pages/Settings";
+import Privacy from "./pages/Privacy";
+import Admin from "./pages/Admin";
+import RequireAuth from "./components/RequireAuth";
+import { AuthProvider } from "./lib/auth";
+
+// 공개: /, /about, /features, /pricing, /privacy, /login, /auth/callback, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
+const guard = (Page: React.ComponentType) => () => (
+  <RequireAuth>
+    <Page />
+  </RequireAuth>
+);
+
+const GuardedDashboardHome = guard(DashboardHome);
+const GuardedArgue = guard(Argue);
+const GuardedThinkingSession = guard(ThinkingSession);
+const GuardedArena = guard(Arena);
+const GuardedAnalytics = guard(Analytics);
+const GuardedSessionHistory = guard(SessionHistory);
+const GuardedSubscription = guard(Subscription);
+const GuardedSettings = guard(Settings);
+const GuardedAdmin = guard(Admin);
 
 function Router() {
   return (
@@ -24,14 +48,19 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/features" component={Features} />
       <Route path="/pricing" component={Pricing} />
-      <Route path="/dashboard" component={DashboardHome} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/login" component={Login} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/dashboard/diagnostic" component={Diagnostic} />
-      <Route path="/dashboard/argue" component={Argue} />
-      <Route path="/dashboard/session" component={ThinkingSession} />
-      <Route path="/dashboard/arena" component={Arena} />
-      <Route path="/dashboard/analytics" component={Analytics} />
-      <Route path="/dashboard/history" component={SessionHistory} />
-      <Route path="/dashboard/subscription" component={Subscription} />
+      <Route path="/dashboard" component={GuardedDashboardHome} />
+      <Route path="/dashboard/argue" component={GuardedArgue} />
+      <Route path="/dashboard/session" component={GuardedThinkingSession} />
+      <Route path="/dashboard/arena" component={GuardedArena} />
+      <Route path="/dashboard/analytics" component={GuardedAnalytics} />
+      <Route path="/dashboard/history" component={GuardedSessionHistory} />
+      <Route path="/dashboard/subscription" component={GuardedSubscription} />
+      <Route path="/dashboard/settings" component={GuardedSettings} />
+      <Route path="/admin" component={GuardedAdmin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -42,10 +71,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

@@ -1,5 +1,5 @@
 process.env.TZ = 'Asia/Seoul'; // 로컬 날짜 계산 검증용 (UTC+9)
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   computeStreak,
   completionRate,
@@ -14,6 +14,16 @@ import {
   activeDays,
   daysUntilRediagnosis,
   nextDiagnosticDate,
+  STORE_KEY,
+  loadStore,
+  upsertSession,
+  upsertArena,
+  addDiagnostic,
+  onRecordChange,
+  replaceAll,
+  clearLocal,
+  arenaRecord,
+  type ArenaRecord,
   type SessionRecord,
   type Score,
 } from '../store';
@@ -152,5 +162,65 @@ describe('UTC 타임스탬프 → 로컬 날짜 (KST)', () => {
     expect(returnFlags(s, '2026-10-03').d1).toBe(true);
     expect(nextDiagnosticDate(s.diagnostics[0].at)).toBe('2026-10-30');
     expect(daysUntilRediagnosis(s, '2026-10-29')).toBe(1);
+  });
+});
+
+describe('로컬 저장소 확장(arenas·ownerId·진단 id·onRecordChange)', () => {
+  it('arenaRecord: 판정별 전적, 판정 없는 판은 제외', () => {
+    const a = (verdict?: 'win' | 'draw' | 'lose'): ArenaRecord => ({
+      id: Math.random().toString(36), topicId: 't', side: 'pro', startedAt: 'x', turns: [],
+      result: verdict && { consistency: 0, evidence: 0, defense: 0, total: 0, verdict, rationale: '', lessons: [] },
+    });
+    expect(arenaRecord([a('win'), a('win'), a('draw'), a('lose'), a()])).toEqual({ w: 2, d: 1, l: 1 });
+    expect(arenaRecord()).toEqual({ w: 0, d: 0, l: 0 });
+  });
+});
+
+describe('저장소 정규화·변경 알림', () => {
+  const mem = new Map<string, string>();
+  beforeEach(() => {
+    mem.clear();
+    vi.stubGlobal('window', new EventTarget());
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('옛 저장 값(arenas·ownerId·진단 id 없음)을 읽으면 보정하고 id를 한 번만 부여한다', () => {
+    const old = { ...emptyStore(), diagnostics: [{ at: '2026-10-01T00:00:00.000Z', prompt: 'p', text: 't', score: score(50) }] } as Record<string, unknown>;
+    delete old.arenas;
+    delete old.ownerId;
+    mem.set(STORE_KEY, JSON.stringify(old));
+    const s = loadStore();
+    expect(s.arenas).toEqual([]);
+    expect(s.ownerId).toBeNull();
+    const id = s.diagnostics[0].id;
+    expect(id).toBeTruthy();
+    expect(JSON.parse(mem.get(STORE_KEY)!).diagnostics[0].id).toBe(id);
+  });
+  it('upsertSession·addDiagnostic·upsertArena가 구독자에게 알린다', () => {
+    const seen: [string, string][] = [];
+    const off = onRecordChange((k, id) => seen.push([k, id]));
+    upsertSession(sess({ id: 's1', kind: 'argue' }));
+    addDiagnostic({ at: '2026-10-01T00:00:00.000Z', prompt: 'p', text: 't', score: score(50) });
+    upsertArena({ id: 'a1', topicId: 't', side: 'con', startedAt: '2026-10-01T00:00:00.000Z', turns: [] });
+    off();
+    upsertSession(sess({ id: 's2' }));
+    expect(seen.map(([k]) => k)).toEqual(['argue', 'diagnostic', 'arena']);
+    expect(seen[0][1]).toBe('s1');
+    const d = loadStore().diagnostics[0];
+    expect(d.id).toBe(seen[1][1]);
+    expect(loadStore().arenas?.map((a) => a.id)).toEqual(['a1']);
+  });
+  it('replaceAll·clearLocal', () => {
+    upsertSession(sess({ id: 's1' }));
+    replaceAll({ ...loadStore(), ownerId: 'u1', sessions: [] });
+    expect(loadStore().ownerId).toBe('u1');
+    clearLocal();
+    expect(loadStore().ownerId).toBeNull();
+    expect(loadStore().sessions).toEqual([]);
   });
 });
