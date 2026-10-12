@@ -90,18 +90,19 @@ export const requestSchema = z.discriminatedUnion("action", [
 export type CoachRequest = z.infer<typeof requestSchema>;
 export type TurnItem = z.infer<typeof turnItem>;
 
-// 모델 출력 스키마 (structured outputs). SDK가 parse 단계에서 원본 zod로 다시 검증하므로
-// .max()는 서버 측 길이 검사 역할을 한다(위반 → throw → 502).
+// 모델 출력 스키마 (structured outputs). 문자열 길이는 스키마로 막지 않는다 — 모델이 설명의 길이
+// 힌트를 넘기면 SDK parse가 실패해 사용자에게 502가 가기 때문이다(10-13 실측: 영어 rationale 300자 초과).
+// 출력량은 max_tokens로 묶고, 화면 안전 상한은 handler의 clipOutput()이 자른다.
 export const turnOutputSchema = z.object({
-  question: z.string().max(300),
+  question: z.string(),
   stage,
   detectedType: z.enum(["고민형", "지적형", "검증형"]).nullable(),
   aporia: z.boolean(),
 });
 
 export const argueOutputSchema = z.object({
-  question: z.string().max(300),
-  targetWeakness: z.string().max(80),
+  question: z.string(),
+  targetWeakness: z.string(),
 });
 
 const rubric = {
@@ -112,25 +113,60 @@ const rubric = {
 
 export const scoreOutputSchema = z.object({
   ...rubric,
-  rationale: z.string().max(300),
+  rationale: z.string(),
 });
 
 export const reportOutputSchema = z.object({
-  stuckPoints: z.array(z.string().max(160)).min(1).max(3),
-  assumptions: z.array(z.string().max(160)).min(1).max(3),
-  nextQuestions: z.array(z.string().max(160)).min(1).max(3),
-  turningPoint: z.string().max(200),
+  stuckPoints: z.array(z.string()).min(1),
+  assumptions: z.array(z.string()).min(1),
+  nextQuestions: z.array(z.string()).min(1),
+  turningPoint: z.string(),
 });
 
 export const arenaTurnOutputSchema = z.object({
-  argument: z.string().max(600),
-  targetsClaim: z.string().max(120),
+  argument: z.string(),
+  targetsClaim: z.string(),
 });
 
 export const arenaJudgeOutputSchema = z.object({
   ...rubric,
-  rationale: z.string().max(400),
-  lessons: z
-    .array(z.object({ quote: z.string().max(160), lesson: z.string().max(160) }))
-    .length(3),
+  rationale: z.string(),
+  lessons: z.array(z.object({ quote: z.string(), lesson: z.string() })).min(1),
 });
+
+/** 필드별 화면 안전 상한(문자 수). 배열 필드는 항목 수 상한도 함께 둔다. */
+export const OUTPUT_CAPS = {
+  question: 600,
+  targetWeakness: 160,
+  rationale: 1000,
+  stuckPoints: 400,
+  assumptions: 400,
+  nextQuestions: 400,
+  turningPoint: 400,
+  argument: 1200,
+  targetsClaim: 240,
+  quote: 400,
+  lesson: 400,
+} as const;
+export const MAX_LIST_ITEMS = 3;
+
+const clipText = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+
+/** 모델 출력의 문자열·배열을 OUTPUT_CAPS 안으로 자른다(얕은 구조 + lessons 한 단계). */
+export function clipOutput<T extends Record<string, unknown>>(out: T): T {
+  const caps = OUTPUT_CAPS as Record<string, number>;
+  const res: Record<string, unknown> = { ...out };
+  for (const [k, v] of Object.entries(out)) {
+    if (typeof v === "string" && caps[k]) res[k] = clipText(v, caps[k]);
+    else if (Array.isArray(v)) {
+      res[k] = v.slice(0, MAX_LIST_ITEMS).map((item) =>
+        typeof item === "string"
+          ? caps[k] ? clipText(item, caps[k]) : item
+          : item && typeof item === "object"
+            ? clipOutput(item as Record<string, unknown>)
+            : item,
+      );
+    }
+  }
+  return res as T;
+}

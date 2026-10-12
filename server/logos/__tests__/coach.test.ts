@@ -351,18 +351,27 @@ describe("output caps", () => {
     expect((await res.json()).code).toBe("upstream");
   });
 
-  it("output schemas reject over-cap and wrong-count outputs", async () => {
+  it("long outputs are clipped instead of failing the parse (10-13: English rationale > 300)", async () => {
     const s = await import("../schemas");
-    expect(s.turnOutputSchema.safeParse({ question: "q".repeat(301), stage: "표면", detectedType: null, aporia: false }).success).toBe(false);
-    expect(s.argueOutputSchema.safeParse({ question: "q", targetWeakness: "w".repeat(81) }).success).toBe(false);
-    expect(s.scoreOutputSchema.safeParse({ ...scoreOut, rationale: "r".repeat(301) }).success).toBe(false);
-    expect(s.arenaTurnOutputSchema.safeParse({ argument: "a".repeat(601), targetsClaim: "t" }).success).toBe(false);
-    expect(s.reportOutputSchema.safeParse({ stuckPoints: ["s".repeat(161)], assumptions: ["a"], nextQuestions: ["n"], turningPoint: "" }).success).toBe(false);
-    const lesson = { quote: "q", lesson: "l" };
-    const base = { consistency: 0, evidence: 0, defense: 0, rationale: "r" };
-    expect(s.arenaJudgeOutputSchema.safeParse({ ...base, lessons: [lesson, lesson] }).success).toBe(false);
-    expect(s.arenaJudgeOutputSchema.safeParse({ ...base, rationale: "r".repeat(401), lessons: [lesson, lesson, lesson] }).success).toBe(false);
-    expect(s.arenaJudgeOutputSchema.safeParse({ ...base, lessons: [lesson, lesson, lesson] }).success).toBe(true);
+    expect(s.scoreOutputSchema.safeParse({ ...scoreOut, rationale: "r".repeat(2000) }).success).toBe(true);
+    const clipped = s.clipOutput({ question: "q".repeat(5000), targetWeakness: "w".repeat(500) });
+    expect(clipped.question.length).toBe(s.OUTPUT_CAPS.question);
+    expect(clipped.question.endsWith("…")).toBe(true);
+    expect(clipped.targetWeakness.length).toBe(s.OUTPUT_CAPS.targetWeakness);
+    const rep = s.clipOutput({ stuckPoints: ["a", "b", "c", "d"], assumptions: ["x".repeat(900)], nextQuestions: ["n"], turningPoint: "" });
+    expect(rep.stuckPoints).toHaveLength(3);
+    expect(rep.assumptions[0].length).toBe(s.OUTPUT_CAPS.assumptions);
+    const judge = s.clipOutput({ lessons: [1, 2, 3, 4].map(() => ({ quote: "q".repeat(900), lesson: "l" })) });
+    expect(judge.lessons).toHaveLength(3);
+    expect(judge.lessons[0].quote.length).toBe(s.OUTPUT_CAPS.quote);
+    expect(s.arenaJudgeOutputSchema.safeParse({ consistency: 0, evidence: 0, defense: 0, rationale: "r", lessons: [] }).success).toBe(false);
+  });
+
+  it("handler clips an over-long model question before responding", async () => {
+    const { client } = fakeClient({ stop_reason: "end_turn", parsed_output: { question: "q".repeat(3000), stage: "표면", detectedType: null, aporia: false } });
+    const res = await handleCoach(req(turnBody, AUTH), KEY_ENV, { client, quota: OK });
+    expect(res.status).toBe(200);
+    expect((await res.json()).question.length).toBeLessThanOrEqual(600);
   });
 
   it("an over-cap output surfaces as a throwing parse -> 502 through callStructured", async () => {

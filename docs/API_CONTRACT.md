@@ -12,14 +12,14 @@
 ## 액션
 | action | kind(한도) | 추가 필드 | 응답 |
 |---|---|---|---|
-| `session.turn` | session | `topic ≤200, stage, history ≤16, message 1..1000, control?, anchor?` | `{question ≤300, stage, detectedType, aporia}` |
-| `session.report` | session | `topic, history ≤24` | `{stuckPoints 1..3, assumptions 1..3, nextQuestions 1..3, turningPoint}` (항목 ≤160자) |
-| `argue.turn` | argue | `topic, position, round 1..3, history ≤8, message` | `{question ≤300, targetWeakness ≤80}` |
-| `score` | `kind` 필드 | `kind: "diagnostic"\|"session"\|"argue"`, `text ≤2000, context?` | `{consistency, evidence, defense, total, rationale ≤300}` |
-| `arena.turn` | arena | `topicId`(shared/arenaTopics), `side: "pro"\|"con"`(사용자 입장), `round 1..3, history ≤6, message 1..1000` | `{argument ≤600, targetsClaim ≤120}` |
-| `arena.judge` | arena | `topicId, side, transcript 2..6`(user로 시작, user/assistant 교대) | `{consistency, evidence, defense, total, verdict: "win"\|"draw"\|"lose", rationale ≤400, lessons: [{quote, lesson}]×3}` |
+| `session.turn` | session | `topic ≤200, stage, history ≤16, message 1..1000, control?, anchor?` | `{question, stage, detectedType, aporia}` |
+| `session.report` | session | `topic, history ≤24` | `{stuckPoints 1..3, assumptions 1..3, nextQuestions 1..3, turningPoint}` |
+| `argue.turn` | argue | `topic, position, round 1..3, history ≤8, message` | `{question, targetWeakness}` |
+| `score` | `kind` 필드 | `kind: "diagnostic"\|"session"\|"argue"`, `text ≤2000, context?` | `{consistency, evidence, defense, total, rationale}` |
+| `arena.turn` | arena | `topicId`(shared/arenaTopics), `side: "pro"\|"con"`(사용자 입장), `round 1..3, history ≤6, message 1..1000` | `{argument, targetsClaim}` |
+| `arena.judge` | arena | `topicId, side, transcript 2..6`(user로 시작, user/assistant 교대) | `{consistency, evidence, defense, total, verdict: "win"\|"draw"\|"lose", rationale, lessons: [{quote, lesson}] 1..3}` |
 
-모든 성공 응답에 `promptVersion`이 붙는다.
+모든 성공 응답에 `promptVersion`이 붙는다. 문자열 길이는 스키마로 거부하지 않고, 서버가 `OUTPUT_CAPS`(server/logos/schemas.ts) 길이로 잘라 보낸다(넘친 끝은 `…`). 배열은 최대 3개.
 
 ## 인증·한도
 - 비로그인 허용: `action:"score"` + `kind:"diagnostic"`만. IP(IPv6 /64)당 하루 `GUEST_DIAGNOSTICS_PER_DAY`.

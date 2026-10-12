@@ -22,6 +22,7 @@ import {
   reportOutputSchema,
   requestSchema,
   scoreOutputSchema,
+  clipOutput,
   turnOutputSchema,
   type CoachRequest,
   type TurnItem,
@@ -125,7 +126,7 @@ async function run(
       ]
         .filter(Boolean)
         .join("\n");
-      const out = await callStructured(client, {
+      const out = clipOutput(await callStructured(client, {
         model: COACH_MODEL,
         system: withLocale(SESSION_SYSTEM, locale),
         user,
@@ -133,7 +134,7 @@ async function run(
         effort: "low",
         maxTokens: 1200,
         onUsage,
-      });
+      }));
       const hold = out.aporia || req.control === "THINK";
       return { ...out, stage: nextStage(req.stage, out.stage, userAnswers, hold, req.control) };
     }
@@ -145,7 +146,7 @@ async function run(
       ]
         .filter(Boolean)
         .join("\n");
-      return callStructured(client, {
+      return clipOutput(await callStructured(client, {
         model: COACH_MODEL,
         system: withLocale(ARGUE_SYSTEM, locale),
         user,
@@ -153,10 +154,10 @@ async function run(
         effort: "low",
         maxTokens: 1200,
         onUsage,
-      });
+      }));
     }
     case "session.report":
-      return callStructured(client, {
+      return clipOutput(await callStructured(client, {
         model: COACH_MODEL,
         system: withLocale(REPORT_SYSTEM, locale),
         user: `<context>\n주제: ${req.topic}\n</context>\n<history>\n${fmtHistory(req.history)}\n</history>`,
@@ -164,9 +165,9 @@ async function run(
         effort: "medium",
         maxTokens: 2500,
         onUsage,
-      });
+      }));
     case "score": {
-      const out = await callStructured(client, {
+      const out = clipOutput(await callStructured(client, {
         model: SCORE_MODEL,
         system: withLocale(SCORE_SYSTEM, locale),
         user: `${req.context ? `<context>\n${req.context}\n</context>\n` : ""}<text>\n${req.text}\n</text>`,
@@ -174,7 +175,7 @@ async function run(
         effort: "low",
         maxTokens: 1000,
         onUsage,
-      });
+      }));
       return { ...out, total: out.consistency + out.evidence + out.defense };
     }
     case "arena.turn": {
@@ -189,7 +190,7 @@ async function run(
       ]
         .filter(Boolean)
         .join("\n");
-      return callStructured(client, {
+      return clipOutput(await callStructured(client, {
         model: COACH_MODEL,
         system: withLocale(ARENA_SYSTEM, locale),
         user,
@@ -197,12 +198,12 @@ async function run(
         effort: "low",
         maxTokens: 1500,
         onUsage,
-      });
+      }));
     }
     case "arena.judge": {
       const topic = arenaTopic(req.topicId)![locale === "en" ? "en" : "ko"];
       const mine = req.side === "pro" ? "찬성" : "반대";
-      const out = await callStructured(client, {
+      const out = clipOutput(await callStructured(client, {
         model: SCORE_MODEL,
         system: withLocale(JUDGE_SYSTEM, locale),
         user: `<context>\n주제: ${topic.title}\n사용자 입장: ${mine}\n</context>\n<transcript>\n${fmtDebate(req.transcript)}\n</transcript>`,
@@ -210,7 +211,7 @@ async function run(
         effort: "low",
         maxTokens: 1800,
         onUsage,
-      });
+      }));
       const total = out.consistency + out.evidence + out.defense;
       const haystack = normalizeWs(req.transcript.map((t) => t.content).join("\n"));
       // 원문에 없는 인용은 지어낸 것이므로 비운다.
