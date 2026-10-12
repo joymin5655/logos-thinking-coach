@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldSubmitOnKey, waitHintKey, placeholderFor } from '../composer';
+import { shouldSubmitOnKey, waitHintKey, placeholderFor, focusNearInput } from '../composer';
 
 const k = (o: Partial<Parameters<typeof shouldSubmitOnKey>[0]> = {}) => ({ key: 'Enter', shiftKey: false, metaKey: false, ctrlKey: false, ...o });
 
@@ -29,4 +29,18 @@ describe('waitHintKey', () => {
 
 describe('placeholderFor', () => {
   it('keeps the text in node (no matchMedia)', () => expect(placeholderFor('a (Enter)')).toBe('a (Enter)'));
+});
+
+describe('focusNearInput', () => {
+  const body = {};
+  const other = {};
+  const sendBtn = {};
+  const el = { contains: () => false, parentElement: { contains: (n: unknown) => n === sendBtn } };
+  it('treats no focus, body, the input and its siblings as near', () => {
+    expect(focusNearInput(null, el, body)).toBe(true);
+    expect(focusNearInput(body, el, body)).toBe(true);
+    expect(focusNearInput(el, el, body)).toBe(true);
+    expect(focusNearInput(sendBtn, el, body)).toBe(true);
+  });
+  it('treats focus moved elsewhere as not near', () => expect(focusNearInput(other, el, body)).toBe(false));
 });

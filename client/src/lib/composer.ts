@@ -29,3 +29,9 @@ export const placeholderFor = (text: string) => (isCoarsePointer() ? text.replac
 export const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 export const scrollBehavior = (): ScrollBehavior => (prefersReducedMotion() ? 'auto' : 'smooth');
 
+type FocusNode = { contains(other: unknown): boolean };
+
+/** 포커스가 입력창 주변(입력창·같은 부모 안·body·없음)에 있는지. 로딩 전후 포커스 복귀 판단용. */
+export function focusNearInput(active: unknown, el: (FocusNode & { parentElement: FocusNode | null }) | null, body: unknown): boolean {
+  return !active || active === body || active === el || !!el?.parentElement?.contains(active);
+}
