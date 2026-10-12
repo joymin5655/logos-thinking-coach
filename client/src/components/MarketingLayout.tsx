@@ -60,6 +60,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
         {/* 로고 영역 */}
         <Link
           href="/"
+          className="mk-logo"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -84,8 +85,9 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
           >
             LOGOS
           </span>
-          <div style={{ width: 1, height: 10, backgroundColor: BORDER }} />
+          <div className="mk-mobile-hide" style={{ width: 1, height: 10, backgroundColor: BORDER }} />
           <span
+            className="mk-mobile-hide"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: '8px',
@@ -99,10 +101,11 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
         </Link>
 
         {/* 가운데 스페이서 */}
-        <div style={{ flex: 1 }} />
+        <div className="mk-mobile-hide" style={{ flex: 1 }} />
 
-        {/* 라우트 링크 — 우측 정렬 */}
+        {/* 라우트 링크 — 우측 정렬 (폰 폭에서는 남은 폭 안에서 가로 스크롤) */}
         <div
+          className="mk-nav-links"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -154,8 +157,9 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
 
         <PrefsToggle style={{ flexShrink: 0, padding: '0 12px' }} />
 
-        {/* CTA — 시작하기 */}
+        {/* CTA — 시작하기 (폰 폭에서는 히어로 CTA로 충분해 숨김) */}
         <div
+          className="mk-mobile-hide"
           style={{
             display: 'flex',
             alignItems: 'center',
