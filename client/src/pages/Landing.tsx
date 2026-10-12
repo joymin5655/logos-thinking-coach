@@ -9,7 +9,7 @@ import { useLocation } from 'wouter';
 import MarketingLayout from '@/components/MarketingLayout';
 import ThinkerModel from '@/components/ThinkerModel';
 import SpotlightBeam from '@/components/SpotlightBeam';
-import { SEMANTIC } from '@/lib/colors';
+import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
 
 const BLACK = '#0A0A0A';
 const CREAM = '#F0EBE0';
@@ -20,6 +20,12 @@ const HIGHLIGHT = SEMANTIC.insight; // brighter gold
 
 const MARQUEE_TEXT =
   'LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · ';
+
+const ENTRY_CARDS = [
+  { no: '01', title: '결정을 앞두고', body: '이직, 이사, 투자처럼 쉽게 못 정하는 일. 답을 받는 대신 내가 뭘 확신하는지부터 짚어 봐요.', cta: '코칭 세션 시작', to: '/dashboard/session' },
+  { no: '02', title: '글·발표 전에 논리 점검', body: '쓰려는 주장을 주제로 넣으면 빈틈과 숨은 전제를 질문으로 찾아 줘요.', cta: '주장 점검하기', to: '/dashboard/session' },
+  { no: '03', title: '매일 10분 논증 습관', body: '오늘의 주제에 입장을 정하고 세 번의 반문을 받아요. 연속 기록과 점수 변화가 남아요.', cta: '오늘의 논증', to: '/dashboard/argue' },
+];
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -126,8 +132,9 @@ export default function Landing() {
   );
 
   return (
-    <MarketingLayout footer={heroFooter} singleViewport>
-      {/* ── HERO ── */}
+    <MarketingLayout footer={heroFooter}>
+      {/* ── HERO ── (한 화면 높이 고정, 아래에 소개 섹션이 이어진다) */}
+      <div style={{ height: 'calc(100dvh / var(--ui-scale) - 44px)', minHeight: 560 }}>
       <div
         ref={containerRef}
         style={{
@@ -330,6 +337,72 @@ export default function Landing() {
         </div>
 
       </div>
+      </div>
+
+      {/* ── 진입 동기 ── */}
+      <section aria-labelledby="entry-heading" style={{ backgroundColor: BLACK, color: CREAM, padding: '4rem 1.25rem', borderTop: `1px solid ${CREAM_DIM}` }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>Why people start</div>
+          <h2 id="entry-heading" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', letterSpacing: '-0.02em', margin: '0 0 1.5rem' }}>
+            이럴 때 LOGOS를 찾아요
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 1, backgroundColor: CREAM_DIM }}>
+            {ENTRY_CARDS.map((c) => (
+              <button
+                key={c.title}
+                type="button"
+                onClick={() => navigate(c.to)}
+                style={{ textAlign: 'left', backgroundColor: BLACK, color: CREAM, border: 'none', padding: '1.5rem', cursor: 'pointer', display: 'grid', gap: 10, alignContent: 'start' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#141414'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = BLACK; }}
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', color: CREAM_MID }}>{c.no}</span>
+                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 20 }}>{c.title}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.8, color: CREAM_MID }}>{c.body}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: CREAM }}>{c.cta} →</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 같은 고민, 다른 대화 ── */}
+      <section aria-labelledby="compare-heading" style={{ backgroundColor: CREAM, color: BLACK, padding: '4rem 1.25rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', color: SEMANTIC_DARK.draw, marginBottom: 10 }}>Compare</div>
+          <h2 id="compare-heading" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', letterSpacing: '-0.02em', margin: '0 0 1.25rem' }}>
+            같은 고민, 다른 대화
+          </h2>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, margin: '0 0 1.25rem', padding: '0.75rem 1rem', borderLeft: `3px solid ${BLACK}`, backgroundColor: 'rgba(10,10,10,0.05)' }}>
+            “이직을 지금 해야 할까요?”
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+            <div style={{ border: '1px solid rgba(10,10,10,0.2)', padding: '1.25rem', display: 'grid', gap: 10, alignContent: 'start' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(10,10,10,0.55)' }}>일반 AI</div>
+              <ul style={{ margin: 0, paddingLeft: '1.1em', display: 'grid', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.8 }}>
+                <li>연봉, 성장 가능성, 근무 환경을 표로 비교해 보세요.</li>
+                <li>업계 상황이 좋을 때 옮기는 편이 유리합니다.</li>
+                <li>지금 회사의 불만이 해결 가능한지 먼저 점검해 보세요.</li>
+              </ul>
+              <p style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(10,10,10,0.55)' }}>그럴듯한 답이 바로 나옵니다. 생각은 내가 아니라 AI가 했어요.</p>
+            </div>
+            <div style={{ border: `1px solid ${BLACK}`, backgroundColor: BLACK, color: CREAM, padding: '1.25rem', display: 'grid', gap: 10, alignContent: 'start' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: ACCENT }}>LOGOS</div>
+              <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.5 }}>지금 회사에서 가장 확신하는 불만 한 가지는 무엇인가요?</p>
+              <p style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: 11, color: CREAM_MID, lineHeight: 1.7 }}>LOGOS는 답을 주지 않아요. 질문 하나만 돌려줍니다. 결론은 당신이 내립니다.</p>
+            </div>
+          </div>
+          <div style={{ marginTop: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/session')}
+              style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '10px 22px', backgroundColor: BLACK, color: CREAM, border: `1px solid ${BLACK}`, cursor: 'pointer' }}
+            >
+              내 고민으로 해보기
+            </button>
+          </div>
+        </div>
+      </section>
 
       <style>{`
         @keyframes pulse-dot {

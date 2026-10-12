@@ -211,6 +211,9 @@ export default function Arena() {
 
   return (
     <DashboardLayout title="토론 아레나" titleEn="Arena">
+      <div role="note" style={{ display: 'inline-block', marginBottom: 16, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', color: BLACK, backgroundColor: ACCENT, padding: '5px 12px' }}>
+        미리보기 · AI 대전은 준비 중
+      </div>
       {/* Steps Indicator */}
       <div className="flex items-center gap-2 mb-5" style={{ opacity: 0.7, flexWrap: 'wrap' as const }}>
         {allSteps.map((s, i) => {

@@ -15,6 +15,7 @@ import Arena from "./pages/Arena";
 import Analytics from "./pages/Analytics";
 import SessionHistory from "./pages/SessionHistory";
 import Subscription from "./pages/Subscription";
+import Diagnostic from "./pages/Diagnostic";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/features" component={Features} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/dashboard" component={DashboardHome} />
+      <Route path="/dashboard/diagnostic" component={Diagnostic} />
       <Route path="/dashboard/argue" component={Argue} />
       <Route path="/dashboard/session" component={ThinkingSession} />
       <Route path="/dashboard/arena" component={Arena} />

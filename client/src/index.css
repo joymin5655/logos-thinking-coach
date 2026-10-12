@@ -56,6 +56,8 @@
   --font-mono: 'Space Mono', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
   --font-serif: 'Source Serif 4', 'Pretendard Variable', 'Pretendard', Georgia, serif;
   --font-display: 'Outfit', 'Pretendard Variable', 'Pretendard', sans-serif;
+  /* 한글 장문(리포트·채점 근거·입력창)용. Space Mono의 넓은 공백·구두점 폭을 피한다. */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
 
   /* LOGOS Brand Colors — Exact Unicorn Studio Values */
   --logos-sage: #C8C8B6;

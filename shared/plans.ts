@@ -9,6 +9,8 @@ export type Plan = {
   features: PlanFeature[];
   current?: boolean;
   highlight?: boolean;
+  /** 결제 미지원(Hobby 플랜) — 가격은 예정가이고 CTA는 사전 알림 */
+  comingSoon?: boolean;
   cta: string;
 };
 
@@ -47,7 +49,8 @@ export const PLANS: Plan[] = [
       { text: '팀 기능', included: false },
     ],
     highlight: true,
-    cta: 'Pro로 업그레이드',
+    comingSoon: true,
+    cta: '출시 예정 · 사전 알림',
   },
   {
     id: 'team',
@@ -64,9 +67,13 @@ export const PLANS: Plan[] = [
       { text: '교육기관 파트너십', included: true },
       { text: '추가 멤버 확장', included: true },
     ],
-    cta: '팀 플랜 문의',
+    comingSoon: true,
+    cta: '출시 예정 · 사전 알림',
   },
 ];
+
+export const BETA_NOTE = '현재 베타 기간에는 모든 기능을 무료로 써 볼 수 있어요.';
+export const NOTIFY_TOAST = '출시되면 알려드릴게요.';
 
 export const YEARLY_DISCOUNT = 0.2; // 20% off when paying annually
 

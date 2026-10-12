@@ -1,443 +1,286 @@
 /*
- * DashboardHome.tsx — LOGOS 홈 대시보드
- * Palette: BLACK #0A0A0A / NEAR_BK #111111 / CREAM #F0EBE0 / CREAM_DIM rgba(240,235,224,0.15)
- * Typography: Space Mono
+ * DashboardHome.tsx — LOGOS 성장 대시보드
+ * 모든 숫자는 이 기기에 저장된 실제 기록에서 나온다. 기록이 없으면 빈 상태 문구를 보여준다.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
+import { toast } from 'sonner';
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
-import { ALL_FIELDS, MAX_FIELDS, loadFields, saveFields, fieldRankMock, type Field } from '@/lib/preferences';
-import { FIELD_COLOR, SEMANTIC, scoreColor, rankColor } from '@/lib/colors';
+import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, Quote } from '@/components/logos-ui';
+import { ALL_FIELDS, MAX_FIELDS, loadFields, saveFields, type Field } from '@/lib/preferences';
+import { FIELD_COLOR } from '@/lib/colors';
+import { todaysTopic } from '@/lib/topics';
+import { buildDailyArgueIcs, downloadFile } from '@/lib/ics';
+import {
+  REDIAGNOSE_DAYS, addDays, avgDelta, completionRate, computeStreak, daysUntilRediagnosis, exportJSON,
+  isoWeekKey, localDate, pickComparison, toISODate, useStore, weekdayIndex,
+} from '@/lib/store';
 
-const CREAM      = '#F0EBE0';
-const CREAM_MID  = 'rgba(240,235,224,0.55)';
-const CREAM_DIM  = 'rgba(240,235,224,0.12)';
-const CREAM_FAINT= 'rgba(240,235,224,0.06)';
-const BLACK      = '#0A0A0A';
+const DAY_KO = ['월', '화', '수', '목', '금', '토', '일'];
+const fmtMD = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+};
 
-const SCORE_DATA = [
-  { day: 'Mon', score: 62 },
-  { day: 'Tue', score: 68 },
-  { day: 'Wed', score: 65 },
-  { day: 'Thu', score: 74 },
-  { day: 'Fri', score: 71 },
-  { day: 'Sat', score: 79 },
-  { day: 'Sun', score: 82 },
-];
-
-const RECENT_SESSIONS = [
-  { id: 1, topic: '새 프로젝트 방향성에 대한 고민', date: '2026-05-13', score: 82, level: '통합', duration: '23분' },
-  { id: 2, topic: '팀 내 갈등 해결 방법',           date: '2026-05-12', score: 74, level: '본질', duration: '18분' },
-  { id: 3, topic: '커리어 전환에 대한 불안감',       date: '2026-05-11', score: 68, level: '전제', duration: '31분' },
-];
-
-// 랭크 단계 — 레벨 1부터 9까지. 24 세션 = Lv.5 변증가
-const RANK_TIERS = [
-  { lv: 1, ko: '수련자',   en: 'Novice',       badge: '◇' },
-  { lv: 2, ko: '질문자',   en: 'Inquirer',     badge: '◈' },
-  { lv: 3, ko: '논증가',   en: 'Reasoner',     badge: '◆' },
-  { lv: 4, ko: '회의자',   en: 'Skeptic',      badge: '◉' },
-  { lv: 5, ko: '변증가',   en: 'Dialectician', badge: '◎' },
-  { lv: 6, ko: '비판자',   en: 'Critic',       badge: '✦' },
-  { lv: 7, ko: '해석자',   en: 'Interpreter',  badge: '✧' },
-  { lv: 8, ko: '사색가',   en: 'Contemplator', badge: '✪' },
-  { lv: 9, ko: '소피스트', en: 'Sophos',       badge: '✯' },
-];
-const CURRENT_RANK = RANK_TIERS[4];        // Lv. 5
-const NEXT_RANK    = RANK_TIERS[5];        // Lv. 6
-const RANK_PROGRESS = 64;                  // % to next rank
-
-function ScoreRing({ score }: { score: number }) {
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const c = scoreColor(score);
+function Kpi({ label, n, sub }: { label: string; n: string; sub: string }) {
   return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg width="100" height="100" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke={CREAM_DIM} strokeWidth="5" />
-        <circle
-          cx="50" cy="50" r={radius} fill="none"
-          stroke={c} strokeWidth="5"
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          strokeLinecap="round" transform="rotate(-90 50 50)"
-          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.23,1,0.32,1)' }}
-        />
-      </svg>
-      <div className="absolute text-center">
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: '28px', fontWeight: 700, color: c }}>
-          {score}
-        </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.25em', textTransform: 'uppercase', color: CREAM_MID }}>
-          Score
-        </div>
-      </div>
+    <div style={{ backgroundColor: T.panel, padding: 16, display: 'grid', gap: 4, minWidth: 0 }}>
+      <Label>{label}</Label>
+      <span style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.1, color: T.cream, fontVariantNumeric: 'tabular-nums' }}>{n}</span>
+      <span style={{ fontSize: 12, color: T.creamMid, lineHeight: 1.5 }}>{sub}</span>
     </div>
   );
 }
 
 export default function DashboardHome() {
   const [, navigate] = useLocation();
+  const store = useStore();
   const [fields, setFields] = useState<Field[]>(() => loadFields());
   const [draft, setDraft] = useState<Field[]>([]);
+  const [skipDiag, setSkipDiag] = useState(false);
+  const topic = useMemo(() => todaysTopic(), []);
 
-  // 외부 변경(다른 페이지에서 분야 수정 시) 동기화
   useEffect(() => {
     const sync = () => setFields(loadFields());
     window.addEventListener('logos:fields-changed', sync);
     return () => window.removeEventListener('logos:fields-changed', sync);
   }, []);
 
-  const toggleDraft = (f: Field) => {
-    setDraft((prev) => {
-      if (prev.includes(f)) return prev.filter((x) => x !== f);
-      if (prev.length >= MAX_FIELDS) return prev;
-      return [...prev, f];
-    });
+  const now = new Date();
+  const today = toISODate(now);
+  const streak = computeStreak(store.streak.days, today);
+  const comp = completionRate(store.sessions);
+  const delta = avgDelta(store.sessions);
+  const lastDiag = store.diagnostics[store.diagnostics.length - 1];
+  const prevDiag = store.diagnostics[store.diagnostics.length - 2];
+  const dueIn = daysUntilRediagnosis(store, today);
+  const rediagDue = dueIn === 0;
+  const doneToday = store.sessions.some((s) => s.kind === 'argue' && s.completedAt && localDate(s.startedAt) === today);
+
+  const trend = useMemo(
+    () =>
+      store.sessions
+        .filter((s) => s.completedAt && s.scoreAfter)
+        .sort((a, b) => a.completedAt!.localeCompare(b.completedAt!))
+        .slice(-10)
+        .map((s) => ({ label: fmtMD(s.completedAt!), score: s.scoreAfter!.total })),
+    [store.sessions],
+  );
+  const compare = useMemo(() => pickComparison(store.sessions, new Date()), [store.sessions]);
+
+  const fieldCounts = fields.map((f) => ({
+    f,
+    n: store.sessions.filter((s) => s.completedAt && s.field && (s.field.includes(f) || f.includes(s.field))).length,
+  }));
+  const recent = [...store.sessions].reverse().slice(0, 3);
+
+  const weekStart = addDays(today, -weekdayIndex(today));
+  const week = DAY_KO.map((ko, i) => {
+    const date = addDays(weekStart, i);
+    const froze = streak.freezeDates.includes(date) || store.streak.freezesUsed[isoWeekKey(date)] === date;
+    return { ko, date, done: store.streak.days.includes(date), froze, isToday: date === today, future: date > today };
+  });
+
+  const addToCalendar = () => {
+    const tomorrow = todaysTopic(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+    const ics = buildDailyArgueIcs(tomorrow.title, `${window.location.origin}/dashboard/argue`);
+    downloadFile('logos-daily-argue.ics', ics, 'text/calendar;charset=utf-8');
+    toast('내일 아침 8시 일정을 내려받았어요. 캘린더 앱에서 열어 주세요.');
+  };
+  const exportData = () => {
+    downloadFile(`logos-export-${today}.json`, exportJSON(), 'application/json');
+    toast('기록을 내려받았어요.');
   };
 
+  const toggleDraft = (f: Field) =>
+    setDraft((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : prev.length >= MAX_FIELDS ? prev : [...prev, f]));
   const commitFields = () => {
-    if (draft.length === 0) return;
+    if (!draft.length) return;
     saveFields(draft);
     setFields(draft);
     setDraft([]);
   };
 
-  const cardStyle = {
-    borderColor: CREAM_DIM,
-    backgroundColor: CREAM_FAINT,
-    border: `1px solid ${CREAM_DIM}`,
-  };
+  const showDiagInvite = (!lastDiag && !skipDiag) || (lastDiag && rediagDue);
 
   return (
     <DashboardLayout title="대시보드" titleEn="Dashboard">
-      {/* Welcome */}
-      <div className="mb-10">
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '8px' }}>
-          Good Morning
-        </div>
-        <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: '34px', color: CREAM, letterSpacing: '-0.02em', marginBottom: '6px' }}>
-          오늘도 깊이 생각하세요
-        </h2>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: '13px', color: CREAM_MID, lineHeight: 1.8 }}>
-          일 3회 무료 세션 중 <strong style={{ color: CREAM }}>2회</strong> 남았습니다
-        </p>
-      </div>
-
-      {/* Field Onboarding — 분야 미선택 시 노출 */}
-      {fields.length === 0 && (
-        <div className="mb-6 p-5" style={cardStyle}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: 6 }}>
-            Onboarding · 분야 선택
-          </div>
-          <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 18, color: CREAM, marginBottom: 6 }}>
-            관심 분야를 골라 주세요
-          </h3>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: CREAM_MID, lineHeight: 1.7, marginBottom: 16 }}>
-            선택한 분야는 오늘의 논증 주제와 분야별 랭킹에 반영됩니다. 최대 {MAX_FIELDS}개.
+      <FocusStyle />
+      <div style={{ display: 'grid', gap: 24, maxWidth: 1080 }}>
+        <div style={{ display: 'grid', gap: 6 }}>
+          <Label>Growth</Label>
+          <h2 style={{ fontFamily: serif, fontWeight: 600, fontSize: 'clamp(1.6rem, 4vw, 2.1rem)', color: T.cream, letterSpacing: '-0.02em', margin: 0 }}>
+            오늘도 깊이 생각하세요
+          </h2>
+          <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, margin: 0, lineHeight: 1.8 }}>
+            베타 기간에는 모든 기능을 무료로 쓸 수 있어요. 기록은 이 기기에만 저장됩니다.
           </p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {ALL_FIELDS.map((opt) => {
-              const picked = draft.includes(opt.value);
-              const atCap  = !picked && draft.length >= MAX_FIELDS;
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => toggleDraft(opt.value)}
-                  disabled={atCap}
-                  style={{
-                    fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
-                    padding: '8px 14px',
-                    border: `1px solid ${picked ? CREAM : CREAM_DIM}`,
-                    backgroundColor: picked ? CREAM : 'transparent',
-                    color: picked ? BLACK : (atCap ? 'rgba(240,235,224,0.3)' : CREAM_MID),
-                    cursor: atCap ? 'not-allowed' : 'pointer', transition: 'all 0.18s',
-                  }}
-                >
-                  {opt.value} <span style={{ opacity: 0.5, fontSize: 7, marginLeft: 4 }}>{opt.en}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center justify-between">
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: CREAM_MID, letterSpacing: '0.15em' }}>
-              {draft.length} / {MAX_FIELDS} 선택됨
-            </span>
-            <button
-              onClick={commitFields}
-              disabled={draft.length === 0}
-              style={{
-                fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' as const,
-                padding: '10px 18px',
-                backgroundColor: draft.length > 0 ? CREAM : CREAM_DIM,
-                color: draft.length > 0 ? BLACK : CREAM_MID,
-                border: 'none', cursor: draft.length > 0 ? 'pointer' : 'not-allowed', transition: 'background-color 0.18s',
-              }}
-            >
-              저장하고 시작
-            </button>
-          </div>
         </div>
-      )}
 
-      {/* Rank Badge */}
-      <div className="mb-6 p-5 flex items-center gap-5" style={cardStyle}>
-        <div
-          style={{
-            width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `1px solid ${CREAM_DIM}`, backgroundColor: BLACK, flexShrink: 0,
-          }}
-        >
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: '38px', color: CREAM, lineHeight: 1 }}>{CURRENT_RANK.badge}</span>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '4px' }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID }}>Rank · Lv. {CURRENT_RANK.lv}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
-            <span style={{ fontFamily: "var(--font-serif)", fontSize: '28px', fontWeight: 600, color: CREAM, letterSpacing: '-0.01em' }}>{CURRENT_RANK.ko}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, letterSpacing: '0.1em' }}>{CURRENT_RANK.en}</span>
-          </div>
-          {/* progress bar */}
-          <div style={{ height: 2, backgroundColor: CREAM_DIM, position: 'relative', marginBottom: '6px' }}>
-            <div style={{ width: `${RANK_PROGRESS}%`, height: '100%', backgroundColor: rankColor(CURRENT_RANK.lv), transition: 'width 1s ease' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "var(--font-mono)", fontSize: '10px', color: CREAM_MID, letterSpacing: '0.15em' }}>
-            <span>{RANK_PROGRESS}% TO NEXT</span>
-            <span>NEXT · Lv. {NEXT_RANK.lv} {NEXT_RANK.ko}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 분야별 랭킹 — 분야 선택된 경우만 노출 */}
-      {fields.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID }}>
-              분야별 랭킹 · Field Ranks
+        {showDiagInvite && (
+          <div style={{ ...panelStyle, borderColor: T.cream, display: 'grid', gap: 10 }}>
+            <Label>{lastDiag ? '재진단' : '3분 사고력 진단'}</Label>
+            <p style={{ margin: 0, fontFamily: serif, fontSize: 20, lineHeight: 1.4, color: T.cream }}>
+              {lastDiag
+                ? `${REDIAGNOSE_DAYS}일이 지났어요. 다시 재서 얼마나 달라졌는지 볼까요?`
+                : '먼저 지금의 기준점을 만들어 둘까요? 3분이면 됩니다.'}
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>
+              {lastDiag ? `지난 진단은 ${lastDiag.score.total}점이었어요.` : '한 문항에 짧게 쓰면 AI가 추정 점수를 냅니다. 4주 뒤 같은 방식으로 다시 재서 변화를 보여 드려요.'}
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/diagnostic')}>{lastDiag ? '재진단 하기' : '3분 진단 시작'}</button>
+              {!lastDiag && <button type="button" className="lg-btn" style={btnGhost} onClick={() => setSkipDiag(true)}>나중에 할게요</button>}
             </div>
-            <button
-              onClick={() => { saveFields([]); setDraft([]); }}
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              분야 재선택
-            </button>
           </div>
-          <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(fields.length, 3)}, 1fr)` }}>
-            {fields.map((f, i) => {
-              const r = fieldRankMock(f, i);
-              return (
-                <div key={f} className="p-4" style={cardStyle}>
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID }}>
-                      {f}
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.25em', color: CREAM_MID }}>Lv. {r.lv}</span>
-                  </div>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: FIELD_COLOR[f], lineHeight: 1 }}>{r.badge}</span>
-                    <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 16, color: CREAM }}>{r.ko}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: CREAM_MID, letterSpacing: '0.1em', marginLeft: 'auto' }}>{r.en}</span>
-                  </div>
-                  <div style={{ height: 2, backgroundColor: CREAM_DIM, marginBottom: 6 }}>
-                    <div style={{ width: `${r.progress}%`, height: 2, backgroundColor: FIELD_COLOR[f], transition: 'width 1s ease' }} />
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 7, color: CREAM_MID, letterSpacing: '0.15em' }}>
-                    {r.progress}% · NEXT TIER
-                  </div>
+        )}
+
+        {fields.length === 0 && (
+          <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
+            <Label>관심 분야 · 선택</Label>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>고르면 오늘의 논증 주제에 반영돼요. 최대 {MAX_FIELDS}개, 건너뛰어도 됩니다.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="group" aria-label="관심 분야">
+              {ALL_FIELDS.map((opt) => {
+                const picked = draft.includes(opt.value);
+                const atCap = !picked && draft.length >= MAX_FIELDS;
+                return (
+                  <button key={opt.value} type="button" className="lg-btn" aria-pressed={picked} onClick={() => toggleDraft(opt.value)} disabled={atCap}
+                    style={{ ...btnGhost, padding: '8px 14px', fontSize: 11, textTransform: 'none', letterSpacing: '0.05em', backgroundColor: picked ? T.cream : 'transparent', color: picked ? T.black : atCap ? T.creamDim : T.creamMid, borderColor: picked ? T.cream : T.borderMid, cursor: atCap ? 'not-allowed' : 'pointer' }}>
+                    {opt.value}
+                  </button>
+                );
+              })}
+            </div>
+            <div><button type="button" className="lg-btn" style={{ ...btnPrimary, opacity: draft.length ? 1 : 0.4 }} disabled={!draft.length} onClick={commitFields}>저장</button></div>
+          </div>
+        )}
+
+        {/* KPI */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 1, backgroundColor: T.border, border: `1px solid ${T.border}` }}>
+          <Kpi label="연속 기록" n={`${streak.count}일`} sub={streak.freezesLeftThisWeek > 0 ? '이번 주 쉬어가기 1회 남음' : '이번 주 쉬어가기를 썼어요'} />
+          <Kpi label="세션 완주율" n={comp.rate === null ? '—' : `${Math.round(comp.rate * 100)}%`} sub={comp.started ? `시작 ${comp.started} · 완주 ${comp.completed}` : '아직 시작한 세션이 없어요'} />
+          <Kpi label="세션 내 평균 상승" n={delta === null ? '—' : `${delta > 0 ? '+' : ''}${Math.round(delta)}`} sub={delta === null ? '완주한 세션이 쌓이면 보여요' : '처음 주장 → 최종 정리'} />
+          <Kpi
+            label="진단 변화"
+            n={!lastDiag ? '—' : prevDiag ? `${prevDiag.score.total}→${lastDiag.score.total}` : `${lastDiag.score.total}→?`}
+            sub={!lastDiag ? '3분 진단으로 기준점을 만들어요' : dueIn === 0 ? '재진단 할 수 있어요' : `재진단까지 ${dueIn}일`}
+          />
+        </div>
+
+        {/* 오늘의 논증 + 주간 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ border: `1px solid ${T.cream}`, padding: 18, display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
+            <Label>오늘의 논증 · 10분</Label>
+            <p style={{ fontFamily: serif, fontSize: 19, lineHeight: 1.4, margin: 0, color: T.cream }}>"{topic.title}"</p>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>입장을 고르고 근거를 쓰면, LOGOS가 가장 약한 고리를 세 번 묻습니다.</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{doneToday ? '한 번 더' : '시작하기'}</button>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={addToCalendar}>내일 아침 8시 캘린더에 추가</button>
+            </div>
+            {doneToday && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>오늘 논증을 마쳤어요.</span>}
+          </div>
+          <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
+            <Label>이번 주</Label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+              {week.map((d) => (
+                <div key={d.date} style={{ display: 'grid', gap: 4, justifyItems: 'center', fontFamily: mono, fontSize: 10, color: T.creamMid }}>
+                  <i
+                    role="img"
+                    aria-label={`${d.ko}요일 ${d.done ? '기록함' : d.froze ? '쉬어감' : d.future ? '아직 안 옴' : '기록 없음'}`}
+                    style={{
+                      width: '100%', aspectRatio: '1', maxWidth: 34, display: 'block',
+                      border: `1px solid ${d.isToday ? T.amber : d.done ? T.cream : T.border}`,
+                      background: d.done ? T.cream : d.froze ? `repeating-linear-gradient(45deg, ${T.border} 0 3px, transparent 3px 6px)` : 'transparent',
+                      opacity: d.future ? 0.45 : 1,
+                    }}
+                  />
+                  {d.ko}
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, borderLeft: `2px solid ${T.border}`, paddingLeft: 12, lineHeight: 1.7 }}>
+              빗금 = 쉬어가기(주 1회). 하루 놓쳐도 기록이 끊기지 않아요.
+            </p>
           </div>
         </div>
-      )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        {[
-          { label: '총 세션',    labelEn: 'Total Sessions', value: '24', unit: '회',  color: SEMANTIC.info },
-          { label: '평균 스코어', labelEn: 'Avg Score',      value: '74', unit: 'pts', color: scoreColor(74) },
-          { label: '이번 주 성장',labelEn: 'Weekly Growth',  value: '+12', unit: '%',  color: SEMANTIC.win },
-          { label: '연속 참여',  labelEn: 'Streak',          value: '7',  unit: '일',  color: SEMANTIC.insight },
-        ].map((stat) => (
-          <div key={stat.label} className="p-5" style={cardStyle}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '10px' }}>
-              {stat.labelEn}
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: '34px', fontWeight: 600, color: stat.color }}>
-                {stat.value}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID }}>
-                {stat.unit}
-              </span>
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID, marginTop: '4px' }}>
-              {stat.label}
+        {/* 추이 + 비교 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gap: 8, minWidth: 0, alignContent: 'start' }}>
+            <Label>세션 점수 추이 (최종 정리 기준 · AI 추정치)</Label>
+            {trend.length >= 2 ? (
+              <div style={{ height: 180 }} role="img" aria-label={`최근 ${trend.length}회 점수: ${trend[0].score}에서 ${trend[trend.length - 1].score}`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trend} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
+                    <CartesianGrid stroke="rgba(240,235,224,0.10)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} width={40} />
+                    <Tooltip contentStyle={{ backgroundColor: T.black, border: `1px solid ${T.borderMid}`, fontFamily: 'Space Mono', fontSize: 11 }} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} formatter={(v: number) => [`${v}점`, '최종 정리']} />
+                    <Line type="monotone" dataKey="score" stroke={T.accent} strokeWidth={2} dot={{ r: 3, fill: T.accent, stroke: T.accent }} activeDot={{ r: 5, fill: T.amber, stroke: T.amber }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
+                세션을 2번 완주하면 점수 추이가 그려져요. 지금까지 완주 {trend.length}회.
+              </p>
+            )}
+          </div>
+          <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
+            <Label>{compare ? (compare.sameTopic ? `한 달 전의 나와 비교 · 같은 주제 "${compare.older.topic}"` : '예전의 나와 비교') : '한 달 전의 나와 비교'}</Label>
+            {compare ? (
+              <>
+                <Quote>{fmtMD(compare.older.startedAt)}: "{compare.older.finalSummary ?? compare.older.firstClaim}"</Quote>
+                <Quote after>{fmtMD(compare.newer.startedAt)}: "{compare.newer.finalSummary ?? compare.newer.firstClaim}"</Quote>
+              </>
+            ) : (
+              <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
+                완주한 기록이 2개 이상 쌓이면 예전 내 생각과 지금 생각을 나란히 볼 수 있어요. 3주 넘게 지난 기록이 있으면 그것과 먼저 비교합니다.
+              </p>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>기록은 이 기기에만 저장돼요</span>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={exportData}>파일럿용 기록 내보내기 (JSON)</button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-        {/* Score Overview */}
-        <div className="p-6" style={cardStyle}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '16px' }}>
-            Current Score
-          </div>
-          <div className="flex flex-col items-center py-2">
-            <ScoreRing score={82} />
-            <div className="mt-5 w-full space-y-2">
-              {[
-                { label: '논리 구조', value: 85, color: SEMANTIC.win },
-                { label: '일관성',   value: 78, color: SEMANTIC.draw },
-                { label: '근거의 질', value: 83, color: SEMANTIC.warning },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', color: CREAM_MID, width: '52px', flexShrink: 0 }}>
-                    {item.label}
-                  </span>
-                  <div className="flex-1" style={{ height: 2, backgroundColor: CREAM_DIM }}>
-                    <div style={{ width: `${item.value}%`, height: 2, backgroundColor: item.color, transition: 'width 1s ease' }} />
-                  </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', color: item.color, width: '20px', textAlign: 'right' as const }}>
-                    {item.value}
-                  </span>
+        {fields.length > 0 && (
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Label>분야별 완주 횟수</Label>
+              <button type="button" className="lg-btn" onClick={() => { saveFields([]); setDraft([]); }} style={{ ...btnGhost, border: 'none', padding: '2px 0', fontSize: 10, textDecoration: 'underline' }}>분야 재선택</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+              {fieldCounts.map(({ f, n }) => (
+                <div key={f} style={{ ...panelStyle, padding: 14, display: 'grid', gap: 4, borderTop: `2px solid ${FIELD_COLOR[f]}` }}>
+                  <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{f}</span>
+                  <span style={{ fontFamily: serif, fontSize: 24, color: T.cream }}>{n}<span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}> 회</span></span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Weekly Chart */}
-        <div className="p-6 col-span-1 md:col-span-2" style={cardStyle}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '10px' }}>
-            Weekly Progress
-          </div>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: '28px', fontWeight: 600, color: CREAM, marginBottom: '4px' }}>
-            이번 주 성장 추이
-          </div>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID, marginBottom: '20px' }}>
-            논리력 스코어 변화
-          </p>
-          <div style={{ height: 120 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={SCORE_DATA}>
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }}
-                  axisLine={false} tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: `1px solid ${CREAM_DIM}`,
-                    borderRadius: 0,
-                    color: CREAM,
-                    fontSize: 10,
-                    fontFamily: "var(--font-mono)",
-                  }}
-                  labelStyle={{ color: CREAM_MID }}
-                />
-                <defs>
-                  <linearGradient id="weeklyLine" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%"   stopColor={SEMANTIC.warning} />
-                    <stop offset="50%"  stopColor={SEMANTIC.draw} />
-                    <stop offset="100%" stopColor={SEMANTIC.win} />
-                  </linearGradient>
-                </defs>
-                <Line
-                  type="monotone" dataKey="score"
-                  stroke="url(#weeklyLine)" strokeWidth={1.6}
-                  dot={{ fill: SEMANTIC.draw, r: 2.5, strokeWidth: 0 }}
-                  activeDot={{ r: 4, fill: SEMANTIC.insight }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Start */}
-      <div
-        className="p-8 mb-10 flex items-center justify-between"
-        style={{ backgroundColor: 'rgba(240,235,224,0.05)', border: `1px solid ${CREAM_DIM}` }}
-      >
-        <div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '8px' }}>
-            New Session
-          </div>
-          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: '28px', fontWeight: 600, color: CREAM, marginBottom: '6px' }}>
-            새로운 생각을 시작하세요
-          </h3>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, lineHeight: 1.8 }}>
-            고민을 입력하면 소크라테스가 질문을 던집니다
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/dashboard/session')}
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: '11px',
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase' as const,
-            fontWeight: 700,
-            backgroundColor: CREAM,
-            color: BLACK,
-            border: 'none',
-            padding: '12px 28px',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'opacity 0.18s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-        >
-          세션 시작 →
-        </button>
-      </div>
-
-      {/* Recent Sessions */}
-      <div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '16px' }}>
-          Recent Sessions
-        </div>
-        <div>
-          {RECENT_SESSIONS.map((session, i) => (
-            <button
-              key={session.id}
-              onClick={() => navigate('/dashboard/history')}
-              className="w-full flex items-center justify-between py-4 text-left transition-colors"
-              style={{ borderTop: `1px solid ${CREAM_DIM}` }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = CREAM_FAINT; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <div className="flex items-center gap-6">
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID, width: '16px', flexShrink: 0 }}>
-                  {String(i + 1).padStart(2, '0')}
+        <div style={{ display: 'grid', gap: 10 }}>
+          <Label>최근 기록</Label>
+          {recent.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
+              아직 기록이 없어요. 오늘의 논증이나 소크라테스 코칭으로 첫 기록을 만들어 보세요.
+            </p>
+          ) : (
+            recent.map((s) => (
+              <button key={s.id} type="button" className="lg-btn" onClick={() => navigate('/dashboard/history')}
+                style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '14px 0', background: 'none', border: 'none', borderTop: `1px solid ${T.border}`, color: T.cream, cursor: 'pointer' }}>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, overflowWrap: 'anywhere' }}>{s.topic}</span>
+                  <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{fmtMD(s.startedAt)} · {s.kind === 'argue' ? '오늘의 논증' : '코칭'} · {s.completedAt ? '완주' : '진행 중'}</span>
                 </span>
-                <div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: '13px', fontWeight: 700, color: CREAM, marginBottom: '3px' }}>
-                    {session.topic}
-                  </div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', color: CREAM_MID }}>
-                    {session.date} · {session.duration} · {session.level} 단계
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: '24px', fontWeight: 600, color: scoreColor(session.score) }}>
-                  {session.score}
-                </div>
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.3 }}>
-                  <path d="M5 3L9 7L5 11" stroke={CREAM} strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-              </div>
-            </button>
-          ))}
-          <div style={{ borderTop: `1px solid ${CREAM_DIM}` }} />
+                {s.scoreAfter && <span style={{ fontFamily: serif, fontSize: 24, flexShrink: 0 }}>{s.scoreAfter.total}</span>}
+              </button>
+            ))
+          )}
         </div>
       </div>
     </DashboardLayout>

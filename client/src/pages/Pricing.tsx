@@ -1,4 +1,5 @@
-import { useLocation } from 'wouter';
+import { toast } from 'sonner';
+import { NOTIFY_TOAST } from '@shared/plans';
 import MarketingLayout from '@/components/MarketingLayout';
 import PlanCards from '@/components/PlanCards';
 import { SEMANTIC_DARK } from '@/lib/colors';
@@ -7,8 +8,6 @@ const BLACK = '#0A0A0A';
 const CREAM = '#F0EBE0';
 
 export default function Pricing() {
-  const [, navigate] = useLocation();
-
   return (
     <MarketingLayout singleViewport>
       <section
@@ -37,7 +36,7 @@ export default function Pricing() {
 
           <PlanCards
             variant="public"
-            onCtaClick={() => navigate('/dashboard/subscription')}
+            onCtaClick={(plan) => { if (plan.comingSoon) toast(NOTIFY_TOAST); }}
           />
         </div>
       </section>

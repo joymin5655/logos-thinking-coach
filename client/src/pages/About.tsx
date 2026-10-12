@@ -38,6 +38,24 @@ const ROADMAP = [
   { q: '2027 Q2+', phase: '확장',        items: ['모바일 앱',    'B2B Team',       '투자 유치 준비'],                      color: SEMANTIC_DARK.win },
 ];
 
+// 검증 로드맵 — 지금 / 다음 / KPI
+const VALIDATION_NOW = [
+  '세션 내 Before/After: 처음 주장과 최종 정리를 같은 루브릭으로 따로 채점',
+  '3분 사고력 진단과 4주 뒤 재진단',
+  '세션 후 2문항 설문(일반 AI와의 차이, 스스로 낸 결론이라는 느낌)',
+  '파일럿용 기록 내보내기(JSON)',
+];
+const VALIDATION_NEXT = [
+  '파일럿 A/B: LOGOS vs 일반 챗봇',
+  '참가자 40~60명, 4~8주',
+  '블라인드 인간 채점으로 AI 채점을 보정',
+];
+const VALIDATION_KPI = [
+  { label: '세션 완주율', target: '60%', note: '1차 목표' },
+  { label: 'D7 재방문', target: '40%', note: '가입 7일 뒤' },
+  { label: '세션 내 평균 상승', target: '+10점', note: '처음 주장 → 최종 정리' },
+];
+
 // Team 3인 (PITCH 13)
 const TEAM = [
   { role: '대표 / 서비스 기획', en: 'Founder · Service Design',   focus: '에듀테크 비즈니스 설계', tag: 'Recovery Logic 설계 주도' },
@@ -158,6 +176,44 @@ export default function About() {
             </div>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.7, color: BLACK, opacity: 0.55, marginTop: '1rem', maxWidth: '720px' }}>
               국내에 B2C 대상 소크라테스형 AI 서비스는 현재 전무합니다. LOGOS가 선점할 수 있는 완전한 공백 시장입니다.
+            </p>
+          </div>
+
+          {/* 검증 로드맵 */}
+          <div style={{ marginBottom: '4rem' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '1rem' }}>Validation Roadmap</div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.4vw, 1.8rem)', letterSpacing: '-0.02em', marginBottom: '2rem', color: BLACK }}>
+              검증 로드맵: 실제로 생각이 나아지는지 확인합니다
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              {[
+                { tag: '지금', color: SEMANTIC_DARK.win, items: VALIDATION_NOW },
+                { tag: '다음', color: SEMANTIC_DARK.info, items: VALIDATION_NEXT },
+              ].map((col) => (
+                <div key={col.tag} style={{ padding: '1.5rem 1.25rem', backgroundColor: '#ffffff70', borderTop: `2px solid ${col.color}` }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.28em', color: col.color, marginBottom: '0.75rem' }}>{col.tag}</div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {col.items.map((it) => (
+                      <li key={it} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: BLACK, opacity: 0.75, lineHeight: 1.7, paddingLeft: '12px', position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 0, color: col.color }}>·</span>
+                        {it}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1px', backgroundColor: 'rgba(10,10,10,0.15)' }}>
+              {VALIDATION_KPI.map((k) => (
+                <div key={k.label} style={{ padding: '1.25rem', backgroundColor: '#ffffff70' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.28em', textTransform: 'uppercase', color: BLACK, opacity: 0.5, marginBottom: '0.6rem' }}>KPI · {k.note}</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)', color: SEMANTIC_DARK.draw, letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '0.4rem' }}>{k.target}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: BLACK, opacity: 0.7 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.7, color: BLACK, opacity: 0.55, marginTop: '1rem', maxWidth: '720px' }}>
+              지금 보이는 점수는 AI 추정치입니다. 파일럿에서 사람 채점과 비교해 보정하기 전까지 효과의 증거로 쓰지 않습니다.
             </p>
           </div>
 

@@ -1,221 +1,136 @@
 /*
- * SessionHistory.tsx
- * LOGOS Design: 세션 기록 페이지
- * - 날짜/주제별 필터
- * - 세션 상세 보기
- * - 논리력 스코어 표시
+ * SessionHistory.tsx — 세션 기록 (이 기기에 저장된 실제 기록)
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
-import { scoreColor } from '@/lib/colors';
+import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, DeltaRow, Quote, RubricBars, ReportBlocks, sans } from '@/components/logos-ui';
+import { sessionDelta, useStore, type SessionRecord } from '@/lib/store';
 
-const SESSIONS = [
-  {
-    id: 1,
-    topic: '새 프로젝트 방향성에 대한 고민',
-    date: '2026-05-13',
-    score: 82,
-    level: '통합',
-    duration: '23분',
-    summary: '프로젝트의 핵심 목표를 명확히 하고, 팀원들과의 소통 방식에 대한 새로운 관점을 발견했습니다.',
-    tags: ['업무', '기획', '팀워크'],
-  },
-  {
-    id: 2,
-    topic: '팀 내 갈등 해결 방법',
-    date: '2026-05-12',
-    score: 74,
-    level: '본질',
-    duration: '18분',
-    summary: '갈등의 표면 아래에 있는 근본적인 기대 불일치를 발견했습니다.',
-    tags: ['인간관계', '업무', '소통'],
-  },
-  {
-    id: 3,
-    topic: '커리어 전환에 대한 불안감',
-    date: '2026-05-11',
-    score: 68,
-    level: '전제',
-    duration: '31분',
-    summary: '불안감의 원인이 실패에 대한 두려움이 아닌 정체성의 변화에 있음을 인식했습니다.',
-    tags: ['커리어', '자기계발', '심리'],
-  },
-  {
-    id: 4,
-    topic: '창업 아이디어의 실현 가능성',
-    date: '2026-05-09',
-    score: 71,
-    level: '본질',
-    duration: '27분',
-    summary: '아이디어의 핵심 가치 제안을 명확히 하고 타겟 고객을 재정의했습니다.',
-    tags: ['창업', '기획', '비즈니스'],
-  },
-  {
-    id: 5,
-    topic: '학습 방법론에 대한 고민',
-    date: '2026-05-07',
-    score: 65,
-    level: '전제',
-    duration: '20분',
-    summary: '효율적인 학습보다 깊이 있는 이해가 더 중요하다는 것을 재확인했습니다.',
-    tags: ['학습', '자기계발'],
-  },
+type Filter = 'all' | 'session' | 'argue';
+const FILTERS: { v: Filter; label: string }[] = [
+  { v: 'all', label: '전체' },
+  { v: 'session', label: '코칭' },
+  { v: 'argue', label: '오늘의 논증' },
 ];
+const fmt = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+};
 
-const ALL_TAGS = ['전체', '업무', '기획', '인간관계', '커리어', '자기계발', '창업', '심리', '학습'];
-
-const CREAM       = '#F0EBE0';
-const CREAM_MID   = 'rgba(240,235,224,0.55)';
-const CREAM_DIM   = 'rgba(240,235,224,0.12)';
-const CREAM_FAINT = 'rgba(240,235,224,0.06)';
-const BLACK       = '#0A0A0A';
+function Detail({ s }: { s: SessionRecord }) {
+  const [showLog, setShowLog] = useState(false);
+  return (
+    <div style={{ display: 'grid', gap: 18, padding: '4px 0 20px' }}>
+      {s.scoreBefore && s.scoreAfter ? (
+        <>
+          <DeltaRow before={s.scoreBefore.total} after={s.scoreAfter.total} />
+          <RubricBars before={s.scoreBefore} after={s.scoreAfter} />
+          <p style={{ margin: 0, fontFamily: sans, fontSize: 12, color: T.creamMid, lineHeight: 1.7 }}>AI 추정치 · {s.scoreAfter.rationale}</p>
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>아직 점수가 없어요. 끝까지 마치면 처음과 마지막을 비교해 보여 드려요.</p>
+      )}
+      {s.firstClaim && <Quote>처음: "{s.firstClaim}"</Quote>}
+      {s.finalSummary && <Quote after>마지막: "{s.finalSummary}"</Quote>}
+      {s.report && <ReportBlocks report={s.report} />}
+      {s.survey && (
+        <p style={{ margin: 0, fontFamily: mono, fontSize: 11, color: T.creamMid }}>
+          설문 · 일반 AI와의 차이 {s.survey.differentFromAI}/5 · 스스로 낸 결론 {s.survey.selfAuthored}/5
+        </p>
+      )}
+      <div>
+        <button type="button" className="lg-btn" style={{ ...btnGhost, padding: '6px 12px', fontSize: 10 }} onClick={() => setShowLog((v) => !v)} aria-expanded={showLog}>
+          {showLog ? '대화 접기' : `대화 전체 보기 (${s.turns.length})`}
+        </button>
+        {showLog && (
+          <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+            {s.turns.map((t, i) => (
+              <p key={i} style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: t.role === 'assistant' ? T.cream : T.creamMid, fontFamily: t.role === 'assistant' ? serif : mono, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.2em', color: T.creamDim, marginRight: 8 }}>{t.role === 'assistant' ? 'LOGOS' : 'YOU'}</span>
+                {t.content}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function SessionHistory() {
   const [, navigate] = useLocation();
-  const [selectedTag, setSelectedTag] = useState('전체');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const store = useStore();
+  const [filter, setFilter] = useState<Filter>('all');
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState<string | null>(null);
 
-  const filtered = SESSIONS.filter((s) => {
-    const matchTag = selectedTag === '전체' || s.tags.includes(selectedTag);
-    const matchSearch = !searchQuery || s.topic.includes(searchQuery) || s.summary.includes(searchQuery);
-    return matchTag && matchSearch;
-  });
+  const list = useMemo(
+    () =>
+      [...store.sessions]
+        .reverse()
+        .filter((s) => (filter === 'all' || s.kind === filter) && (!q || s.topic.includes(q) || (s.finalSummary ?? '').includes(q) || (s.firstClaim ?? '').includes(q))),
+    [store.sessions, filter, q],
+  );
 
   return (
-    <DashboardLayout title="세션 기록" titleEn="History">
-      {/* Search & Filter */}
-      <div className="mb-8">
-        <div
-          className="flex items-center gap-3 pb-4 mb-4"
-          style={{ borderBottom: `1px solid ${CREAM_DIM}` }}
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.4 }}>
-            <circle cx="6" cy="6" r="4.5" stroke={CREAM} strokeWidth="1.2" />
-            <path d="M9.5 9.5L12 12" stroke={CREAM} strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="세션 검색..."
-            className="flex-1 bg-transparent outline-none"
-            style={{ fontFamily: "var(--font-mono)", fontSize: '14px', color: CREAM }}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              style={{ color: CREAM_MID, opacity: 0.6 }}
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          {ALL_TAGS.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: '11px',
-                letterSpacing: '0.12em',
-                padding: '4px 10px',
-                backgroundColor: selectedTag === tag ? CREAM : 'transparent',
-                color: selectedTag === tag ? BLACK : CREAM_MID,
-                border: `1px solid ${selectedTag === tag ? CREAM : CREAM_DIM}`,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Session Count */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: CREAM_MID, marginBottom: '16px' }}>
-        {filtered.length}개의 세션
-      </div>
-
-      {/* Session List */}
-      <div>
-        {filtered.map((session, i) => (
-          <div key={session.id} style={{ borderTop: `1px solid ${CREAM_DIM}` }}>
-            <button
-              onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
-              className="w-full flex items-start justify-between py-5 text-left transition-colors"
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = CREAM_FAINT; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <div className="flex items-start gap-6">
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, width: '20px', flexShrink: 0, marginTop: '2px' }}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: '14px', fontWeight: 700, color: CREAM, marginBottom: '5px' }}>
-                    {session.topic}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID }}>{session.date}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID }}>{session.duration}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.1em', padding: '2px 6px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
-                      {session.level} 단계
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 shrink-0 ml-4">
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: '28px', fontWeight: 600, color: scoreColor(session.score) }}>
-                  {session.score}
-                </div>
-                <svg
-                  width="12" height="12" viewBox="0 0 12 12" fill="none"
-                  style={{ opacity: 0.3, transform: expandedId === session.id ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
-                >
-                  <path d="M4 2L8 6L4 10" stroke={CREAM} strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-              </div>
-            </button>
-
-            {expandedId === session.id && (
-              <div className="pb-6 pl-11">
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: '13px', color: CREAM_MID, lineHeight: 1.9, marginBottom: '14px' }}>
-                  {session.summary}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {session.tags.map((tag) => (
-                    <span key={tag} style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.1em', padding: '3px 8px', backgroundColor: CREAM_FAINT, color: CREAM_MID }}>
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.7'; }}
-                    onClick={() => navigate('/dashboard/analytics')}
-                  >
-                    분석 보기 →
-                  </button>
-                  <button
-                    style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase', color: CREAM_MID, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.35 }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.35'; }}
-                  >
-                    삭제
-                  </button>
-                </div>
-              </div>
-            )}
+    <DashboardLayout title="세션 기록" titleEn="Session History">
+      <FocusStyle />
+      <div style={{ display: 'grid', gap: 16, maxWidth: 860 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+          <div role="group" aria-label="종류" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {FILTERS.map((f) => (
+              <button key={f.v} type="button" className="lg-btn" aria-pressed={filter === f.v} onClick={() => setFilter(f.v)}
+                style={{ ...btnGhost, padding: '6px 12px', fontSize: 10, textTransform: 'none', backgroundColor: filter === f.v ? T.cream : 'transparent', color: filter === f.v ? T.black : T.cream }}>
+                {f.label}
+              </button>
+            ))}
           </div>
-        ))}
-        <div style={{ borderTop: `1px solid ${CREAM_DIM}` }} />
+          <label style={{ display: 'contents' }}>
+            <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>기록 검색</span>
+            <input className="lg-field" value={q} onChange={(e) => setQ(e.target.value)} placeholder="주제·내용 검색"
+              style={{ fontFamily: mono, fontSize: 12, color: T.cream, backgroundColor: T.black, border: `1px solid ${T.border}`, padding: '8px 12px', minWidth: 0, flex: '1 1 160px', maxWidth: 260 }} />
+          </label>
+        </div>
+
+        {store.sessions.length === 0 ? (
+          <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
+            <p style={{ margin: 0, fontFamily: serif, fontSize: 18, color: T.cream }}>아직 기록이 없어요.</p>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>세션이나 오늘의 논증을 시작하면 여기에 쌓여요. 기록은 이 기기에만 저장됩니다.</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/session')}>코칭 세션</button>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={() => navigate('/dashboard/argue')}>오늘의 논증</button>
+            </div>
+          </div>
+        ) : list.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>조건에 맞는 기록이 없어요.</p>
+        ) : (
+          <div>
+            {list.map((s) => {
+              const d = sessionDelta(s);
+              const isOpen = open === s.id;
+              return (
+                <div key={s.id} style={{ borderTop: `1px solid ${T.border}` }}>
+                  <button type="button" className="lg-btn" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : s.id)}
+                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '16px 0', background: 'none', border: 'none', color: T.cream, cursor: 'pointer' }}>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, marginBottom: 3, overflowWrap: 'anywhere' }}>{s.topic}</span>
+                      <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>
+                        {fmt(s.startedAt)} · {s.kind === 'argue' ? '오늘의 논증' : '코칭'} · {s.completedAt ? '완주' : `진행 중 (${s.stageReached} 단계)`}
+                      </span>
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
+                      {d !== null && <span style={{ fontFamily: mono, fontSize: 12, color: d > 0 ? T.amber : T.creamMid }}>{d > 0 ? `+${d}` : d}</span>}
+                      {s.scoreAfter && <span style={{ fontFamily: serif, fontSize: 24 }}>{s.scoreAfter.total}</span>}
+                    </span>
+                  </button>
+                  {isOpen && <Detail s={s} />}
+                </div>
+              );
+            })}
+            <div style={{ borderTop: `1px solid ${T.border}` }} />
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

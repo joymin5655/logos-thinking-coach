@@ -44,6 +44,17 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    path: '/dashboard/diagnostic',
+    label: '3분 진단',
+    labelEn: 'Diagnostic',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M8 4V8H11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     path: '/dashboard/argue',
     label: '오늘의 논증',
     labelEn: 'Daily Argue',
@@ -121,7 +132,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title, titleEn }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   return (
     <div
@@ -298,13 +309,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
 
       {/* ── Main Content ── */}
       <main
-        className="flex-1 overflow-y-auto"
+        className="flex-1 min-w-0 overflow-y-auto"
         style={{ backgroundColor: NEAR_BK }}
       >
         {/* Top bar */}
         {(title || titleEn) && (
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-8"
+            className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-8"
             style={{
               height: 60,
               boxSizing: 'border-box',
@@ -368,7 +379,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             </div>
           </div>
         )}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {children}
         </div>
       </main>

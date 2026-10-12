@@ -11,7 +11,7 @@
  *   - CTA 클릭은 부모에게 위임
  */
 import { useState } from 'react';
-import { PLANS, YEARLY_DISCOUNT, monthlyEquivalent, yearlyTotal, type Plan, type BillingCycle } from '@shared/plans';
+import { PLANS, BETA_NOTE, YEARLY_DISCOUNT, monthlyEquivalent, yearlyTotal, type Plan, type BillingCycle } from '@shared/plans';
 import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
 
 const CREAM       = '#F0EBE0';
@@ -46,8 +46,11 @@ export default function PlanCards({ variant, currentPlanId, onCtaClick }: Props)
 
   return (
     <>
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: fgMid, margin: '0 0 12px', lineHeight: 1.7 }}>
+        {BETA_NOTE} 아래 가격은 출시 시 예정 가격이에요.
+      </p>
       {/* Billing Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 14, flexWrap: 'wrap' }}>
         {(['monthly', 'yearly'] as BillingCycle[]).map((c) => {
           const active = cycle === c;
           return (
@@ -70,7 +73,7 @@ export default function PlanCards({ variant, currentPlanId, onCtaClick }: Props)
       </div>
 
       {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', backgroundColor: sepBg }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', backgroundColor: sepBg }}>
         {PLANS.map((plan) => {
           const monthly = monthlyEquivalent(plan, cycle);
           const isHighlight = plan.highlight;
@@ -83,6 +86,7 @@ export default function PlanCards({ variant, currentPlanId, onCtaClick }: Props)
           const ctaLabel = isCurrent ? '현재 플랜' : plan.cta;
           const ctaBg = isHighlight ? 'transparent' : 'transparent';
           const ctaBorder = isHighlight ? SEMANTIC.draw : (isPublic ? 'rgba(10,10,10,0.25)' : 'rgba(240,235,224,0.25)');
+          const soon = !!plan.comingSoon;
 
           return (
             <div key={plan.id} style={{ padding: variant === 'public' ? '1.5rem 1.5rem 1.25rem' : '1.75rem', backgroundColor: bg, color: txt, display: 'flex', flexDirection: 'column' }}>
@@ -99,6 +103,9 @@ export default function PlanCards({ variant, currentPlanId, onCtaClick }: Props)
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: txtMid }}>
                   /{plan.period.split(' ')[0]}
                 </span>
+                {plan.comingSoon && (
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: ACCENT, border: `1px solid ${fgDim}`, padding: '1px 6px', marginLeft: 6 }}>예정</span>
+                )}
               </div>
               {cycle === 'yearly' && plan.price > 0 ? (
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: ACCENT, letterSpacing: '0.05em', marginBottom: 10 }}>
@@ -132,12 +139,12 @@ export default function PlanCards({ variant, currentPlanId, onCtaClick }: Props)
                 onClick={() => !ctaDisabled && onCtaClick(plan)}
                 disabled={ctaDisabled}
                 style={{
-                  width: '100%', padding: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase' as const,
-                  border: `1px solid ${ctaBorder}`,
+                  width: '100%', padding: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 10, letterSpacing: soon ? '0.08em' : '0.22em', textTransform: 'uppercase' as const,
+                  border: `1px ${soon ? 'dashed' : 'solid'} ${ctaBorder}`,
                   backgroundColor: ctaBg,
                   color: isHighlight ? CREAM : txt,
                   cursor: ctaDisabled ? 'default' : 'pointer',
-                  opacity: ctaDisabled ? 0.45 : 1,
+                  opacity: ctaDisabled ? 0.45 : soon ? 0.7 : 1,
                   transition: 'all 0.18s',
                 }}
                 onMouseEnter={(e) => {
