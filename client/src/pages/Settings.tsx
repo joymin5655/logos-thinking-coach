@@ -13,7 +13,7 @@ import { T, mono, serif, sans, Label, btnPrimary, btnGhost, btnDisabled, panelSt
 import { useTheme, type ThemePref } from '@/contexts/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { OUTBOX_KEY, flush, pullAll } from '@/lib/sync';
+import { flush, pullAll, resetSync } from '@/lib/sync';
 import { clearLocal, exportJSON, toISODate, updateStore } from '@/lib/store';
 import { downloadFile } from '@/lib/ics';
 import { formatDate, useLocale, useT, type Locale } from '@/i18n';
@@ -107,6 +107,7 @@ export default function Settings() {
   const deleteData = async () => {
     if (!supabase || !uid) return;
     setBusy(true);
+    resetSync({ keepUid: true }); // 보낼 outbox를 먼저 비워 삭제 뒤에 되살아나지 않게 한다
     const { error } = await supabase.rpc('delete_my_data');
     if (error) {
       setBusy(false);
@@ -123,6 +124,7 @@ export default function Settings() {
   const deleteAccount = async () => {
     if (!supabase) return;
     setBusy(true);
+    resetSync({ keepUid: true });
     const { error } = await supabase.rpc('delete_my_account');
     if (error) {
       setBusy(false);
@@ -130,11 +132,7 @@ export default function Settings() {
       return;
     }
     clearLocal();
-    try {
-      localStorage.removeItem(OUTBOX_KEY);
-    } catch {
-      /* 저장소 접근 불가 */
-    }
+    resetSync();
     await supabase.auth.signOut({ scope: 'local' });
     setBusy(false);
     setAccountOpen(false);

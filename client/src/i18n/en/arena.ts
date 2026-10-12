@@ -48,6 +48,5 @@ export const arena: Record<keyof typeof Ko, string> = {
   recordLine: '{w}W {d}D {l}L',
   vsAverage: 'This match {n} · your average {avg} ({diff})',
   firstMatch: 'This is your first match, so there is no average to compare yet. This match: {n}.',
-  history: 'View history',
   again: 'Start a new debate',
 };

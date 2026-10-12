@@ -5,7 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { onSignIn, signOutFlow } from './sync';
+import { onSignIn, onSignedOut, signOutFlow } from './sync';
 
 type AuthContextValue = {
   user: User | null;
@@ -13,6 +13,8 @@ type AuthContextValue = {
   /** 첫 세션 확인이 끝나기 전까지 true */
   loading: boolean;
   isAdmin: boolean;
+  /** 로그인했지만 is_admin 확인이 끝나기 전까지 true */
+  adminLoading: boolean;
   /** false면 Supabase env가 없어 로그인할 수 없다 */
   ready: boolean;
   /** 로그인 후 돌아올 경로(같은 사이트 안만). 실패하면 false */
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(!!supabase);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUid, setAdminUid] = useState<string | null>(null); // is_admin 확인이 끝난 uid
   const signedInUid = useRef<string | null>(null);
 
   useEffect(() => {
@@ -45,13 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (uid === signedInUid.current) return;
       signedInUid.current = uid;
       if (!uid) {
+        onSignedOut(); // 만료·원격 로그아웃에서도 재시도 루프를 멈춘다
         setIsAdmin(false);
+        setAdminUid(null);
         return;
       }
       void onSignIn(uid);
       void Promise.resolve(client.rpc('is_admin')).then(
-        ({ data, error }) => !cancelled && signedInUid.current === uid && setIsAdmin(!error && data === true),
-        () => !cancelled && setIsAdmin(false),
+        ({ data, error }) => {
+          if (cancelled || signedInUid.current !== uid) return;
+          setIsAdmin(!error && data === true);
+          setAdminUid(uid);
+        },
+        () => {
+          if (cancelled || signedInUid.current !== uid) return;
+          setIsAdmin(false);
+          setAdminUid(uid);
+        },
       );
     };
 
@@ -82,9 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return !error;
   }, []);
 
+  const adminLoading = !!session && adminUid !== session.user.id;
   const value = useMemo<AuthContextValue>(
-    () => ({ user: session?.user ?? null, session, loading, isAdmin, ready: !!supabase, signIn, signOut: signOutFlow }),
-    [session, loading, isAdmin, signIn],
+    () => ({ user: session?.user ?? null, session, loading, isAdmin, adminLoading, ready: !!supabase, signIn, signOut: signOutFlow }),
+    [session, loading, isAdmin, adminLoading, signIn],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

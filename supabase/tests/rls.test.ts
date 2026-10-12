@@ -296,3 +296,58 @@ describe("데이터·계정 삭제", () => {
     await expect(as(db, "anon").q("select delete_my_data()")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("quota carryover (계정 삭제 후 재가입)", () => {
+  const call = (who: string, ref: string, day = 3) =>
+    as(db, who).q<{ consume_quota: { ok: boolean; reason?: string } }>(
+      "select consume_quota('session', $1, 'turn', 9, 9, $2)",
+      [ref, day],
+    ).then((r) => r[0].consume_quota);
+
+  beforeEach(async () => {
+    await db.exec("delete from private.deleted_usage");
+  });
+
+  it("같은 이메일로 재가입해도 오늘 사용량이 이어진다", async () => {
+    await db.query("update auth.users set email = 'Same@Example.test' where id = $1", [A]);
+    for (let i = 0; i < 3; i++) expect((await call(A, REF(1))).ok).toBe(true);
+    await as(db, A).q("select delete_my_account()");
+    const A2 = await addUser(db, 11, "same@example.test"); // 다른 uuid, 같은 이메일(대소문자 무시)
+    expect(await call(A2, REF(1))).toEqual({ ok: false, reason: "day" });
+  });
+
+  it("다른 이메일은 영향 없음", async () => {
+    for (let i = 0; i < 3; i++) await call(A, REF(1));
+    await as(db, A).q("select delete_my_account()");
+    expect((await call(B, REF(1))).ok).toBe(true);
+    const C = await addUser(db, 12, "other@example.test");
+    expect((await call(C, REF(1))).ok).toBe(true);
+  });
+
+  it("authenticated는 private.deleted_usage를 읽을 수 없다", async () => {
+    await expect(as(db, A).q("select * from private.deleted_usage")).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe("records 행 수 상한", () => {
+  const seed = (n: number) =>
+    db.query(
+      `insert into records (id, user_id, kind, started_at, data)
+       select gen_random_uuid(), $1, 'session', now(), '{}'::jsonb from generate_series(1, $2)`,
+      [A, n],
+    );
+
+  it("상한 미만이면 새 행이 들어간다", async () => {
+    await as(db, A).q(insertRec, [...rec(1)]);
+    expect(await as(db, A).q("select id from records")).toHaveLength(1);
+  });
+
+  it("2000행에서 새 행은 거부되고 기존 id upsert는 통과한다", async () => {
+    await as(db, A).q(insertRec, [...rec(1)]);
+    await seed(1999);
+    await expect(as(db, A).q(insertRec, [...rec(2)])).rejects.toThrow(/record_limit/);
+    await as(db, A).q(`${insertRec} on conflict (id) do update set data = excluded.data`, [...rec(1)]);
+    // 다른 사용자는 영향 없음
+    await as(db, B).q(insertRec, [...rec(3)]);
+  });
+});

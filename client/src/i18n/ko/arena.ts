@@ -47,6 +47,5 @@ export const arena = {
   recordLine: '{w}승 {d}무 {l}패',
   vsAverage: '이번 판 {n}점 · 내 평균 {avg}점 ({diff})',
   firstMatch: '이번이 첫 판이라 비교할 평균이 아직 없어요. 이번 판 {n}점.',
-  history: '기록 보기',
   again: '새 토론 시작',
 } as const;

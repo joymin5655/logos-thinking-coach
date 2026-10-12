@@ -7,6 +7,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, DeltaRow, Quote, RubricBars, ReportBlocks, sans } from '@/components/logos-ui';
 import { formatDate, useT } from '@/i18n';
 import { sessionDelta, useStore, type SessionRecord } from '@/lib/store';
+import type { Stage } from '@/lib/api';
+
+const STAGE_KEY = { 표면: 'Surface', 도전: 'Challenge', 핵심: 'Core', 통합: 'Integrate' } as const satisfies Record<Stage, string>;
 
 type Filter = 'all' | 'session' | 'argue';
 const FILTERS = [
@@ -59,6 +62,7 @@ function Detail({ s }: { s: SessionRecord }) {
 
 export default function SessionHistory() {
   const t = useT('history');
+  const tSession = useT('session');
   const [, navigate] = useLocation();
   const store = useStore();
   const [filter, setFilter] = useState<Filter>('all');
@@ -116,7 +120,7 @@ export default function SessionHistory() {
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, marginBottom: 3, overflowWrap: 'anywhere' }}>{s.topic}</span>
                       <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>
-                        {fmt(s.startedAt)} · {s.kind === 'argue' ? t('kindArgue') : t('kindCoaching')} · {s.completedAt ? t('done') : t('inProgress', { stage: s.stageReached })}
+                        {fmt(s.startedAt)} · {s.kind === 'argue' ? t('kindArgue') : t('kindCoaching')} · {s.completedAt ? t('done') : t('inProgress', { stage: tSession(`stage${STAGE_KEY[s.stageReached]}`) })}
                       </span>
                     </span>
                     <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>

@@ -143,7 +143,7 @@ export const OUTPUT_CAPS = {
   assumptions: 400,
   nextQuestions: 400,
   turningPoint: 400,
-  argument: 1200,
+  argument: 1000,
   targetsClaim: 240,
   quote: 400,
   lesson: 400,

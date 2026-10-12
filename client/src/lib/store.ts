@@ -7,6 +7,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import type { Stage, Control, Position } from './api';
+import { translate } from '../i18n';
 
 export const STORE_KEY = 'logos.v1';
 export const STORE_VERSION = 1;
@@ -463,8 +464,7 @@ export function addDiagnostic(rec: DiagnosticRecord) {
 export function buildExport(store: LogosStore, now = new Date()) {
   const today = toISODate(now);
   return {
-    note:
-      '이 파일은 LOGOS 파일럿용 내보내기입니다. 사용자가 직접 쓴 글과 AI 대화 전문이 그대로 들어 있고, 이름·이메일은 포함되지 않습니다. participantId는 이 기기에서 한 번 만든 임의 값입니다. 점수는 AI 추정치이며 사람 채점으로 보정되지 않았습니다.',
+    note: translate('common', 'exportNote'),
     exportedAt: now.toISOString(),
     participantId: store.participantId,
     version: store.version,

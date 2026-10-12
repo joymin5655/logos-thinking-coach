@@ -13,8 +13,9 @@ import {
   TypingDots, ErrorLine, CharCount, Quote,
 } from '@/components/logos-ui';
 import { coach, errorMessage, handleAuthError, type ArenaSide } from '@/lib/api';
-import { SEMANTIC } from '@/lib/colors';
-import { arenaRecord, loadStore, newId, upsertArena, type ArenaRecord } from '@/lib/store';
+import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
+import { useTheme } from '@/contexts/ThemeContext';
+import { arenaRecord, loadStore, newId, recordActivity, upsertArena, type ArenaRecord } from '@/lib/store';
 import { useLocale, useT } from '@/i18n';
 import { ARENA_TOPICS, type ArenaDifficulty, type ArenaTopic } from '../../../shared/arenaTopics';
 
@@ -37,6 +38,7 @@ const tiny = { fontFamily: mono, fontSize: 10, letterSpacing: '0.2em', textTrans
 
 export default function Arena() {
   const t = useT('arena');
+  const sem = useTheme().theme === 'dark' ? SEMANTIC : SEMANTIC_DARK; // 라이트 배경에서는 명도를 낮춘 팔레트
   const { locale } = useLocale();
   const [, navigate] = useLocation();
   const [step, setStep] = useState<Step>('topic');
@@ -90,6 +92,7 @@ export default function Arena() {
           verdict: res.verdict, rationale: res.rationale, lessons: res.lessons,
         },
       });
+      recordActivity();
     } catch (e) {
       if (handleAuthError(e, navigate)) return;
       setFailed({ kind: 'judge', error: errorMessage(e) });
@@ -240,7 +243,7 @@ export default function Arena() {
             </div>
             <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: `1px solid ${T.borderMid}`, padding: '6px 14px', fontFamily: serif, fontSize: 20, fontWeight: 600, color: T.cream }}>
-                <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: SEMANTIC[res.verdict] }} />
+                <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: sem[res.verdict] }} />
                 {t(VERDICT_KEY[res.verdict])}
               </span>
               <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{t('thresholds')}</span>
@@ -285,7 +288,6 @@ export default function Arena() {
           </p>
           <div style={{ display: 'grid', gap: 8 }}>
             <button type="button" className="lg-btn" style={btnPrimary} onClick={reset}>{t('again')}</button>
-            <Link href="/dashboard/history" className="lg-btn" style={{ ...btnGhost, textAlign: 'center', textDecoration: 'none' }}>{t('history')}</Link>
           </div>
         </div>
       </div>,

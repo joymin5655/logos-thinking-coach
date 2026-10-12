@@ -7,7 +7,8 @@ import { useLocation } from 'wouter';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, AXES } from '@/components/logos-ui';
-import { SEMANTIC } from '@/lib/colors';
+import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { formatDate, useT } from '@/i18n';
 import { avgDelta, useStore, type Score } from '@/lib/store';
 
@@ -31,6 +32,7 @@ export default function Analytics() {
   const [, navigate] = useLocation();
   const store = useStore();
   const t = useT('analytics');
+  const sem = useTheme().theme === 'dark' ? SEMANTIC : SEMANTIC_DARK; // 라이트 배경에서는 명도를 낮춘 팔레트
   const [period, setPeriod] = useState<Period>('month');
 
   const points = useMemo(() => {
@@ -64,8 +66,8 @@ export default function Analytics() {
   if (delta !== null && delta <= 0) improves.push(t('deltaFlat'));
 
   const feedback = [
-    { type: 'strong', title: t('strengths'), color: SEMANTIC.win, items: strengths },
-    { type: 'weak', title: t('improvements'), color: SEMANTIC.warning, items: improves },
+    { type: 'strong', title: t('strengths'), color: sem.win, items: strengths },
+    { type: 'weak', title: t('improvements'), color: sem.warning, items: improves },
   ];
 
   return (
@@ -109,7 +111,7 @@ export default function Analytics() {
                         <YAxis domain={[0, 100]} tick={tick} axisLine={false} tickLine={false} width={40} />
                         <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} />
                         <Line type="monotone" dataKey="consistency" name={t('serConsistency')} stroke={T.accent} strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="evidence" name={t('serEvidence')} stroke={SEMANTIC.info} strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                        <Line type="monotone" dataKey="evidence" name={t('serEvidence')} stroke={sem.info} strokeWidth={2} dot={false} strokeDasharray="5 3" />
                         <Line type="monotone" dataKey="defense" name={t('serDefense')} stroke={T.amber} strokeWidth={2} dot={false} strokeDasharray="1 3" />
                       </LineChart>
                     </ResponsiveContainer>

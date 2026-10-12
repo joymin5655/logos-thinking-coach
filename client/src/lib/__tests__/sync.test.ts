@@ -23,7 +23,9 @@ const fake = vi.hoisted(() => {
       },
       select: () => ({
         order: () => ({
-          range: async (a: number, b: number) => ({ data: [...state.rows.values()].slice(a, b + 1), error: null }),
+          order: () => ({
+            range: async (a: number, b: number) => ({ data: [...state.rows.values()].slice(a, b + 1), error: null }),
+          }),
         }),
       }),
     }),
@@ -71,6 +73,13 @@ afterEach(() => {
 });
 
 describe('toRow', () => {
+  it('설문 일부만 답한 기록(0)은 서버 제약(1~5)을 위해 null로 보낸다', () => {
+    const r = toRow('session', sess('s9', { survey: { differentFromAI: 0, selfAuthored: 4 } }));
+    expect(r.survey_diff).toBeNull();
+    expect(r.survey_self).toBe(4);
+    expect(toRow('session', sess('s8', { survey: { differentFromAI: 6, selfAuthored: 3 } })).survey_diff).toBeNull();
+  });
+
   it('세션: 점수·설문·완료 시각을 열로 뽑고 data에 원본을 둔다', () => {
     const rec = sess('s1', { completedAt: '2026-10-01T01:00:00.000Z', scoreBefore: score(40), scoreAfter: score(70), survey: { differentFromAI: 4, selfAuthored: 5 } });
     expect(toRow('session', rec)).toEqual({

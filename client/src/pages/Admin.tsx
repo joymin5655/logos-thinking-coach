@@ -64,8 +64,9 @@ function Section({ title, note, children }: { title: string; note?: string; chil
 }
 
 export default function Admin() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, loading: authLoading, adminLoading } = useAuth();
   const t = useT('admin');
+  const tAuth = useT('auth');
   const { locale } = useLocale();
   const [data, setData] = useState<Metrics | null>(null);
   const [busy, setBusy] = useState(false);
@@ -116,7 +117,13 @@ export default function Admin() {
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading || adminLoading) {
+    return (
+      <div role="status" style={{ minHeight: 'calc(100dvh / var(--ui-scale))', display: 'grid', placeItems: 'center', background: T.black, color: T.creamMid, fontFamily: mono, fontSize: 11, letterSpacing: '0.18em' }}>
+        {tAuth('checking')}
+      </div>
+    );
+  }
   if (!isAdmin || denied) return <NotFound />;
 
   const dash = t('noData');

@@ -19,7 +19,7 @@ export default function AuthCallback() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const desc = query.get('error_description') ?? hash.get('error_description');
     if (desc) {
-      setError(desc);
+      setError(translate('auth', 'callbackNoSession')); // URL의 error_description은 화면에 그대로 싣지 않는다
       return;
     }
     if (!supabase) {
@@ -28,7 +28,7 @@ export default function AuthCallback() {
     }
     // getSession()은 코드 교환이 끝날 때까지 기다린다
     void supabase.auth.getSession().then(({ data, error: e }) => {
-      if (e) setError(e.message);
+      if (e) setError(translate('auth', 'callbackNoSession'));
       else if (!data.session) setError(translate('auth', 'callbackNoSession'));
     });
   }, []);
