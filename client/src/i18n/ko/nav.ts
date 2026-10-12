@@ -1,0 +1,22 @@
+// 한국어 원문(기준 사전). 키를 추가하면 en/nav.ts에도 같은 키가 있어야 타입 검사를 통과한다.
+export const nav = {
+  home: '홈',
+  diagnostic: '3분 진단',
+  argue: '오늘의 논증',
+  session: '소크라테스 코칭',
+  arena: '토론 아레나',
+  analytics: '논리력 분석',
+  history: '세션 기록',
+  subscription: '구독',
+  newSession: '+ 새 세션',
+  userMenu: '계정 메뉴',
+  defaultName: '사용자',
+  plan: 'Free · 베타',
+  settings: '설정',
+  privacy: '개인정보 처리방침',
+  admin: '관리자',
+  signOut: '로그아웃',
+  signIn: '로그인',
+  pending: '동기화 대기 {n}',
+  collapse: '사이드바 접기·펴기',
+} as const;

@@ -1,0 +1,29 @@
+# Supabase Free 프로젝트는 7일 동안 요청이 없으면 일시정지된다. 하루 한 번 가벼운 요청으로 깨워 둔다.
+# URL·publishable 키는 공개 전제 값이라 secret이 아니라 Actions variables에 둔다.
+name: supabase-keepalive
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping Supabase (auth + PostgREST)
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -eu
+          # anon에는 테이블 권한이 없어 401이 정상이다 — DB까지 요청이 닿았는지만 본다.
+          for path in "auth/v1/health" "rest/v1/records?select=id&limit=1"; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+              -H "apikey: $SUPABASE_PUBLISHABLE_KEY" "$SUPABASE_URL/$path")
+            echo "$path -> $code"
+            if [ "$code" -ge 500 ] || [ "$code" = "000" ]; then exit 1; fi
+          done

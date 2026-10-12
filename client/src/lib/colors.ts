@@ -6,22 +6,22 @@
  *   - RANK_SEQUENTIAL    : 랭크 9단계 그라데이션 (재 → 금)
  *   - SEMANTIC           : 승패/상태 의미
  *
- * 채도 55-75% / 명도 55-65% — 다크 BG에서 또렷이 떠 보이며 다양성 확보.
+ * 채도 55-75% / 명도 50-65% — 다크(#0A0A0A)·라이트(#F0EBE0) 배경 양쪽에서 읽히는 중간 명도.
  * 색맹(deuteranopia/protanopia) 친화: 적·녹 직접 대비 회피, 명도로도 구분.
  */
 import type { Field } from './preferences';
 
 // ── Categorical (카테고리/필드용 9색) ──
 export const CHART_CATEGORICAL: string[] = [
-  '#E0B84A', // 1 Vivid Gold      (기존 ACCENT 채도 ↑)
+  '#CFA23A', // 1 Vivid Gold      (기존 ACCENT 채도 ↑)
   '#E07350', // 2 Vivid Terra
-  '#F2A21E', // 3 Bright Ochre
+  '#E3901A', // 3 Bright Ochre
   '#C265B8', // 4 Vivid Plum
   '#4FA8DC', // 5 Bright Sky
   '#E8552E', // 6 Hot Rust
-  '#8FCC4C', // 7 Lime Sage
-  '#D4D43E', // 8 Bright Olive
-  '#3FB4D6', // 9 Cyan Slate
+  '#74B238', // 7 Lime Sage
+  '#B9B92E', // 8 Bright Olive
+  '#2FA2C6', // 9 Cyan Slate
 ];
 
 // Field name → 색 고정 매핑 (preferences.ts ALL_FIELDS 순서와 일치)

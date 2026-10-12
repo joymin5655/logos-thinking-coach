@@ -279,7 +279,7 @@ type Plan = {
 - `singleViewport` 모드는 main이 `overflow: hidden` 이라 콘텐츠가 정해진 viewport 안에 들도록 패딩/폰트 사이즈 조정 필요. 새 콘텐츠 추가 시 한 화면 룰 깨질 수 있음.
 - `zoom` 속성은 모든 최신 브라우저 지원 (Firefox 126+, 2024-05).
 - 3D 모델 22MB는 첫 로드에 무겁다 — production 빌드 시 GLB 압축(Draco) 또는 lazy load 고려.
-- `%VITE_ANALYTICS_*%` 환경 변수 미설정 시 콘솔 경고. `.env` 추가 또는 `client/index.html` umami 스크립트 제거 권장.
+- analytics(umami) 스크립트는 제거되었다. 분석 도구가 필요하면 별도로 도입한다.
 
 ---
 

@@ -1,218 +1,161 @@
 /*
  * Analytics.tsx — LOGOS 논리력 분석
- * Palette: BLACK #0A0A0A / CREAM #F0EBE0 / CREAM_MID / CREAM_DIM
+ * 세션 최종 정리와 진단의 루브릭 점수(AI 추정치)를 시간순으로 본다. 강점·개선은 평균에서 규칙으로 계산한다.
  */
+import { useMemo, useState } from 'react';
+import { useLocation } from 'wouter';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
-import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, RadarChart, Radar,
-  PolarGrid, PolarAngleAxis,
-} from 'recharts';
-import { useState } from 'react';
-import { SEMANTIC, scoreColor } from '@/lib/colors';
+import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, AXES } from '@/components/logos-ui';
+import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
+import { useTheme } from '@/contexts/ThemeContext';
+import { formatDate, useT } from '@/i18n';
+import { avgDelta, useStore, type Score } from '@/lib/store';
 
-const CREAM      = '#F0EBE0';
-const CREAM_MID  = 'rgba(240,235,224,0.55)';
-const CREAM_DIM  = 'rgba(240,235,224,0.12)';
-const CREAM_FAINT= 'rgba(240,235,224,0.06)';
-const BLACK      = '#0A0A0A';
-
-const WEEKLY_DATA = [
-  { day: '5/7',  score: 62, logic: 60, consistency: 65, evidence: 61 },
-  { day: '5/8',  score: 68, logic: 70, consistency: 66, evidence: 68 },
-  { day: '5/9',  score: 65, logic: 63, consistency: 68, evidence: 64 },
-  { day: '5/10', score: 74, logic: 76, consistency: 72, evidence: 74 },
-  { day: '5/11', score: 71, logic: 73, consistency: 70, evidence: 70 },
-  { day: '5/12', score: 79, logic: 80, consistency: 78, evidence: 79 },
-  { day: '5/13', score: 82, logic: 85, consistency: 78, evidence: 83 },
+type Period = 'week' | 'month' | 'all';
+const PERIODS: { v: Period; label: 'periodWeek' | 'periodMonth' | 'periodAll'; days: number }[] = [
+  { v: 'week', label: 'periodWeek', days: 7 },
+  { v: 'month', label: 'periodMonth', days: 30 },
+  { v: 'all', label: 'periodAll', days: 36500 },
 ];
+const pct = (v: number, max: number) => Math.round((v / max) * 100);
+const tooltipStyle = { backgroundColor: T.panel, border: `1px solid ${T.borderMid}`, fontFamily: 'Space Mono', fontSize: 11, color: T.cream };
+const tick = { fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid };
 
-const MONTHLY_DATA = [
-  { week: '4주차', score: 58 },
-  { week: '1주차', score: 63 },
-  { week: '2주차', score: 69 },
-  { week: '3주차', score: 74 },
-  { week: '이번주', score: 82 },
-];
-
-const RADAR_DATA = [
-  { subject: '논리 구조', A: 85, fullMark: 100 },
-  { subject: '일관성',   A: 78, fullMark: 100 },
-  { subject: '근거의 질', A: 83, fullMark: 100 },
-  { subject: '사고 깊이', A: 76, fullMark: 100 },
-  { subject: '통합력',   A: 80, fullMark: 100 },
-];
-
-const FEEDBACK = [
-  {
-    type: '강점',
-    color: SEMANTIC.win,
-    items: [
-      '논리 구조가 명확하게 발전하고 있습니다.',
-      '근거 제시 능력이 지난 주 대비 12% 향상되었습니다.',
-    ],
-  },
-  {
-    type: '개선 포인트',
-    color: SEMANTIC.warning,
-    items: [
-      '일관성 유지에 더 집중해보세요. 중간에 전제가 바뀌는 경향이 있습니다.',
-      '반론을 적극적으로 고려하면 사고 깊이가 더 높아질 수 있습니다.',
-    ],
-  },
-];
+const ADVICE = {
+  consistency: { strong: 'advStrongConsistency', weak: 'advWeakConsistency' },
+  evidence: { strong: 'advStrongEvidence', weak: 'advWeakEvidence' },
+  defense: { strong: 'advStrongDefense', weak: 'advWeakDefense' },
+} as const;
 
 export default function Analytics() {
-  const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const [, navigate] = useLocation();
+  const store = useStore();
+  const t = useT('analytics');
+  const sem = useTheme().theme === 'dark' ? SEMANTIC : SEMANTIC_DARK; // 라이트 배경에서는 명도를 낮춘 팔레트
+  const [period, setPeriod] = useState<Period>('month');
 
-  const cardStyle = {
-    border: `1px solid ${CREAM_DIM}`,
-    backgroundColor: CREAM_FAINT,
-  };
+  const points = useMemo(() => {
+    const cutoff = Date.now() - PERIODS.find((p) => p.v === period)!.days * 86_400_000;
+    const list: { at: string; label: string; score: Score }[] = [];
+    for (const s of store.sessions) {
+      if (s.completedAt && s.scoreAfter) list.push({ at: s.completedAt, label: s.kind === 'argue' ? t('kindArgue') : t('kindSession'), score: s.scoreAfter });
+    }
+    for (const d of store.diagnostics) list.push({ at: d.at, label: t('kindDiagnostic'), score: d.score });
+    return list.filter((p) => new Date(p.at).getTime() >= cutoff).sort((a, b) => a.at.localeCompare(b.at));
+  }, [store.sessions, store.diagnostics, period, t]);
 
-  const tooltipStyle = {
-    backgroundColor: '#1a1a1a',
-    border: `1px solid ${CREAM_DIM}`,
-    borderRadius: 0,
-    color: CREAM,
-    fontSize: 10,
-    fontFamily: "var(--font-mono)",
-  };
+  const series = points.map((p) => ({
+    day: formatDate(p.at),
+    total: p.score.total,
+    consistency: pct(p.score.consistency, 30),
+    evidence: pct(p.score.evidence, 40),
+    defense: pct(p.score.defense, 30),
+  }));
 
-  const labelStyle = { fontFamily: "var(--font-mono)", fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: CREAM_MID, marginBottom: '8px' };
-  const headStyle  = { fontFamily: "var(--font-serif)", fontSize: '26px', fontWeight: 600, color: CREAM, marginBottom: '4px' };
+  const avgs = AXES.map((ax) => {
+    const mean = points.length ? points.reduce((a, p) => a + p.score[ax.key], 0) / points.length : 0;
+    return { ...ax, ratio: points.length ? mean / ax.max : 0, mean };
+  });
+  const bars = avgs.map((a) => ({ name: t(a.labelKey), value: Math.round(a.ratio * 100) }));
+  const delta = avgDelta(store.sessions);
+
+  const strengths = avgs.filter((a) => a.ratio >= 0.7).map((a) => t(ADVICE[a.key].strong));
+  const improves = avgs.filter((a) => a.ratio < 0.55).map((a) => t(ADVICE[a.key].weak));
+  if (delta !== null && delta > 0) strengths.push(t('deltaUp', { n: Math.round(delta) }));
+  if (delta !== null && delta <= 0) improves.push(t('deltaFlat'));
+
+  const feedback = [
+    { type: 'strong', title: t('strengths'), color: sem.win, items: strengths },
+    { type: 'weak', title: t('improvements'), color: sem.warning, items: improves },
+  ];
 
   return (
-    <DashboardLayout title="논리력 분석" titleEn="Analytics">
-      {/* Header Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        {[
-          { label: '현재 스코어', labelEn: 'Current',  value: '82', change: '+8',  color: scoreColor(82) },
-          { label: '최고 스코어', labelEn: 'Best',     value: '82', change: '',    color: SEMANTIC.insight },
-          { label: '평균 스코어', labelEn: 'Average',  value: '72', change: '+4',  color: scoreColor(72) },
-          { label: '총 세션',    labelEn: 'Sessions', value: '24', change: '',    color: SEMANTIC.info },
-        ].map((stat) => (
-          <div key={stat.label} className="p-5" style={cardStyle}>
-            <div style={labelStyle}>{stat.labelEn}</div>
-            <div className="flex items-baseline gap-2">
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: '34px', fontWeight: 600, color: stat.color }}>
-                {stat.value}
-              </span>
-              {stat.change && (
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, color: SEMANTIC.win }}>
-                  {stat.change}
-                </span>
-              )}
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: '11px', color: CREAM_MID, marginTop: '4px' }}>
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Period Toggle */}
-      <div className="flex items-center gap-0 mb-6">
-        {(['weekly', 'monthly'] as const).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: '11px',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase' as const,
-              padding: '7px 18px',
-              backgroundColor: period === p ? CREAM : 'transparent',
-              color: period === p ? BLACK : CREAM_MID,
-              border: `1px solid ${CREAM_DIM}`,
-              cursor: 'pointer',
-              transition: 'all 0.18s',
-            }}
-          >
-            {p === 'weekly' ? '주간' : '월간'}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Chart */}
-      <div className="p-6 mb-6" style={cardStyle}>
-        <div style={labelStyle}>Score Trend</div>
-        <div style={headStyle}>{period === 'weekly' ? '주간 스코어 변화' : '월간 스코어 변화'}</div>
-        <div style={{ height: 200, marginTop: '20px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            {period === 'weekly' ? (
-              <LineChart data={WEEKLY_DATA}>
-                <CartesianGrid stroke={CREAM_DIM} strokeDasharray="3 3" />
-                <XAxis dataKey="day" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[50, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="score"       stroke={SEMANTIC.draw}    strokeWidth={1.8} dot={{ fill: SEMANTIC.draw, r: 2.5, strokeWidth: 0 }} name="종합" />
-                <Line type="monotone" dataKey="logic"       stroke={SEMANTIC.win}     strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="논리구조" />
-                <Line type="monotone" dataKey="consistency" stroke={SEMANTIC.info}    strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="일관성" />
-                <Line type="monotone" dataKey="evidence"    stroke={SEMANTIC.warning} strokeWidth={1.2} strokeDasharray="4 2" dot={false} name="근거" />
-              </LineChart>
-            ) : (
-              <BarChart data={MONTHLY_DATA}>
-                <CartesianGrid stroke={CREAM_DIM} strokeDasharray="3 3" />
-                <XAxis dataKey="week" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[40, 100]} tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <defs>
-                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor={SEMANTIC.insight} />
-                    <stop offset="100%" stopColor={SEMANTIC.draw} />
-                  </linearGradient>
-                </defs>
-                <Bar dataKey="score" fill="url(#barFill)" radius={[1, 1, 0, 0]} name="스코어" />
-              </BarChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Bottom Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Radar Chart */}
-        <div className="p-6" style={cardStyle}>
-          <div style={labelStyle}>Skill Radar</div>
-          <div style={headStyle}>역량 분석</div>
-          <div style={{ height: 200, marginTop: '16px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={RADAR_DATA}>
-                <PolarGrid stroke={CREAM_DIM} />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fill: CREAM_MID, fontFamily: "var(--font-mono)" }} />
-                <Radar name="Score" dataKey="A" stroke={SEMANTIC.draw} fill={SEMANTIC.draw} fillOpacity={0.18} strokeWidth={1.5} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Feedback */}
-        <div className="p-6" style={cardStyle}>
-          <div style={labelStyle}>AI Feedback</div>
-          <div style={headStyle}>개선 피드백</div>
-          <div className="space-y-6" style={{ marginTop: '16px' }}>
-            {FEEDBACK.map((fb) => (
-              <div key={fb.type}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: fb.color, fontWeight: 700, marginBottom: '10px' }}>
-                  {fb.type}
-                </div>
-                <ul className="space-y-2">
-                  {fb.items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span style={{ color: CREAM_MID, marginTop: 1, flexShrink: 0 }}>—</span>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: CREAM_MID, lineHeight: 1.8 }}>
-                        {item}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <FocusStyle />
+      <div style={{ display: 'grid', gap: 20, maxWidth: 1080 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ margin: 0, fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('aiNote')}</p>
+          <div role="group" aria-label={t('periodAria')} style={{ display: 'flex', gap: 6 }}>
+            {PERIODS.map((p) => (
+              <button key={p.v} type="button" className="lg-btn" aria-pressed={period === p.v} onClick={() => setPeriod(p.v)}
+                style={{ ...btnGhost, padding: '6px 12px', fontSize: 10, textTransform: 'none', backgroundColor: period === p.v ? T.cream : 'transparent', color: period === p.v ? 'var(--l-on-fg)' : T.cream }}>
+                {t(p.label)}
+              </button>
             ))}
           </div>
         </div>
+
+        {points.length === 0 ? (
+          <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
+            <p style={{ margin: 0, fontFamily: serif, fontSize: 18, color: T.cream }}>{t('emptyTitle')}</p>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('emptyBody')}</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{t('toArgue')}</button>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={() => navigate('/dashboard/session')}>{t('toSession')}</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+              <div style={{ ...panelStyle, display: 'grid', gap: 10 }}>
+                <Label>{t('trendLabel')}</Label>
+                {points.length < 2 ? (
+                  <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{t('needTwo')}</p>
+                ) : (
+                  <div style={{ height: 220 }} role="img" aria-label={t('trendAria')}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={series} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
+                        <CartesianGrid stroke={T.border} vertical={false} />
+                        <XAxis dataKey="day" tick={tick} axisLine={false} tickLine={false} />
+                        <YAxis domain={[0, 100]} tick={tick} axisLine={false} tickLine={false} width={40} />
+                        <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} />
+                        <Line type="monotone" dataKey="consistency" name={t('serConsistency')} stroke={T.accent} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="evidence" name={t('serEvidence')} stroke={sem.info} strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                        <Line type="monotone" dataKey="defense" name={t('serDefense')} stroke={T.amber} strokeWidth={2} dot={false} strokeDasharray="1 3" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontFamily: mono, fontSize: 10, color: T.creamMid }}>
+                  <span>{t('legendSolid')}</span><span>{t('legendDashed')}</span><span>{t('legendDotted')}</span>
+                </div>
+              </div>
+              <div style={{ ...panelStyle, display: 'grid', gap: 10 }}>
+                <Label>{t('avgLabel')}</Label>
+                <div style={{ height: 220 }} role="img" aria-label={bars.map((b) => `${b.name} ${b.value}%`).join(', ')}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={bars} layout="vertical" margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+                      <CartesianGrid stroke={T.border} horizontal={false} />
+                      <XAxis type="number" domain={[0, 100]} tick={tick} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="name" tick={tick} axisLine={false} tickLine={false} width={96} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: T.faint }} itemStyle={{ color: T.cream }} formatter={(v: number) => [`${v}%`, t('avgName')]} />
+                      <Bar dataKey="value" barSize={14}>
+                        {bars.map((b) => <Cell key={b.name} fill={T.accent} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{t('basedOn', { n: points.length })}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+              {feedback.map((f) => (
+                <div key={f.type} style={{ ...panelStyle, display: 'grid', gap: 10, borderTop: `2px solid ${f.color}` }}>
+                  <Label>{f.title}</Label>
+                  {f.items.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{f.type === 'strong' ? t('noStrengths') : t('noWeaknesses')}</p>
+                  ) : (
+                    <ul style={{ margin: 0, paddingLeft: '1.1em', display: 'grid', gap: 8, fontSize: 13, color: T.cream, lineHeight: 1.7 }}>
+                      {f.items.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

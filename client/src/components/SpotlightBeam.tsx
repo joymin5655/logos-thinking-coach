@@ -9,6 +9,7 @@
  * 배경색에 영향 없이 동상 위에만 오버레이로 작동
  */
 import { useEffect, useRef } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Particle {
   x: number;
@@ -57,7 +58,15 @@ export default function SpotlightBeam({ className, style, color = 'cream' }: Spo
       line: 'rgba(152, 192, 239, 0.12)',
     },
   };
-  const pal = palette[color];
+  // 라이트 테마: 크림 배경 위에서 안 보이는 크림 빔 대신 따뜻한 호박색 빔을 쓴다.
+  const dark = useTheme().theme === 'dark';
+  const lightPal = {
+    beam: 'rgba(169, 101, 10, 0.12)',
+    beamCore: 'rgba(169, 101, 10, 0.20)',
+    particle: (opacity: number) => `rgba(111, 101, 76, ${opacity})`,
+    line: 'rgba(111, 101, 76, 0.18)',
+  };
+  const pal = dark ? palette[color] : lightPal;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -121,7 +130,7 @@ export default function SpotlightBeam({ className, style, color = 'cream' }: Spo
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animRef.current);
     };
-  }, [color]);
+  }, [color, dark]);
 
   return (
     <div

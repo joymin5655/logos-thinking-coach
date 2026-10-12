@@ -1,20 +1,14 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
+import PrefsToggle from '@/components/PrefsToggle';
+import { useT } from '@/i18n';
 
-const BLACK = '#0A0A0A';
-const CREAM = '#F0EBE0';
-const CREAM_MID = 'rgba(240,235,224,0.55)';
-const CREAM_DIM = 'rgba(240,235,224,0.25)';
-const ACCENT = '#C8C0A8';
-
-const NAV_LINKS = [
-  { href: '/about', label: 'About' },
-  { href: '/features', label: 'Features' },
-  { href: '/pricing', label: 'Pricing' },
-];
-
-const MARQUEE_TEXT =
-  'LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · ';
+// 테마 토큰(--l-*) — 라이트/다크 전환은 index.css가 처리한다.
+const BG = 'var(--l-bg)';
+const FG = 'var(--l-fg)';
+const FG_MID = 'var(--l-fg-mid)';
+const BORDER = 'var(--l-border-mid)';
+const ACCENT = 'var(--l-accent)';
 
 type Props = {
   children: ReactNode;
@@ -26,13 +20,20 @@ type Props = {
 
 export default function MarketingLayout({ children, footer, singleViewport }: Props) {
   const [location, navigate] = useLocation();
+  const t = useT('marketing');
+  const MARQUEE_TEXT = t('marquee');
+  const NAV_LINKS = [
+    { href: '/about', label: t('navAbout') },
+    { href: '/features', label: t('navFeatures') },
+    { href: '/pricing', label: t('navPricing') },
+  ];
 
   return (
     <div
       className={singleViewport ? 'fit-viewport' : undefined}
       style={{
-        backgroundColor: BLACK,
-        color: CREAM,
+        backgroundColor: BG,
+        color: FG,
         minHeight: singleViewport ? undefined : '100vh',
         fontFamily: "var(--font-mono)",
         display: 'flex',
@@ -47,9 +48,9 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
           left: 0,
           right: 0,
           zIndex: 100,
-          backgroundColor: 'rgba(10,10,10,0.92)',
+          backgroundColor: 'color-mix(in srgb, var(--l-bg) 92%, transparent)',
           backdropFilter: 'blur(12px)',
-          borderBottom: `1px solid ${CREAM_DIM}`,
+          borderBottom: `1px solid ${BORDER}`,
           display: 'flex',
           alignItems: 'center',
           height: 52,
@@ -59,37 +60,39 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
         {/* 로고 영역 */}
         <Link
           href="/"
+          className="mk-logo"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 10,
             padding: '0 24px',
             flexShrink: 0,
-            borderRight: `1px solid ${CREAM_DIM}`,
+            borderRight: `1px solid ${BORDER}`,
             height: '100%',
             textDecoration: 'none',
           }}
         >
-          <img src="/logo.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+          <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
           <span
             style={{
               fontFamily: "var(--font-mono)",
               fontWeight: 700,
               fontSize: '12px',
               letterSpacing: '0.22em',
-              color: CREAM,
+              color: FG,
               whiteSpace: 'nowrap',
             }}
           >
             LOGOS
           </span>
-          <div style={{ width: 1, height: 10, backgroundColor: CREAM_DIM }} />
+          <div className="mk-mobile-hide" style={{ width: 1, height: 10, backgroundColor: BORDER }} />
           <span
+            className="mk-mobile-hide"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: '8px',
               letterSpacing: '0.15em',
-              color: CREAM_MID,
+              color: FG_MID,
               whiteSpace: 'nowrap',
             }}
           >
@@ -98,10 +101,11 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
         </Link>
 
         {/* 가운데 스페이서 */}
-        <div style={{ flex: 1 }} />
+        <div className="mk-mobile-hide" style={{ flex: 1 }} />
 
-        {/* 라우트 링크 — 우측 정렬 */}
+        {/* 라우트 링크 — 우측 정렬 (폰 폭에서는 남은 폭 안에서 가로 스크롤) */}
         <div
+          className="mk-nav-links"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -122,7 +126,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                   fontWeight: isActive ? 700 : 400,
                   fontSize: '10px',
                   letterSpacing: '0.22em',
-                  color: isActive ? CREAM : CREAM_MID,
+                  color: isActive ? FG : FG_MID,
                   textTransform: 'uppercase',
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
@@ -130,8 +134,8 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                   padding: '4px 0',
                   transition: 'color 0.18s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = CREAM; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = isActive ? CREAM : CREAM_MID; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = FG; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = isActive ? FG : FG_MID; }}
               >
                 {link.label}
                 {isActive && (
@@ -142,7 +146,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                       right: 0,
                       bottom: -2,
                       height: 1,
-                      backgroundColor: CREAM,
+                      backgroundColor: FG,
                     }}
                   />
                 )}
@@ -151,14 +155,17 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
           })}
         </div>
 
-        {/* CTA — 시작하기 */}
+        <PrefsToggle style={{ flexShrink: 0, padding: '0 12px' }} />
+
+        {/* CTA — 시작하기 (폰 폭에서는 히어로 CTA로 충분해 숨김) */}
         <div
+          className="mk-mobile-hide"
           style={{
             display: 'flex',
             alignItems: 'center',
             padding: '0 24px',
             flexShrink: 0,
-            borderLeft: `1px solid ${CREAM_DIM}`,
+            borderLeft: `1px solid ${BORDER}`,
             height: '100%',
           }}
         >
@@ -170,8 +177,8 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               fontSize: '9px',
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
-              color: BLACK,
-              backgroundColor: CREAM,
+              color: 'var(--l-on-fg)',
+              backgroundColor: FG,
               border: 'none',
               padding: '7px 16px',
               cursor: 'pointer',
@@ -179,9 +186,9 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = ACCENT; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = CREAM; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = FG; }}
           >
-            시작하기
+            {t('start')}
           </button>
         </div>
       </nav>
@@ -195,12 +202,12 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
       {footer ?? (
         <footer
           style={{
-            backgroundColor: BLACK,
-            color: CREAM,
+            backgroundColor: BG,
+            color: FG,
             display: 'flex',
             alignItems: 'center',
             height: 44,
-            borderTop: `1px solid ${CREAM_DIM}`,
+            borderTop: `1px solid ${BORDER}`,
             overflow: 'hidden',
           }}
         >
@@ -212,11 +219,11 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               gap: 10,
               padding: '0 20px',
               flexShrink: 0,
-              borderRight: `1px solid ${CREAM_DIM}`,
+              borderRight: `1px solid ${BORDER}`,
               height: '100%',
             }}
           >
-            <img src="/logo.png" alt="LOGOS" style={{ width: '14px', height: '14px', objectFit: 'contain', opacity: 0.45 }} />
+            <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '14px', height: '14px', objectFit: 'contain', opacity: 0.45 }} />
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -224,7 +231,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 opacity: 0.45,
-                color: CREAM,
+                color: FG,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -232,28 +239,48 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             </span>
           </div>
 
-          {/* 이메일 — 우측 고정 (PITCH 15) */}
-          <a
-            href="mailto:sbm8011@gmail.com"
+          <Link
+            href="/privacy"
             style={{
               display: 'flex',
               alignItems: 'center',
               padding: '0 20px',
               flexShrink: 0,
-              borderLeft: `1px solid ${CREAM_DIM}`,
+              borderRight: `1px solid ${BORDER}`,
               height: '100%',
               fontFamily: "var(--font-mono)",
               fontSize: '9px',
               letterSpacing: '0.12em',
-              color: CREAM_MID,
+              color: FG_MID,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('privacy')}
+          </Link>
+
+          {/* 이메일 — 우측 고정 (PITCH 15) */}
+          <a
+            href="mailto:contact@lo9os.org"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 20px',
+              flexShrink: 0,
+              borderLeft: `1px solid ${BORDER}`,
+              height: '100%',
+              fontFamily: "var(--font-mono)",
+              fontSize: '9px',
+              letterSpacing: '0.12em',
+              color: FG_MID,
               textDecoration: 'none',
               transition: 'color 0.18s',
               order: 2,
             }}
             onMouseEnter={(e) => { e.currentTarget.style.color = ACCENT; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = CREAM_MID; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = FG_MID; }}
           >
-            sbm8011@gmail.com
+            contact@lo9os.org
           </a>
 
           {/* 마퀴 — 중앙 flex 1, 양쪽 페이드 마스크 */}
@@ -285,7 +312,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                     fontWeight: 400,
                     fontSize: '9px',
                     letterSpacing: '0.2em',
-                    color: CREAM_MID,
+                    color: FG_MID,
                     display: 'inline-block',
                     textTransform: 'uppercase',
                   }}

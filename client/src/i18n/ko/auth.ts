@@ -1,0 +1,21 @@
+// 한국어 원문(기준 사전). 키를 추가하면 en/auth.ts에도 같은 키가 있어야 타입 검사를 통과한다.
+export const auth = {
+  loginTitle: '로그인',
+  loginLead: '기록을 계정에 저장하고, 어느 기기에서든 이어서 쓸 수 있어요.',
+  google: 'Google로 계속하기',
+  notConfigured: '로그인 준비 중이에요. 잠시 후 다시 와 주세요.',
+  privacyNote: '계속하면 개인정보 처리방침에 따라 기록이 저장되는 것에 동의하는 거예요.',
+  privacyLink: '개인정보 처리방침',
+  signInFailed: '로그인을 시작하지 못했어요. 다시 시도해 주세요.',
+  redirecting: '이동하는 중…',
+  callbackWorking: '로그인을 마무리하는 중…',
+  callbackError: '로그인하지 못했어요',
+  callbackNoSession: '로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
+  backToLogin: '로그인 화면으로',
+  checking: '확인하는 중…',
+  migrated: '{n}개 기록을 계정에 저장했어요',
+  signOutConfirm: '아직 서버에 저장되지 않은 기록이 {n}개 있어요. 지금 로그아웃하면 이 기록은 사라져요. 로그아웃할까요?',
+  ctaSave: '로그인하면 기록이 저장돼요',
+  ctaSaveLead: '지금은 이 기기에만 있어요. 로그인하면 계정에 저장되고 다른 기기에서도 볼 수 있어요.',
+  ctaButton: '로그인하기',
+} as const;

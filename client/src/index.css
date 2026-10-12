@@ -56,12 +56,29 @@
   --font-mono: 'Space Mono', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
   --font-serif: 'Source Serif 4', 'Pretendard Variable', 'Pretendard', Georgia, serif;
   --font-display: 'Outfit', 'Pretendard Variable', 'Pretendard', sans-serif;
+  /* 한글 장문(리포트·채점 근거·입력창)용. Space Mono의 넓은 공백·구두점 폭을 피한다. */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
 
   /* LOGOS Brand Colors — Exact Unicorn Studio Values */
   --logos-sage: #C8C8B6;
   --logos-dark: #262618;
   --logos-dark-mid: #3A3A28;
   --logos-muted: #7A7D6E;
+
+  /* LOGOS 화면 토큰(--l-*) — 인라인 스타일 상수(T, BLACK/CREAM)가 이 변수를 가리킨다.
+   * 라이트 = 크림 바탕·먹색 글씨, 다크(.dark) = 먹색 바탕·크림 글씨(기존 화면). */
+  --l-bg: #F0EBE0;
+  --l-panel: #E7E1D3;
+  --l-fg: #14140F;
+  --l-fg-mid: rgba(20,20,15,0.66);
+  --l-fg-dim: rgba(20,20,15,0.40);
+  --l-border: rgba(20,20,15,0.14);
+  --l-border-mid: rgba(20,20,15,0.26);
+  --l-faint: rgba(20,20,15,0.05);
+  --l-accent: #6F654C;
+  --l-amber: #A9650A;
+  --l-error: #C2410C;
+  --l-on-fg: #F0EBE0;
 
   /* Semantic tokens — Sage Green Light Theme */
   --background: oklch(0.82 0.014 102);
@@ -100,6 +117,19 @@
 }
 
 .dark {
+  --l-bg: #0A0A0A;
+  --l-panel: #111111;
+  --l-fg: #F0EBE0;
+  --l-fg-mid: rgba(240,235,224,0.58);
+  --l-fg-dim: rgba(240,235,224,0.30);
+  --l-border: rgba(240,235,224,0.14);
+  --l-border-mid: rgba(240,235,224,0.24);
+  --l-faint: rgba(240,235,224,0.05);
+  --l-accent: #C8C0A8;
+  --l-amber: #E8A33A;
+  --l-error: #E8552E;
+  --l-on-fg: #0A0A0A;
+  color-scheme: dark;
   --background: oklch(0.14 0.018 88);
   --foreground: oklch(0.82 0.014 102);
   --card: oklch(0.18 0.016 88);
@@ -148,6 +178,27 @@
   :root {
     --ui-scale: 1.3;
   }
+  /* 폰 폭에서는 배율을 걷어 390px 화면에 레이아웃 300px만 남는 문제를 막는다. */
+  @media (max-width: 640px) {
+    :root {
+      --ui-scale: 1;
+    }
+    .mk-mobile-hide {
+      display: none !important;
+    }
+    .mk-logo {
+      padding: 0 14px !important;
+    }
+    .mk-nav-links {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      justify-content: flex-start !important;
+      gap: 1.25rem !important;
+      padding: 0 12px !important;
+    }
+  }
   #root {
     zoom: var(--ui-scale);
   }
@@ -157,6 +208,13 @@
   /* Fit one actual viewport while zoom is applied to ancestor. */
   .fit-viewport {
     height: calc(100dvh / var(--ui-scale));
+  }
+  /* logo.png는 흰색 마크라 라이트 테마에서는 반전해 먹색으로 보이게 한다. */
+  .logo-mark {
+    filter: invert(1);
+  }
+  .dark .logo-mark {
+    filter: none;
   }
   @keyframes logos-marquee-left {
     0%   { transform: translateX(0); }

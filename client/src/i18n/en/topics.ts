@@ -1,0 +1,25 @@
+import type { topics as Ko } from '../ko/topics';
+
+export const topics: Record<keyof typeof Ko, string> = {
+  d1Title: 'Does AI threaten human creativity?',
+  d1Context: 'Now that generative AI has moved deep into creative work, how should uniquely human creativity be defined?',
+  d2Title: 'Does a four-day work week raise productivity?',
+  d2Context: 'The debate continues over whether a shorter work week is a short-term rest effect or a lasting structural change.',
+  d3Title: 'Which matters more: talent or effort?',
+  d3Context: 'A classic debate about what success is made of. Which side do you find more decisive?',
+  d4Title: 'Does social media help democracy?',
+  d4Context: 'Connection and division, public opinion and algorithms — both effects show up at the same time.',
+  d5Title: 'Is a basic income a workable policy?',
+  d5Context: 'Funding, incentives, social impact. It takes more than a simple redistribution argument.',
+  d6Title: 'Does a digital detox work?',
+  d6Context: 'Is it a matter of willpower or of environment design? Lay out your arguments.',
+  d7Title: 'Is the idea of a job for life gone?',
+  d7Context: 'A trade-off between stability and flexibility. Generational differences matter too.',
+  catTechSociety: 'Tech & Society',
+  catLabor: 'Labor',
+  catPhilosophy: 'Philosophy',
+  catSociety: 'Society',
+  catEconomy: 'Economy',
+  catLifestyle: 'Lifestyle',
+  catCareer: 'Career',
+};
