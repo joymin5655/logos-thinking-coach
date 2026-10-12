@@ -3,6 +3,7 @@
  */
 import MarketingLayout from '@/components/MarketingLayout';
 import { useT } from '@/i18n';
+import { usePageMeta } from '@/lib/usePageMeta';
 
 type Key = Parameters<ReturnType<typeof useT<'privacy'>>>[0];
 
@@ -22,15 +23,16 @@ const SECTIONS = [
 const range = (from: number, count: number) => Array.from({ length: count }, (_, i) => from + i);
 
 export default function Privacy() {
+  usePageMeta('privacy');
   const t = useT('privacy');
   const k = (s: string) => s as Key;
   return (
     <MarketingLayout>
-      <main style={{ backgroundColor: 'var(--l-bg)', color: 'var(--l-fg)', padding: '5.5rem 1.5rem 4rem', fontFamily: 'var(--font-sans)' }}>
+      <main style={{ backgroundColor: 'var(--l-bg)', color: 'var(--l-fg)', padding: '5.5rem 1.5rem 4rem', fontFamily: 'var(--font-body)' }}>
         <article style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 28 }}>
           <header style={{ display: 'grid', gap: 12 }}>
             <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.7rem, 4vw, 2.3rem)', letterSpacing: '-0.02em' }}>{t('title')}</h1>
-            <p role="note" style={{ margin: 0, padding: '10px 14px', border: '1px solid var(--l-amber)', color: 'var(--l-amber)', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.7 }}>
+            <p role="note" style={{ margin: 0, padding: '10px 14px', border: '1px solid var(--l-amber)', color: 'var(--l-amber)', fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.7, letterSpacing: 'normal', wordBreak: 'keep-all' }}>
               <strong>{t('draft')}</strong> — {t('draftNote')}
             </p>
             <p style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--l-fg-mid)' }}>{t('effective')}</p>
@@ -59,4 +61,4 @@ export default function Privacy() {
   );
 }
 
-const para = { margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--l-fg-mid)' } as const;
+const para = { margin: 0, fontSize: 14, lineHeight: 1.8, letterSpacing: 'normal', wordBreak: 'keep-all', color: 'var(--l-fg-mid)' } as const;

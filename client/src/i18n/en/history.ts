@@ -1,9 +1,11 @@
 import type { history as Ko } from '../ko/history';
 
 export const history: Record<keyof typeof Ko, string> = {
+  titleEn: '',
   title: 'Session History',
   filterAll: 'All',
   filterCoaching: 'Coaching',
+  filterArena: 'Arena',
   filterArgue: 'Daily argument',
   filterGroup: 'Type',
   searchLabel: 'Search records',
@@ -21,6 +23,12 @@ export const history: Record<keyof typeof Ko, string> = {
   argueButton: 'Daily argument',
   noMatch: 'No records match.',
   kindArgue: 'Daily argument',
+  kindArena: 'Arena',
+  verdictW: 'W',
+  verdictD: 'D',
+  verdictL: 'L',
+  arenaSide: '{side} side',
+  arenaPending: 'Not judged',
   kindCoaching: 'Coaching',
   done: 'Finished',
   inProgress: 'In progress (stage {stage})',

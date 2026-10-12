@@ -8,28 +8,19 @@ import { toast } from 'sonner';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, Quote } from '@/components/logos-ui';
-import { ALL_FIELDS, MAX_FIELDS, loadFields, saveFields, type Field } from '@/lib/preferences';
+import { loadFields, type Field } from '@/lib/preferences';
+import { FIELD_KEY } from '@/lib/fieldKeys';
+import { pickResume, resumeHref, stageStep } from '@/lib/resume';
 import { FIELD_COLOR } from '@/lib/colors';
 import { todaysTopic } from '@/lib/topics';
 import { buildDailyArgueIcs, downloadFile } from '@/lib/ics';
 import { formatDate, useLocale, useT } from '@/i18n';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { ARENA_TOPICS } from '../../../shared/arenaTopics';
 import {
   REDIAGNOSE_DAYS, addDays, avgDelta, completionRate, computeStreak, daysUntilRediagnosis, exportJSON,
-  isoWeekKey, localDate, pickComparison, toISODate, useStore, weekdayIndex,
+  arenaRecord, isoWeekKey, localDate, pickComparison, toISODate, useStore, weekdayIndex,
 } from '@/lib/store';
-
-// Field는 데이터에 쓰이는 한국어 키다. 화면에는 이 키로 사전의 표시 이름을 찾아 쓴다.
-const FIELD_KEY = {
-  '기술·사회': 'fieldTechSociety',
-  '사회': 'fieldSociety',
-  '경제': 'fieldEconomy',
-  '철학': 'fieldPhilosophy',
-  '윤리': 'fieldEthics',
-  '노동': 'fieldLabor',
-  '커리어': 'fieldCareer',
-  '라이프스타일': 'fieldLifestyle',
-  '교육': 'fieldEducation',
-} as const satisfies Record<Field, string>;
 
 const fmtMD = (iso: string) => formatDate(iso);
 
@@ -45,11 +36,12 @@ function Kpi({ label, n, sub }: { label: string; n: string; sub: string }) {
 
 export default function DashboardHome() {
   const t = useT('dashboard');
+  const tn = useT('nav');
   const { locale } = useLocale();
   const [, navigate] = useLocation();
   const store = useStore();
+  usePageMeta('dashboard', { noindex: true });
   const [fields, setFields] = useState<Field[]>(() => loadFields());
-  const [draft, setDraft] = useState<Field[]>([]);
   const [skipDiag, setSkipDiag] = useState(false);
   // locale이 바뀌면 주제 제목도 다시 가져온다
   const topic = useMemo(() => todaysTopic(), [locale]);
@@ -86,7 +78,29 @@ export default function DashboardHome() {
     f,
     n: store.sessions.filter((s) => s.completedAt && s.field && (s.field.includes(f) || f.includes(s.field))).length,
   }));
-  const recent = [...store.sessions].reverse().slice(0, 3);
+  // 코칭·논증·아레나 기록을 시작 시각 순으로 합쳐 최근 3건만 보여 준다
+  const recent = [
+    ...store.sessions.map((s) => ({
+      id: s.id,
+      at: s.startedAt,
+      topic: s.topic,
+      kind: s.kind === 'argue' ? t('kindArgue') : t('kindCoaching'),
+      arena: false,
+      done: !!s.completedAt,
+      score: s.scoreAfter?.total,
+    })),
+    ...(store.arenas ?? []).map((a) => ({
+      id: a.id,
+      at: a.startedAt,
+      topic: ARENA_TOPICS.find((x) => x.id === a.topicId)?.[locale].title ?? a.topicId,
+      kind: t('kindArena'),
+      arena: true,
+      done: !!a.completedAt,
+      score: a.result?.total,
+    })),
+  ]
+    .sort((x, y) => y.at.localeCompare(x.at))
+    .slice(0, 3);
 
   const weekStart = addDays(today, -weekdayIndex(today));
   const week = [0, 1, 2, 3, 4, 5, 6].map((i) => {
@@ -107,92 +121,73 @@ export default function DashboardHome() {
     toast(t('exportDone'));
   };
 
-  const toggleDraft = (f: Field) =>
-    setDraft((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : prev.length >= MAX_FIELDS ? prev : [...prev, f]));
-  const commitFields = () => {
-    if (!draft.length) return;
-    saveFields(draft);
-    setFields(draft);
-    setDraft([]);
-  };
-
   const showDiagInvite = (!lastDiag && !skipDiag) || (lastDiag && rediagDue);
+  const resumeRec = pickResume(store);
+  const wdl = arenaRecord(store.arenas ?? []);
+  const arenaDone = wdl.w + wdl.d + wdl.l;
+  const kpis: { label: string; n: string; sub: string }[] = [];
+  if (streak.count > 0) kpis.push({ label: t('kpiStreak'), n: t('days', { n: streak.count }), sub: streak.freezesLeftThisWeek > 0 ? t('freezeLeft') : t('freezeUsed') });
+  if (comp.rate !== null) kpis.push({ label: t('kpiCompletion'), n: `${Math.round(comp.rate * 100)}%`, sub: t('startedCompleted', { started: comp.started, completed: comp.completed }) });
+  if (delta !== null) kpis.push({ label: t('kpiDelta'), n: `${delta > 0 ? '+' : ''}${Math.round(delta)}`, sub: t('deltaSub') });
+  if (lastDiag) kpis.push({ label: t('kpiDiag'), n: prevDiag ? `${prevDiag.score.total}→${lastDiag.score.total}` : `${lastDiag.score.total}→?`, sub: dueIn === 0 ? t('diagKpiDue') : t('diagKpiIn', { n: dueIn ?? 0 }) });
+  if (arenaDone > 0) kpis.push({ label: t('kpiArena'), n: t('arenaWdl', wdl), sub: t('arenaSub', { n: arenaDone }) });
+
+  const argueCard = (hero: boolean) => (
+    <div style={{ border: `1px solid ${hero ? T.cream : T.border}`, padding: 18, display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
+      <Label>{t('argueLabel')}</Label>
+      <p style={{ fontFamily: serif, fontSize: hero ? 22 : 19, lineHeight: 1.4, margin: 0, color: T.cream }}>"{topic.title}"</p>
+      <p className="l-prose" style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{t('argueLead')}</p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{doneToday ? t('argueAgain') : t('argueStart')}</button>
+        <button type="button" className="lg-btn" style={btnGhost} onClick={addToCalendar}>{t('addToCalendar')}</button>
+      </div>
+      {doneToday && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('argueDone')}</span>}
+    </div>
+  );
 
   return (
-    <DashboardLayout title={t('title')} titleEn="Dashboard">
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
       <div style={{ display: 'grid', gap: 24, maxWidth: 1080 }}>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <Label>{t('eyebrow')}</Label>
-          <h2 style={{ fontFamily: serif, fontWeight: 600, fontSize: 'clamp(1.6rem, 4vw, 2.1rem)', color: T.cream, letterSpacing: '-0.02em', margin: 0 }}>
-            {t('heading')}
-          </h2>
-          <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, margin: 0, lineHeight: 1.8 }}>
-            {t('intro')}{' '}
-            <Link href="/privacy" style={{ color: T.cream }}>{t('privacyLink')}</Link>
-          </p>
-        </div>
+        <Label>{t('eyebrowLine', { date: formatDate(now, { weekday: 'long', month: 'long', day: 'numeric' }), n: streak.count })}</Label>
+
+        {resumeRec ? (
+          <>
+            <div style={{ border: `1px solid ${T.cream}`, padding: 18, display: 'grid', gap: 12, minWidth: 0 }}>
+              <Label>{t('heroResume', { mode: tn('session') })}</Label>
+              <p style={{ fontFamily: serif, fontSize: 22, lineHeight: 1.4, margin: 0, color: T.cream, overflowWrap: 'anywhere' }}>"{resumeRec.topic}"</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span role="img" aria-label={t('stageOf', { n: stageStep(resumeRec) })} style={{ display: 'flex', gap: 4, flex: '0 1 200px', width: '100%' }}>
+                  {[1, 2, 3, 4].map((i) => <span key={i} style={{ height: 4, flex: 1, backgroundColor: i <= stageStep(resumeRec) ? T.amber : T.border }} />)}
+                </span>
+                <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('stageOf', { n: stageStep(resumeRec) })}</span>
+              </div>
+              <div><button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate(resumeHref(resumeRec))}>{t('resumeBtn')}</button></div>
+            </div>
+            {argueCard(false)}
+          </>
+        ) : (
+          argueCard(true)
+        )}
 
         {showDiagInvite && (
-          <div style={{ ...panelStyle, borderColor: T.cream, display: 'grid', gap: 10 }}>
-            <Label>{lastDiag ? t('diagRe') : t('diagFirst')}</Label>
-            <p style={{ margin: 0, fontFamily: serif, fontSize: 20, lineHeight: 1.4, color: T.cream }}>
-              {lastDiag ? t('diagReLead', { days: REDIAGNOSE_DAYS }) : t('diagFirstLead')}
-            </p>
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>
-              {lastDiag ? t('diagLast', { score: lastDiag.score.total }) : t('diagFirstBody', { days: REDIAGNOSE_DAYS })}
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/diagnostic')}>{lastDiag ? t('diagReButton') : t('diagFirstButton')}</button>
-              {!lastDiag && <button type="button" className="lg-btn" style={btnGhost} onClick={() => setSkipDiag(true)}>{t('diagLater')}</button>}
-            </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+            <button type="button" className="lg-btn" onClick={() => navigate('/dashboard/diagnostic')}
+              style={{ flex: 1, border: `1px dashed ${T.borderMid}`, background: 'none', color: T.cream, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13 }}>
+              {lastDiag ? t('diagRowRe') : t('diagRowFirst')}
+            </button>
+            {!lastDiag && <button type="button" className="lg-btn" style={{ ...btnGhost, border: 'none', textDecoration: 'underline', textTransform: 'none' }} onClick={() => setSkipDiag(true)}>{t('diagLater')}</button>}
           </div>
         )}
 
-        {fields.length === 0 && (
-          <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
-            <Label>{t('fieldPickLabel')}</Label>
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('fieldPickLead', { max: MAX_FIELDS })}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="group" aria-label={t('fieldGroup')}>
-              {ALL_FIELDS.map((opt) => {
-                const picked = draft.includes(opt.value);
-                const atCap = !picked && draft.length >= MAX_FIELDS;
-                return (
-                  <button key={opt.value} type="button" className="lg-btn" aria-pressed={picked} onClick={() => toggleDraft(opt.value)} disabled={atCap}
-                    style={{ ...btnGhost, padding: '8px 14px', fontSize: 11, textTransform: 'none', letterSpacing: '0.05em', backgroundColor: picked ? T.cream : 'transparent', color: picked ? 'var(--l-on-fg)' : atCap ? T.creamDim : T.creamMid, borderColor: picked ? T.cream : T.borderMid, cursor: atCap ? 'not-allowed' : 'pointer' }}>
-                    {t(FIELD_KEY[opt.value])}
-                  </button>
-                );
-              })}
-            </div>
-            <div><button type="button" className="lg-btn" style={{ ...btnPrimary, opacity: draft.length ? 1 : 0.4 }} disabled={!draft.length} onClick={commitFields}>{t('save')}</button></div>
+        {kpis.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 1, backgroundColor: T.border, border: `1px solid ${T.border}` }}>
+            {kpis.map((k) => <Kpi key={k.label} {...k} />)}
           </div>
         )}
 
-        {/* KPI */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 1, backgroundColor: T.border, border: `1px solid ${T.border}` }}>
-          <Kpi label={t('kpiStreak')} n={t('days', { n: streak.count })} sub={streak.freezesLeftThisWeek > 0 ? t('freezeLeft') : t('freezeUsed')} />
-          <Kpi label={t('kpiCompletion')} n={comp.rate === null ? '—' : `${Math.round(comp.rate * 100)}%`} sub={comp.started ? t('startedCompleted', { started: comp.started, completed: comp.completed }) : t('noneStarted')} />
-          <Kpi label={t('kpiDelta')} n={delta === null ? '—' : `${delta > 0 ? '+' : ''}${Math.round(delta)}`} sub={delta === null ? t('deltaEmpty') : t('deltaSub')} />
-          <Kpi
-            label={t('kpiDiag')}
-            n={!lastDiag ? '—' : prevDiag ? `${prevDiag.score.total}→${lastDiag.score.total}` : `${lastDiag.score.total}→?`}
-            sub={!lastDiag ? t('diagKpiEmpty') : dueIn === 0 ? t('diagKpiDue') : t('diagKpiIn', { n: dueIn ?? 0 })}
-          />
-        </div>
-
-        {/* 오늘의 논증 + 주간 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          <div style={{ border: `1px solid ${T.cream}`, padding: 18, display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
-            <Label>{t('argueLabel')}</Label>
-            <p style={{ fontFamily: serif, fontSize: 19, lineHeight: 1.4, margin: 0, color: T.cream }}>"{topic.title}"</p>
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('argueLead')}</p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{doneToday ? t('argueAgain') : t('argueStart')}</button>
-              <button type="button" className="lg-btn" style={btnGhost} onClick={addToCalendar}>{t('addToCalendar')}</button>
-            </div>
-            {doneToday && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('argueDone')}</span>}
-          </div>
+        {/* 주간 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 20 }}>
           <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
             <Label>{t('week')}</Label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
@@ -219,52 +214,41 @@ export default function DashboardHome() {
         </div>
 
         {/* 추이 + 비교 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          <div style={{ display: 'grid', gap: 8, minWidth: 0, alignContent: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 20 }}>
+          {trend.length >= 2 && <div style={{ display: 'grid', gap: 8, minWidth: 0, alignContent: 'start' }}>
             <Label>{t('trendLabel')}</Label>
-            {trend.length >= 2 ? (
+            {(
               <div style={{ height: 180 }} role="img" aria-label={t('trendAria', { n: trend.length, from: trend[0].score, to: trend[trend.length - 1].score })}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trend} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
                     <CartesianGrid stroke="var(--l-border)" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} width={40} />
-                    <Tooltip contentStyle={{ backgroundColor: T.black, border: `1px solid ${T.borderMid}`, fontFamily: 'Space Mono', fontSize: 11 }} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} formatter={(v: number) => [t('points', { n: v }), t('finalSummary')]} />
+                    <XAxis dataKey="label" tick={{ fontFamily: 'var(--font-mono)', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontFamily: 'var(--font-mono)', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} width={40} />
+                    <Tooltip contentStyle={{ backgroundColor: T.black, border: `1px solid ${T.borderMid}`, fontFamily: 'var(--font-mono)', fontSize: 11 }} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} formatter={(v: number) => [t('points', { n: v }), t('finalSummary')]} />
                     <Line type="monotone" dataKey="score" stroke={T.accent} strokeWidth={2} dot={{ r: 3, fill: T.accent, stroke: T.accent }} activeDot={{ r: 5, fill: T.amber, stroke: T.amber }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-                {t('trendEmpty', { n: trend.length })}
-              </p>
             )}
-          </div>
-          <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
-            <Label>{compare ? (compare.sameTopic ? t('compareSame', { topic: compare.older.topic }) : t('compareOld')) : t('compareDefault')}</Label>
-            {compare ? (
+          </div>}
+          {compare && <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
+            <Label>{compare.sameTopic ? t('compareSame', { topic: compare.older.topic }) : t('compareOld')}</Label>
+            {(
               <>
                 <Quote>{t('quoteLine', { date: fmtMD(compare.older.startedAt), text: compare.older.finalSummary ?? compare.older.firstClaim ?? '' })}</Quote>
                 <Quote after>{t('quoteLine', { date: fmtMD(compare.newer.startedAt), text: compare.newer.finalSummary ?? compare.newer.firstClaim ?? '' })}</Quote>
               </>
-            ) : (
-              <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-                {t('compareEmpty')}
-              </p>
             )}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>{t('savedBadge')}</span>
-              <button type="button" className="lg-btn" style={btnGhost} onClick={exportData}>{t('exportButton')}</button>
-            </div>
-          </div>
+          </div>}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>{t('savedBadge')}</span>
+          <button type="button" className="lg-btn" style={btnGhost} onClick={exportData}>{t('exportButton')}</button>
         </div>
 
         {fields.length > 0 && (
           <div style={{ display: 'grid', gap: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Label>{t('fieldCounts')}</Label>
-              <button type="button" className="lg-btn" onClick={() => { saveFields([]); setDraft([]); }} style={{ ...btnGhost, border: 'none', padding: '2px 0', fontSize: 10, textDecoration: 'underline' }}>{t('fieldReset')}</button>
-            </div>
+            <Label>{t('fieldCounts')}</Label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
               {fieldCounts.map(({ f, n }) => (
                 <div key={f} style={{ ...panelStyle, padding: 14, display: 'grid', gap: 4, borderTop: `2px solid ${FIELD_COLOR[f]}` }}>
@@ -276,25 +260,21 @@ export default function DashboardHome() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: 10 }}>
+        {recent.length > 0 && <div style={{ display: 'grid', gap: 10 }}>
           <Label>{t('recent')}</Label>
-          {recent.length === 0 ? (
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-              {t('recentEmpty')}
-            </p>
-          ) : (
+          {(
             recent.map((s) => (
-              <button key={s.id} type="button" className="lg-btn" onClick={() => navigate('/dashboard/history')}
+              <button key={s.id} type="button" className="lg-btn" onClick={() => navigate(s.arena ? '/dashboard/history?kind=arena' : '/dashboard/history')}
                 style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '14px 0', background: 'none', border: 'none', borderTop: `1px solid ${T.border}`, color: T.cream, cursor: 'pointer' }}>
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, overflowWrap: 'anywhere' }}>{s.topic}</span>
-                  <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{fmtMD(s.startedAt)} · {s.kind === 'argue' ? t('kindArgue') : t('kindCoaching')} · {s.completedAt ? t('done') : t('inProgress')}</span>
+                  <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{fmtMD(s.at)} · {s.kind} · {s.done ? t('done') : t('inProgress')}</span>
                 </span>
-                {s.scoreAfter && <span style={{ fontFamily: serif, fontSize: 24, flexShrink: 0 }}>{s.scoreAfter.total}</span>}
+                {s.score !== undefined && <span style={{ fontFamily: serif, fontSize: 24, flexShrink: 0 }}>{s.score}</span>}
               </button>
             ))
           )}
-        </div>
+        </div>}
       </div>
     </DashboardLayout>
   );

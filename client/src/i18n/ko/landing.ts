@@ -5,6 +5,8 @@ export const landing = {
   heroLine3: '논리의 빈틈을 스스로 발견하고 더 깊이 사고합니다.',
   ctaStart: '시작하기',
   ctaMore: '더 알아보기',
+  whyEyebrow: '시작하는 이유',
+  compareEyebrow: '비교',
   entryTitle: '이럴 때 LOGOS를 찾아요',
   entry1Title: '결정을 앞두고',
   entry1Body: '이직, 이사, 투자처럼 쉽게 못 정하는 일. 답을 받는 대신 내가 뭘 확신하는지부터 짚어 봐요.',

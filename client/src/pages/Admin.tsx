@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import NotFound from '@/pages/NotFound';
-import { ErrorLine, Label, T, btnGhost, mono, sans } from '@/components/logos-ui';
+import { ErrorLine, FocusStyle, Label, T, btnGhost, mono, sans } from '@/components/logos-ui';
+import { usePageMeta } from '@/lib/usePageMeta';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { toCSV } from '@/lib/csv';
@@ -63,11 +64,41 @@ function Section({ title, note, children }: { title: string; note?: string; chil
   );
 }
 
+function Kpi({ label, d, value, target, ok }: { label: string; d: string; value: string; target: string; ok: boolean | null }) {
+  const t = useT('admin');
+  return (
+    <div style={card}>
+      <div style={{ ...small, marginBottom: 6 }}>{label}</div>
+      <div style={big}>{value}</div>
+      <div style={{ ...small, marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span>{t('target', { target })}</span>
+        {ok !== null && (
+          <span style={{ color: ok ? T.amber : T.creamDim, border: `1px solid ${ok ? T.amber : T.borderMid}`, padding: '1px 6px', fontSize: 11 }}>
+            {ok ? t('met') : t('notMet')}
+          </span>
+        )}
+      </div>
+      <p style={desc}>{d}</p>
+    </div>
+  );
+}
+
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div style={card}>
+      <div style={{ ...small, marginBottom: 6 }}>{label}</div>
+      <div style={big}>{value}</div>
+      {sub && <div style={{ ...small, marginTop: 6 }}>{sub}</div>}
+    </div>
+  );
+}
+
 export default function Admin() {
   const { isAdmin, loading: authLoading, adminLoading } = useAuth();
   const t = useT('admin');
   const tAuth = useT('auth');
   const { locale } = useLocale();
+  usePageMeta('admin', { noindex: true });
   const [data, setData] = useState<Metrics | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -132,36 +163,13 @@ export default function Admin() {
   const dec = (n: number | null | undefined, signed = false) =>
     n == null ? dash : `${signed && n > 0 ? '+' : ''}${n.toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
 
-  const Kpi = ({ label, d, value, target, ok }: { label: string; d: string; value: string; target: string; ok: boolean | null }) => (
-    <div style={card}>
-      <div style={{ ...small, marginBottom: 6 }}>{label}</div>
-      <div style={big}>{value}</div>
-      <div style={{ ...small, marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span>{t('target', { target })}</span>
-        {ok !== null && (
-          <span style={{ color: ok ? T.amber : T.creamDim, border: `1px solid ${ok ? T.amber : T.borderMid}`, padding: '1px 6px', fontSize: 10 }}>
-            {ok ? t('met') : t('notMet')}
-          </span>
-        )}
-      </div>
-      <p style={desc}>{d}</p>
-    </div>
-  );
-
-  const Stat = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
-    <div style={card}>
-      <div style={{ ...small, marginBottom: 6 }}>{label}</div>
-      <div style={big}>{value}</div>
-      {sub && <div style={{ ...small, marginTop: 6 }}>{sub}</div>}
-    </div>
-  );
-
   // 세션 KPI는 코칭 세션(session) 기준. 평균 Δ는 점수 쌍이 있을 때만 판정한다.
   const s = data?.kinds.session;
   const met = (v: number | null | undefined, goal: number) => (v == null ? null : v >= goal);
 
   return (
     <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <FocusStyle />
       <div style={{ maxWidth: 960, padding: '8px 0 40px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <span style={{ ...small, fontFamily: sans }}>{t('basis')}</span>

@@ -100,7 +100,7 @@ export default function PlanCards({ variant, currentPlanId }: Props) {
               aria-pressed={active}
               onClick={() => setCycle(c)}
               style={{
-                fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
+                fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
                 padding: '8px 14px',
                 backgroundColor: active ? 'var(--l-fg)' : 'transparent',
                 color: active ? 'var(--l-on-fg)' : 'var(--l-fg-mid)',
@@ -138,7 +138,7 @@ export default function PlanCards({ variant, currentPlanId }: Props) {
                 flexDirection: 'column',
               }}
             >
-              <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 9, letterSpacing: '0.32em', textTransform: 'uppercase' as const, color: plan.highlight ? 'var(--l-amber)' : 'var(--l-accent)', marginBottom: 8 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 11, letterSpacing: '0.32em', textTransform: 'uppercase' as const, color: plan.highlight ? 'var(--l-amber)' : 'var(--l-accent)', marginBottom: 8 }}>
                 {plan.name}
               </div>
 
@@ -146,24 +146,24 @@ export default function PlanCards({ variant, currentPlanId }: Props) {
                 <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '1.8rem' }}>
                   ₩{formatNumber(monthly)}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--l-fg-mid)' }}>/{t(plan.periodKey as 'periodMonth')}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--l-fg-mid)' }}>/{t(plan.periodKey as 'periodMonth')}</span>
                 {soon && (
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--l-accent)', border: '1px solid var(--l-border-mid)', padding: '1px 6px', marginLeft: 6 }}>{t('planned')}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--l-accent)', border: '1px solid var(--l-border-mid)', padding: '1px 6px', marginLeft: 6 }}>{t('planned')}</span>
                 )}
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: soon && cycle === 'yearly' ? 'var(--l-accent)' : 'var(--l-fg-mid)', letterSpacing: '0.05em', marginBottom: 10, minHeight: 12 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: soon && cycle === 'yearly' ? 'var(--l-accent)' : 'var(--l-fg-mid)', letterSpacing: '0.05em', marginBottom: 10, minHeight: 12 }}>
                 {cycle === 'yearly' && plan.price > 0
                   ? t('yearlyTotal', { amount: formatNumber(yearlyTotal(plan)), pct })
                   : soon ? t('plannedLabel') : ' '}
               </div>
 
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--l-fg-mid)', lineHeight: 1.7, marginBottom: 12, minHeight: 28 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--l-fg-mid)', lineHeight: 1.7, marginBottom: 12, minHeight: 28 }}>
                 {t(plan.descKey as 'freeDesc')}
               </div>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.25rem 0', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
                 {plan.features.map((f) => (
-                  <li key={f.key + String(f.included)} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, lineHeight: 1.55, color: f.included ? 'var(--l-fg)' : 'var(--l-fg-mid)', opacity: f.included ? 1 : 0.6 }}>
+                  <li key={f.key + String(f.included)} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.55, color: f.included ? 'var(--l-fg)' : 'var(--l-fg-dim)' }}>
                     <span aria-hidden style={{ flexShrink: 0, width: 8, textAlign: 'center' as const }}>{f.included ? '✓' : '—'}</span>
                     <span>{t(f.key as 'featCoaching', f.vars)}</span>
                   </li>
@@ -171,14 +171,14 @@ export default function PlanCards({ variant, currentPlanId }: Props) {
               </ul>
 
               {soon && (
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--l-fg-mid)', lineHeight: 1.6, margin: '0 0 8px' }}>{t('consent')}</p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--l-fg-mid)', lineHeight: 1.6, margin: '0 0 8px' }}>{t('consent')}</p>
               )}
               <button
                 type="button"
                 onClick={() => !ctaDisabled && soon && void join(plan.id as WaitPlan)}
                 disabled={ctaDisabled}
                 style={{
-                  width: '100%', padding: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 10, letterSpacing: soon ? '0.08em' : '0.22em', textTransform: 'uppercase' as const,
+                  width: '100%', padding: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 11, letterSpacing: soon ? '0.08em' : '0.22em', textTransform: 'uppercase' as const,
                   border: `1px ${soon && !isJoined ? 'dashed' : 'solid'} ${plan.highlight && !ctaDisabled ? 'var(--l-amber)' : 'var(--l-border-mid)'}`,
                   backgroundColor: 'transparent',
                   color: 'var(--l-fg)',

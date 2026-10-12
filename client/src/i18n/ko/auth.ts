@@ -12,6 +12,8 @@ export const auth = {
   callbackError: '로그인하지 못했어요',
   callbackNoSession: '로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
   backToLogin: '로그인 화면으로',
+  callbackTimeout: '로그인 응답이 오지 않았어요. 다시 시도해 주세요.',
+  retryLogin: '다시 로그인',
   checking: '확인하는 중…',
   migrated: '{n}개 기록을 계정에 저장했어요',
   signOutConfirm: '아직 서버에 저장되지 않은 기록이 {n}개 있어요. 지금 로그아웃하면 이 기록은 사라져요. 로그아웃할까요?',

@@ -1,9 +1,11 @@
 import { AlertCircle, Home } from "lucide-react";
 import { useLocation } from "wouter";
 import { useT } from "@/i18n";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
+  usePageMeta("notFound", { noindex: true });
   const t = useT("notFound");
 
   return (
@@ -33,7 +35,7 @@ export default function NotFound() {
         <AlertCircle size={56} style={{ color: "var(--l-error)", margin: "0 auto 24px" }} />
         <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 40, fontWeight: 700, margin: "0 0 8px" }}>404</h1>
         <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px", color: "var(--l-fg-mid)" }}>{t("title")}</h2>
-        <p style={{ fontSize: 13, lineHeight: 1.8, margin: "0 0 32px", color: "var(--l-fg-mid)" }}>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, lineHeight: 1.8, letterSpacing: "normal", wordBreak: "keep-all", margin: "0 0 32px", color: "var(--l-fg-mid)" }}>
           {t("body1")}
           <br />
           {t("body2")}

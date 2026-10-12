@@ -6,6 +6,8 @@ export const landing: Record<keyof typeof Ko, string> = {
   heroLine3: 'find the gaps in your own logic and think more deeply.',
   ctaStart: 'Get started',
   ctaMore: 'Learn more',
+  whyEyebrow: 'Why people start',
+  compareEyebrow: 'Compare',
   entryTitle: 'When people turn to LOGOS',
   entry1Title: 'Facing a decision',
   entry1Body: "A job change, a move, an investment: the choices that are hard to settle. Instead of getting an answer, start by pinning down what you're actually sure of.",

@@ -10,6 +10,7 @@ export const analytics = {
   kindArgue: '논증',
   kindSession: '코칭',
   kindDiagnostic: '진단',
+  kindArena: '아레나',
   serTotal: '총점',
   serConsistency: '일관성',
   serEvidence: '근거',

@@ -10,8 +10,10 @@ import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
-  TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, sans } from '@/components/logos-ui';
-import { coach, errorMessage, handleAuthError, type Position } from '@/lib/api';
+  TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, sans, SrLatest,
+  shouldSubmitOnKey, placeholderFor, useRefocusAfterLoading, useDraft, scrollBehavior } from '@/components/logos-ui';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode, type Position } from '@/lib/api';
 import { todaysTopic } from '@/lib/topics';
 import { useLocale, useT } from '@/i18n';
 import { computeStreak, newId, recordActivity, toISODate, upsertSession, loadStore, type SessionRecord, type Turn } from '@/lib/store';
@@ -45,9 +47,15 @@ export default function Argue() {
   const [input, setInput] = useState('');
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState<{ error: string; message: string } | null>(null);
+  const [failed, setFailed] = useState<{ error: string; code?: ApiErrorCode; message: string } | null>(null);
   const [scoringErr, setScoringErr] = useState('');
-  const endRef = useRef<HTMLDivElement>(null);
+  const [scoringCode, setScoringCode] = useState<ApiErrorCode | undefined>();
+  const composerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  usePageMeta('argue', { noindex: true });
+  useRefocusAfterLoading(inputRef, loading);
+  const rescue = useDraft('main', input, setInput);
+  const summaryRescue = useDraft('summary', summary, setSummary);
 
   const commit = (next: SessionRecord) => {
     recRef.current = next;
@@ -56,7 +64,7 @@ export default function Argue() {
     if (next.turns.some((t) => t.role === 'user')) upsertSession(next);
   };
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [rec?.turns.length, loading]);
+  useEffect(() => { composerRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' }); }, [rec?.turns.length, loading]);
 
   const begin = (pos: Position) => {
     setPosition(pos);
@@ -98,8 +106,8 @@ export default function Argue() {
       setRound(nextRound);
       setPhase((p) => (p === 'reason' ? 'argue' : p));
     } catch (e) {
-      if (handleAuthError(e, navigate)) return;
-      setFailed({ error: errorMessage(e), message });
+      if (handleAuthError(e, navigate, () => rescue(message))) return;
+      setFailed({ error: errorMessage(e), code: errorCode(e), message });
     } finally {
       setLoading(false);
     }
@@ -132,7 +140,7 @@ export default function Argue() {
     if (b) next.scoreBefore = { consistency: b.consistency, evidence: b.evidence, defense: b.defense, total: b.total, rationale: b.rationale };
     if (a) { next.scoreAfter = { consistency: a.consistency, evidence: a.evidence, defense: a.defense, total: a.total, rationale: a.rationale }; next.promptVersion = a.promptVersion; }
     const authErr = [before, after].find((r): r is PromiseRejectedResult => r.status === 'rejected');
-    if (authErr && handleAuthError(authErr.reason, navigate)) {
+    if (authErr && handleAuthError(authErr.reason, navigate, () => summaryRescue(finalText))) {
       commit(next);
       return;
     }
@@ -146,6 +154,7 @@ export default function Argue() {
       commit(next);
       const rej = [before, after].find((r): r is PromiseRejectedResult => r.status === 'rejected');
       setScoringErr(rej ? errorMessage(rej.reason) : t('partialFail'));
+      setScoringCode(rej ? errorCode(rej.reason) : undefined);
     }
   };
 
@@ -163,7 +172,7 @@ export default function Argue() {
           <div style={{ display: 'grid', gap: 10 }}>
             <Label>{t('todaysTopic', { category: topic.category })}</Label>
             <h2 style={{ fontFamily: serif, fontWeight: 600, fontSize: 'clamp(1.6rem, 3.6vw, 2.6rem)', color: T.cream, letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>{topic.title}</h2>
-            <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, lineHeight: 1.9, maxWidth: 620, margin: 0 }}>{topic.context}</p>
+            <p className="l-prose" style={{ fontSize: 13, color: T.creamMid, lineHeight: 1.9, maxWidth: 620, margin: 0 }}>{topic.context}</p>
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
             <Label>{t('pickLabel')}</Label>
@@ -175,12 +184,12 @@ export default function Argue() {
                     <span style={{ ...{ fontFamily: mono, fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase' as const }, color: T.creamMid }}>{t(`posTag${POS_KEY[p]}`)}</span>
                   )}
                   <span style={{ fontFamily: serif, fontWeight: 600, fontSize: 22 }}>{posName(p)}</span>
-                  <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, lineHeight: 1.7 }}>{t(`posDesc${POS_KEY[p]}`)}</span>
+                  <span className="l-prose" style={{ fontSize: 12, color: T.creamMid }}>{t(`posDesc${POS_KEY[p]}`)}</span>
                 </button>
               ))}
             </div>
           </div>
-          <p style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, borderTop: `1px solid ${T.border}`, paddingTop: 14, margin: 0, lineHeight: 1.8 }}>
+          <p className="l-prose" style={{ fontSize: 12, color: T.creamMid, borderTop: `1px solid ${T.border}`, paddingTop: 14, margin: 0, lineHeight: 1.8 }}>
             {t('pickFootnote', { rounds: ROUNDS_TOTAL })}
           </p>
         </div>
@@ -248,7 +257,7 @@ export default function Argue() {
             </p>
             <label htmlFor="summary" style={sr}>{t('summaryAria')}</label>
             <textarea id="summary" className="lg-field" value={summary} onChange={(e) => setSummary(e.target.value.slice(0, MAX_SUMMARY))}
-              rows={7} maxLength={MAX_SUMMARY} disabled={phase === 'scoring'} style={textareaStyle} placeholder={t('summaryPlaceholder')} />
+              rows={7} maxLength={MAX_SUMMARY} readOnly={phase === 'scoring'} aria-busy={phase === 'scoring'} style={textareaStyle} placeholder={t('summaryPlaceholder')} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontFamily: mono, fontSize: 10, color: T.creamMid }}>
                 <CharCount value={summary} max={MAX_SUMMARY} /> {t('minChars', { min: MIN_SUMMARY })}
@@ -259,7 +268,7 @@ export default function Argue() {
               </button>
             </div>
             {busy && <TypingDots label={t('scoringDots')} />}
-            {scoringErr && <ErrorLine message={scoringErr} onRetry={() => void submitSummary()} />}
+            {scoringErr && <ErrorLine message={scoringErr} code={scoringCode} onRetry={() => void submitSummary()} />}
           </div>
         </div>
       </DashboardLayout>
@@ -282,11 +291,12 @@ export default function Argue() {
           </div>
           <div style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, display: 'flex', gap: 12 }}>
             <span>{t('stance')} <strong style={{ color: T.cream }}>{posName(position)}</strong></span>
-            <span aria-label={t('roundAria', { n: Math.min(round + (done ? 0 : 1), ROUNDS_TOTAL), total: ROUNDS_TOTAL })}>R {Math.min(round + (done ? 0 : 1), ROUNDS_TOTAL)}/{ROUNDS_TOTAL}</span>
+            <span aria-label={t('roundAria', { n: Math.min(round + (done ? 0 : 1), ROUNDS_TOTAL), total: ROUNDS_TOTAL })}>{t('roundShort', { n: Math.min(round + (done ? 0 : 1), ROUNDS_TOTAL), total: ROUNDS_TOTAL })}</span>
           </div>
         </div>
 
-        <div style={{ ...panelStyle }} aria-live="polite">
+        <SrLatest text={lastIsAi ? rec.turns[rec.turns.length - 1].content : ''} />
+        <div style={{ ...panelStyle }}>
           {inReason && (
             <p style={{ margin: 0, fontFamily: serif, fontSize: 18, lineHeight: 1.7, color: T.cream }}>
               {t('reasonIntro', { pos: posName(position) })}
@@ -297,7 +307,7 @@ export default function Argue() {
             return (
               <div key={i} style={{ padding: '16px 0', borderBottom: i < rec.turns.length - 1 ? `1px solid ${T.border}` : 'none', display: 'grid', gap: 6 }}>
                 <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: ai ? T.creamMid : T.creamDim }}>{ai ? 'LOGOS' : t('you', { pos: posName(position) })}</span>
-                <p style={{ margin: 0, fontFamily: ai ? serif : mono, fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
+                <p className={ai ? undefined : 'l-prose'} style={{ margin: 0, ...(ai ? { fontFamily: serif } : {}), fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
                 {ai && turn.targetWeakness && (
                   <span style={{ fontFamily: mono, fontSize: 10, color: T.creamDim, lineHeight: 1.6 }}>{t('weakness', { text: turn.targetWeakness })}</span>
                 )}
@@ -305,11 +315,11 @@ export default function Argue() {
             );
           })}
           {loading && <TypingDots />}
-          <div ref={endRef} />
         </div>
 
-        {failed && <ErrorLine message={failed.error} onRetry={() => void runTurn(failed.message, false)} retryLabel={t('resendLast')} />}
+        {failed && <ErrorLine message={failed.error} code={failed.code} onRetry={() => void runTurn(failed.message, false)} retryLabel={t('resendLast')} />}
 
+        <div ref={composerRef}>
         {done ? (
           <div style={{ ...panelStyle, borderColor: T.amber, display: 'grid', gap: 10 }}>
             <p style={{ margin: 0, fontSize: 13, color: T.cream, lineHeight: 1.7 }}>{t('roundsDone', { rounds: ROUNDS_TOTAL })}</p>
@@ -318,10 +328,10 @@ export default function Argue() {
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             <label htmlFor="argue-input" style={sr}>{inReason ? t('reasonAria') : t('argueAria')}</label>
-            <textarea id="argue-input" className="lg-field" value={input} onChange={(e) => setInput(e.target.value.slice(0, max))}
-              onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) submit(); }}
-              placeholder={inReason ? t('reasonPlaceholder') : t('arguePlaceholder')}
-              rows={inReason ? 4 : 3} maxLength={max} disabled={loading} style={textareaStyle} />
+            <textarea id="argue-input" ref={inputRef} className="lg-field" value={input} onChange={(e) => setInput(e.target.value.slice(0, max))}
+              onKeyDown={(e) => { if (shouldSubmitOnKey(e)) { e.preventDefault(); submit(); } }}
+              placeholder={placeholderFor(inReason ? t('reasonPlaceholder') : t('arguePlaceholder'))}
+              rows={inReason ? 4 : 3} maxLength={max} readOnly={loading} aria-busy={loading} style={textareaStyle} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <CharCount value={input} max={max} />
               <button type="button" className="lg-btn" onClick={submit} disabled={loading || !input.trim()} style={{ ...btnPrimary, ...(loading || !input.trim() ? btnDisabled : {}) }}>
@@ -330,6 +340,7 @@ export default function Argue() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -6,7 +6,7 @@
 /*
  * LOGOS Design System — Sage Minimalism + Editorial
  * 유니콘 스튜디오 정밀 재현: Background #C8C8B6, Text #262618
- * Typography: Outfit (UI/마퀴) + Source Serif 4 (제목)
+ * Typography: Space Mono (UI 라벨) + Source Serif 4 (제목) + Pretendard (본문)
  */
 
 @theme inline {
@@ -55,9 +55,13 @@
    * whether inline fontFamily or body cascade is used. */
   --font-mono: 'Space Mono', 'Pretendard Variable', 'Pretendard', -apple-system, monospace;
   --font-serif: 'Source Serif 4', 'Pretendard Variable', 'Pretendard', Georgia, serif;
-  --font-display: 'Outfit', 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-display: 'Pretendard Variable', 'Pretendard', sans-serif;
   /* 한글 장문(리포트·채점 근거·입력창)용. Space Mono의 넓은 공백·구두점 폭을 피한다. */
   --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+  /* 본문 기본. 모노(--font-mono)는 라벨·수치용으로만 남기고 긴 글은 이걸 쓴다. */
+  --font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  /* 최소 글자 크기 — 이보다 작은 텍스트는 쓰지 않는다. */
+  --l-text-min: 11px;
 
   /* LOGOS Brand Colors — Exact Unicorn Studio Values */
   --logos-sage: #C8C8B6;
@@ -70,8 +74,8 @@
   --l-bg: #F0EBE0;
   --l-panel: #E7E1D3;
   --l-fg: #14140F;
-  --l-fg-mid: rgba(20,20,15,0.66);
-  --l-fg-dim: rgba(20,20,15,0.40);
+  --l-fg-mid: rgba(20,20,15,0.74);
+  --l-fg-dim: rgba(20,20,15,0.62);
   --l-border: rgba(20,20,15,0.14);
   --l-border-mid: rgba(20,20,15,0.26);
   --l-faint: rgba(20,20,15,0.05);
@@ -120,8 +124,8 @@
   --l-bg: #0A0A0A;
   --l-panel: #111111;
   --l-fg: #F0EBE0;
-  --l-fg-mid: rgba(240,235,224,0.58);
-  --l-fg-dim: rgba(240,235,224,0.30);
+  --l-fg-mid: rgba(240,235,224,0.70);
+  --l-fg-dim: rgba(240,235,224,0.52);
   --l-border: rgba(240,235,224,0.14);
   --l-border-mid: rgba(240,235,224,0.24);
   --l-faint: rgba(240,235,224,0.05);
@@ -219,6 +223,49 @@
   @keyframes logos-marquee-left {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
+  }
+  /* 키보드 포커스 링 — 개별 컴포넌트가 outline을 직접 지정하면 그쪽이 우선한다. */
+  :focus-visible {
+    outline: 2px solid var(--l-accent);
+    outline-offset: 2px;
+  }
+  /* 본문 요소는 모노가 아니라 Pretendard. 라벨은 인라인 fontFamily로 모노를 지정하므로 영향 없다. */
+  p, li, textarea, input, select {
+    font-family: var(--font-body);
+    letter-spacing: normal;
+  }
+  /* 한글 헤딩이 음절 중간("줄어듭니/다")에서 끊기지 않게 한다. */
+  h1, h2, h3 {
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+  /* 랜딩 수직 사이드 레이블은 좁은 화면에서 히어로 본문과 겹친다. */
+  @media (max-width: 640px) {
+    .lp-side-label { display: none; }
+    /* 동상이 히어로 본문 뒤에 깔리므로 배경 수준으로 낮춰 가독성을 확보한다. */
+    .lp-statue { opacity: 0.35; }
+  }
+  .l-prose {
+    font-family: var(--font-body);
+    letter-spacing: normal;
+    line-height: 1.7;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  /* 모션 감소: 애니메이션·전환을 사실상 끈다(마퀴·펄스 포함). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* 터치 기기: 주요 버튼만 44px 최소 높이. 전역 button 규칙은 작은 아이콘 버튼을 깨뜨릴 수 있어 범위를 좁혔다. */
+  @media (pointer: coarse) {
+    .lg-btn, .mk-btn, nav a, nav button {
+      min-height: 44px;
+    }
   }
   @keyframes pulse-dot {
     0%, 100% { opacity: 0.6; transform: scale(1); }

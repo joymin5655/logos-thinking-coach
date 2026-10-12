@@ -10,6 +10,39 @@ const FG_MID = 'var(--l-fg-mid)';
 const BORDER = 'var(--l-border-mid)';
 const ACCENT = 'var(--l-accent)';
 
+// 마케팅 공용 CSS — 호버·포커스·터치·폰 폭 규칙. Landing 등 mk- 클래스를 쓰는 페이지도 이 레이아웃 안에서 렌더된다.
+const MK_CSS = `
+  .mk-link { color: ${FG_MID}; transition: color 0.18s; }
+  .mk-link[aria-current="page"] { color: ${FG}; }
+  .mk-link:hover, .mk-link:focus-visible { color: ${FG}; }
+  .mk-cta { background-color: ${FG}; transition: background-color 0.18s; }
+  .mk-cta:hover, .mk-cta:focus-visible { background-color: ${ACCENT}; }
+  .mk-mail { color: ${FG_MID}; transition: color 0.18s; }
+  .mk-mail:hover, .mk-mail:focus-visible { color: ${ACCENT}; }
+  .mk-btn-primary { background-color: ${FG}; border-color: ${FG}; transition: background-color 0.18s, border-color 0.18s; }
+  .mk-btn-primary:hover, .mk-btn-primary:focus-visible { background-color: ${ACCENT}; border-color: ${ACCENT}; }
+  .mk-btn-ghost { background-color: transparent; transition: background-color 0.18s; }
+  .mk-btn-ghost:hover, .mk-btn-ghost:focus-visible { background-color: var(--l-faint); }
+  .mk-btn-invert { transition: opacity 0.18s; }
+  .mk-btn-invert:hover, .mk-btn-invert:focus-visible { opacity: 0.85; }
+  .mk-card { background-color: ${BG}; transition: background-color 0.18s; }
+  .mk-card:hover, .mk-card:focus-visible { background-color: var(--l-panel); }
+  @media (pointer: coarse) {
+    .mk-cta { min-height: 40px; }
+    .mk-link { min-height: 40px; display: inline-flex; align-items: center; }
+  }
+  @media (max-width: 640px) {
+    /* 한 화면 고정 페이지도 폰 폭에서는 내용이 잘리지 않고 스크롤된다. */
+    .fit-viewport { height: auto !important; min-height: calc(100dvh / var(--ui-scale)); }
+    .fit-viewport > .mk-main { overflow: visible !important; }
+    /* 가로 스크롤되는 nav 링크는 오른쪽 끝을 흐려 더 있음을 알린다. */
+    .mk-nav-links {
+      -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
+      mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
+    }
+  }
+`;
+
 type Props = {
   children: ReactNode;
   /** Custom footer node. If omitted, the default LOGOS © 2026 footer is rendered. */
@@ -40,6 +73,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
         flexDirection: 'column',
       }}
     >
+      <style>{MK_CSS}</style>
       {/* ── NAV — 로고 | 라우트 링크 | CTA ── */}
       <nav
         style={{
@@ -72,7 +106,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             textDecoration: 'none',
           }}
         >
-          <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+          <img src="/logo.png" className="logo-mark" alt="" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -90,7 +124,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             className="mk-mobile-hide"
             style={{
               fontFamily: "var(--font-mono)",
-              fontSize: '8px',
+              fontSize: '10px',
               letterSpacing: '0.15em',
               color: FG_MID,
               whiteSpace: 'nowrap',
@@ -121,21 +155,19 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               <Link
                 key={link.href}
                 href={link.href}
+                className="mk-link"
+                aria-current={isActive ? 'page' : undefined}
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontWeight: isActive ? 700 : 400,
-                  fontSize: '10px',
+                  fontSize: '11px',
                   letterSpacing: '0.22em',
-                  color: isActive ? FG : FG_MID,
                   textTransform: 'uppercase',
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   position: 'relative',
                   padding: '4px 0',
-                  transition: 'color 0.18s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = FG; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = isActive ? FG : FG_MID; }}
               >
                 {link.label}
                 {isActive && (
@@ -170,23 +202,21 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
           }}
         >
           <button
+            type="button"
+            className="mk-cta"
             onClick={() => navigate('/dashboard')}
             style={{
               fontFamily: "var(--font-mono)",
               fontWeight: 700,
-              fontSize: '9px',
+              fontSize: '11px',
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: 'var(--l-on-fg)',
-              backgroundColor: FG,
               border: 'none',
-              padding: '7px 16px',
+              padding: '9px 16px',
               cursor: 'pointer',
-              transition: 'background-color 0.18s',
               whiteSpace: 'nowrap',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = ACCENT; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = FG; }}
           >
             {t('start')}
           </button>
@@ -194,7 +224,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
       </nav>
 
       {/* ── 페이지 콘텐츠 ── */}
-      <main style={singleViewport ? { flex: 1, overflow: 'hidden', minHeight: 0 } : undefined}>
+      <main className="mk-main" style={singleViewport ? { flex: 1, overflow: 'hidden', minHeight: 0 } : undefined}>
         {children}
       </main>
 
@@ -223,15 +253,14 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               height: '100%',
             }}
           >
-            <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '14px', height: '14px', objectFit: 'contain', opacity: 0.45 }} />
+            <img src="/logo.png" className="logo-mark" alt="" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
             <span
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: '9px',
+                fontSize: '11px',
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                opacity: 0.45,
-                color: FG,
+                color: FG_MID,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -249,7 +278,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               borderRight: `1px solid ${BORDER}`,
               height: '100%',
               fontFamily: "var(--font-mono)",
-              fontSize: '9px',
+              fontSize: '11px',
               letterSpacing: '0.12em',
               color: FG_MID,
               textDecoration: 'none',
@@ -259,9 +288,10 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             {t('privacy')}
           </Link>
 
-          {/* 이메일 — 우측 고정 (PITCH 15) */}
+          {/* 이메일 — 우측 고정 */}
           <a
             href="mailto:contact@lo9os.org"
+            className="mk-mail"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -270,21 +300,18 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               borderLeft: `1px solid ${BORDER}`,
               height: '100%',
               fontFamily: "var(--font-mono)",
-              fontSize: '9px',
+              fontSize: '11px',
               letterSpacing: '0.12em',
-              color: FG_MID,
               textDecoration: 'none',
-              transition: 'color 0.18s',
               order: 2,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = ACCENT; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = FG_MID; }}
           >
             contact@lo9os.org
           </a>
 
-          {/* 마퀴 — 중앙 flex 1, 양쪽 페이드 마스크 */}
+          {/* 마퀴 — 중앙 flex 1, 양쪽 페이드 마스크 (장식) */}
           <div
+            aria-hidden="true"
             style={{
               flex: 1,
               overflow: 'hidden',
@@ -310,7 +337,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
                   style={{
                     fontFamily: "var(--font-mono)",
                     fontWeight: 400,
-                    fontSize: '9px',
+                    fontSize: '10px',
                     letterSpacing: '0.2em',
                     color: FG_MID,
                     display: 'inline-block',

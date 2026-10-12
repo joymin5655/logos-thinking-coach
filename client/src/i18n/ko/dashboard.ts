@@ -1,10 +1,20 @@
 // 한국어 원문(기준 사전). 키를 추가하면 en/dashboard.ts에도 같은 키가 있어야 타입 검사를 통과한다.
 export const dashboard = {
+  titleEn: 'Dashboard',
   title: '대시보드',
   eyebrow: 'Growth',
   heading: '오늘도 깊이 생각하세요',
   intro: '베타 기간에는 Free 플랜을 무료로 쓸 수 있어요. 기록은 내 계정에 저장되고, AI 응답은 Anthropic을 통해 만들어져요.',
   privacyLink: '개인정보 처리방침',
+  eyebrowLine: '{date} · 연속 {n}일',
+  heroResume: '이어하기 · {mode}',
+  resumeBtn: '이어서 하기',
+  stageOf: '{n}/4단계',
+  diagRowFirst: '3분 진단으로 기준점 만들기 · 시작 →',
+  diagRowRe: '재진단 할 수 있어요 · 시작 →',
+  kpiArena: '아레나 전적',
+  arenaWdl: '{w}승 {d}무 {l}패',
+  arenaSub: '완료한 판 {n}회',
   // 진단 초대
   diagRe: '재진단',
   diagFirst: '3분 사고력 진단',
@@ -82,6 +92,7 @@ export const dashboard = {
   recentEmpty: '아직 기록이 없어요. 오늘의 논증이나 소크라테스 코칭으로 첫 기록을 만들어 보세요.',
   kindArgue: '오늘의 논증',
   kindCoaching: '코칭',
+  kindArena: '아레나',
   done: '완주',
   inProgress: '진행 중',
 } as const;

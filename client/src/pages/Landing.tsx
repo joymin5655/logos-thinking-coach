@@ -12,16 +12,19 @@ import SpotlightBeam from '@/components/SpotlightBeam';
 import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useT } from '@/i18n';
+import { usePageMeta } from '@/lib/usePageMeta';
 
 // 테마 토큰(--l-*) — 페이지 배경/전경은 테마를 따르고, 대비 띠(compare)만 반전한다.
 const BG = 'var(--l-bg)';
 const FG = 'var(--l-fg)';
 const FG_MID = 'var(--l-fg-mid)';
-const FG_DIM = 'var(--l-border-mid)';
+const LINE = 'var(--l-border-mid)'; // 선·테두리 전용(텍스트에는 쓰지 않는다)
+const FG_DIM = 'var(--l-fg-dim)'; // 보조 텍스트
 const ON_FG = 'var(--l-on-fg)';
 
 export default function Landing() {
   const [, navigate] = useLocation();
+  usePageMeta('home');
   const t = useT('landing');
   const tm = useT('marketing');
   const dark = useTheme().theme === 'dark';
@@ -63,22 +66,22 @@ export default function Landing() {
   const heroFooter = (
     <footer
       style={{
-        borderTop: `1px solid ${FG_DIM}`,
+        borderTop: `1px solid ${LINE}`,
         backgroundColor: BG,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      {/* 마퀴 스트립 */}
+      {/* 마퀴 스트립 (장식) */}
       <div
+        aria-hidden="true"
         style={{
-          height: 24,
+          height: 28,
           overflow: 'hidden',
           whiteSpace: 'nowrap',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: `1px solid ${FG_DIM}`,
           maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
         }}
@@ -96,7 +99,7 @@ export default function Landing() {
               style={{
                 fontFamily: "var(--font-mono)",
                 fontWeight: 400,
-                fontSize: '9px',
+                fontSize: '10px',
                 letterSpacing: '0.2em',
                 color: FG_MID,
                 display: 'inline-block',
@@ -109,34 +112,6 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* SYSTEM 정보 행 */}
-      <div
-        style={{
-          padding: '10px 28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontFamily: "var(--font-mono)", fontSize: '9px', color: FG_DIM, letterSpacing: '0.1em' }}>
-          <span>SYSTEM.ACTIVE</span>
-          <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
-            {[8, 14, 6, 10, 12, 5, 9, 7].map((h, i) => (
-              <div key={i} style={{ width: 2, height: h, backgroundColor: FG_DIM }} />
-            ))}
-          </div>
-          <span>V1.0.0</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "var(--font-mono)", fontSize: '9px', color: FG_DIM }}>
-          <span>◐ RENDERING</span>
-          <div style={{ display: 'flex', gap: 3 }}>
-            {[0, 0.2, 0.4].map((delay, i) => (
-              <div key={i} style={{ width: 4, height: 4, backgroundColor: FG, borderRadius: '50%', opacity: 0.6 - i * 0.15, animation: `pulse-dot 1.4s ease-in-out ${delay}s infinite` }} />
-            ))}
-          </div>
-          <span>FRAME: ∞</span>
-        </div>
-      </div>
     </footer>
   );
 
@@ -155,14 +130,14 @@ export default function Landing() {
         }}
       >
         {/* 코너 프레임 장식 */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 48, height: 48, borderTop: `2px solid ${FG_DIM}`, borderLeft: `2px solid ${FG_DIM}`, zIndex: 50 }} />
-        <div style={{ position: 'absolute', top: 0, right: 0, width: 48, height: 48, borderTop: `2px solid ${FG_DIM}`, borderRight: `2px solid ${FG_DIM}`, zIndex: 50 }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: 48, height: 48, borderBottom: `2px solid ${FG_DIM}`, borderLeft: `2px solid ${FG_DIM}`, zIndex: 50 }} />
-        <div style={{ position: 'absolute', bottom: 0, right: 0, width: 48, height: 48, borderBottom: `2px solid ${FG_DIM}`, borderRight: `2px solid ${FG_DIM}`, zIndex: 50 }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: 48, height: 48, borderTop: `2px solid ${LINE}`, borderLeft: `2px solid ${LINE}`, zIndex: 50 }} />
+        <div style={{ position: 'absolute', top: 0, right: 0, width: 48, height: 48, borderTop: `2px solid ${LINE}`, borderRight: `2px solid ${LINE}`, zIndex: 50 }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: 48, height: 48, borderBottom: `2px solid ${LINE}`, borderLeft: `2px solid ${LINE}`, zIndex: 50 }} />
+        <div style={{ position: 'absolute', bottom: 0, right: 0, width: 48, height: 48, borderBottom: `2px solid ${LINE}`, borderRight: `2px solid ${LINE}`, zIndex: 50 }} />
 
         {/* 3D 동상 + 스포트라이트 — 우측 (zoom 미적용) */}
         <div
-          className="ui-scale-reset"
+          className="ui-scale-reset lp-statue"
           style={{
             position: 'absolute',
             zIndex: 15,
@@ -189,10 +164,10 @@ export default function Landing() {
           }}
         >
           {/* 상단 구분선 + 슬로건 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, opacity: 0.55 }}>
-            <div style={{ width: 28, height: 1, backgroundColor: FG }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 28, height: 1, backgroundColor: LINE }} />
             <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', letterSpacing: '0.2em', color: ACCENT }}>001</span>
-            <div style={{ flex: 1, height: 1, backgroundColor: FG, opacity: 0.3 }} />
+            <div style={{ flex: 1, height: 1, backgroundColor: LINE }} />
           </div>
 
           {/* Primary Slogan (영문) — The AI That Never Answers */}
@@ -254,12 +229,13 @@ export default function Landing() {
           <div style={{ position: 'relative' }}>
             <p
               style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: '14px',
+                fontFamily: 'var(--font-body)',
+                fontSize: '15px',
                 lineHeight: 1.85,
                 color: FG_MID,
                 marginBottom: 28,
-                letterSpacing: '0.04em',
+                letterSpacing: 'normal',
+                wordBreak: 'keep-all',
               }}
             >
               <strong style={{ color: HIGHLIGHT, fontWeight: 700 }}>{t('heroStrong')}</strong><br />
@@ -285,6 +261,8 @@ export default function Landing() {
           {/* CTA 버튼 */}
           <div style={{ display: 'flex', gap: 12 }}>
             <button
+              type="button"
+              className="mk-btn-primary"
               onClick={() => navigate('/dashboard')}
               style={{
                 position: 'relative',
@@ -295,19 +273,18 @@ export default function Landing() {
                 letterSpacing: '0.22em',
                 textTransform: 'uppercase',
                 color: BG,
-                backgroundColor: FG,
-                border: `1px solid ${FG}`,
+                borderWidth: 1,
+                borderStyle: 'solid',
                 cursor: 'pointer',
-                transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = ACCENT; e.currentTarget.style.borderColor = ACCENT; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = FG; e.currentTarget.style.borderColor = FG; }}
             >
               <span style={{ position: 'absolute', top: -4, left: -4, width: 7, height: 7, borderTop: `1px solid ${FG}`, borderLeft: `1px solid ${FG}` }} />
               <span style={{ position: 'absolute', bottom: -4, right: -4, width: 7, height: 7, borderBottom: `1px solid ${FG}`, borderRight: `1px solid ${FG}` }} />
               {t('ctaStart')}
             </button>
             <button
+              type="button"
+              className="mk-btn-ghost"
               onClick={() => navigate('/about')}
               style={{
                 padding: '10px 22px',
@@ -317,57 +294,52 @@ export default function Landing() {
                 letterSpacing: '0.22em',
                 textTransform: 'uppercase',
                 color: FG,
-                backgroundColor: 'transparent',
-                border: `1px solid ${FG_DIM}`,
+                border: `1px solid ${LINE}`,
                 cursor: 'pointer',
-                transition: 'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--l-faint)'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               {t('ctaMore')}
             </button>
           </div>
 
           {/* 하단 기술 주석 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, opacity: 0.35 }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: FG }}>∞</span>
-            <div style={{ flex: 1, height: 1, backgroundColor: FG, opacity: 0.3 }} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: FG, letterSpacing: '0.15em' }}>SOCRATIC METHOD</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24 }} aria-hidden="true">
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: FG_MID }}>∞</span>
+            <div style={{ flex: 1, height: 1, backgroundColor: LINE }} />
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: '12px', color: FG_MID, letterSpacing: '0.15em' }}>SOCRATIC METHOD</span>
           </div>
         </div>
 
         {/* 수직 사이드 레이블 */}
-        <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 40, writingMode: 'vertical-rl', pointerEvents: 'none' }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.45em', textTransform: 'uppercase', color: FG_DIM }}>Thinking Coach</span>
+        <div className="lp-side-label" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 40, writingMode: 'vertical-rl', pointerEvents: 'none' }} aria-hidden="true">
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.45em', textTransform: 'uppercase', color: FG_DIM }}>Thinking Coach</span>
         </div>
-        <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%) rotate(180deg)', zIndex: 40, writingMode: 'vertical-rl', pointerEvents: 'none' }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: '10px', letterSpacing: '0.45em', textTransform: 'uppercase', color: FG_DIM }}>2026 · LOGOS</span>
+        <div className="lp-side-label" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%) rotate(180deg)', zIndex: 40, writingMode: 'vertical-rl', pointerEvents: 'none' }} aria-hidden="true">
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: '11px', letterSpacing: '0.45em', textTransform: 'uppercase', color: FG_DIM }}>2026 · LOGOS</span>
         </div>
 
       </div>
       </div>
 
       {/* ── 진입 동기 ── */}
-      <section aria-labelledby="entry-heading" style={{ backgroundColor: BG, color: FG, padding: '4rem 1.25rem', borderTop: `1px solid ${FG_DIM}` }}>
+      <section aria-labelledby="entry-heading" style={{ backgroundColor: BG, color: FG, padding: '4rem 1.25rem', borderTop: `1px solid ${LINE}` }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>Why people start</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.4em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>{t('whyEyebrow')}</div>
           <h2 id="entry-heading" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', letterSpacing: '-0.02em', margin: '0 0 1.5rem' }}>
             {t('entryTitle')}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 1, backgroundColor: FG_DIM }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 1, backgroundColor: LINE }}>
             {ENTRY_CARDS.map((c) => (
               <button
                 key={c.title}
                 type="button"
+                className="mk-card"
                 onClick={() => navigate(c.to)}
-                style={{ textAlign: 'left', backgroundColor: BG, color: FG, border: 'none', padding: '1.5rem', cursor: 'pointer', display: 'grid', gap: 10, alignContent: 'start' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--l-panel)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = BG; }}
+                style={{ textAlign: 'left', color: FG, border: 'none', padding: '1.5rem', cursor: 'pointer', display: 'grid', gap: 10, alignContent: 'start' }}
               >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', color: FG_MID }}>{c.no}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.3em', color: FG_MID }}>{c.no}</span>
                 <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 20 }}>{c.title}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.8, color: FG_MID }}>{c.body}</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.8, color: FG_MID, letterSpacing: 'normal', wordBreak: 'keep-all' }}>{c.body}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: FG }}>{c.cta} →</span>
               </button>
             ))}
@@ -378,7 +350,7 @@ export default function Landing() {
       {/* ── 같은 고민, 다른 대화 ── */}
       <section aria-labelledby="compare-heading" style={{ backgroundColor: FG, color: ON_FG, padding: '4rem 1.25rem' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', color: BAND_ACCENT, marginBottom: 10 }}>Compare</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.4em', textTransform: 'uppercase', color: BAND_ACCENT, marginBottom: 10 }}>{t('compareEyebrow')}</div>
           <h2 id="compare-heading" style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', letterSpacing: '-0.02em', margin: '0 0 1.25rem' }}>
             {t('compareTitle')}
           </h2>
@@ -387,23 +359,24 @@ export default function Landing() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
             <div style={{ border: `1px solid ${BAND_LINE}`, padding: '1.25rem', display: 'grid', gap: 10, alignContent: 'start' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: BAND_MID }}>{t('genericAi')}</div>
-              <ul style={{ margin: 0, paddingLeft: '1.1em', display: 'grid', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.8 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: BAND_MID }}>{t('genericAi')}</div>
+              <ul style={{ margin: 0, paddingLeft: '1.1em', display: 'grid', gap: 8, fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.8, letterSpacing: 'normal', wordBreak: 'keep-all' }}>
                 <li>{t('generic1')}</li>
                 <li>{t('generic2')}</li>
                 <li>{t('generic3')}</li>
               </ul>
-              <p style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: 11, color: BAND_MID }}>{t('genericNote')}</p>
+              <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 12, color: BAND_MID, letterSpacing: 'normal', wordBreak: 'keep-all' }}>{t('genericNote')}</p>
             </div>
             <div style={{ border: `1px solid ${ON_FG}`, backgroundColor: ON_FG, color: FG, padding: '1.25rem', display: 'grid', gap: 10, alignContent: 'start' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: ACCENT }}>LOGOS</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: ACCENT }}>LOGOS</div>
               <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.5 }}>{t('logosQuestion')}</p>
-              <p style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: 11, color: FG_MID, lineHeight: 1.7 }}>{t('logosNote')}</p>
+              <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 12, color: FG_MID, lineHeight: 1.7, letterSpacing: 'normal', wordBreak: 'keep-all' }}>{t('logosNote')}</p>
             </div>
           </div>
           <div style={{ marginTop: '1.5rem' }}>
             <button
               type="button"
+              className="mk-btn-invert"
               onClick={() => navigate('/dashboard/session')}
               style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '10px 22px', backgroundColor: ON_FG, color: FG, border: `1px solid ${ON_FG}`, cursor: 'pointer' }}
             >
@@ -413,12 +386,6 @@ export default function Landing() {
         </div>
       </section>
 
-      <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.3); }
-        }
-      `}</style>
     </MarketingLayout>
   );
 }

@@ -26,7 +26,7 @@ export const arena: Record<keyof typeof Ko, string> = {
   opponent: 'AI opponent',
   targets: 'Targeted claim · {claim}',
   inputLabel: 'Your argument',
-  placeholder: 'Write your argument (Cmd/Ctrl + Enter to send)',
+  placeholder: 'Write your argument (Enter to send, Shift+Enter for a new line)',
   send: 'Send',
   thinking: 'The AI opponent is writing a rebuttal',
   retryTurn: 'Resend last turn',
@@ -49,4 +49,7 @@ export const arena: Record<keyof typeof Ko, string> = {
   vsAverage: 'This match {n} · your average {avg} ({diff})',
   firstMatch: 'This is your first match, so there is no average to compare yet. This match: {n}.',
   again: 'Start a new debate',
+  goHome: 'Back to home',
+  toHistory: 'View history',
+  titleEn: '',
 };

@@ -2,9 +2,16 @@
  * logos-ui.tsx — 세션·논증·진단·대시보드가 함께 쓰는 작은 조각들.
  * 팔레트는 기존 대시보드와 같다. 앰버는 '납득'·점수 상승 순간에만 쓴다.
  */
-import type { CSSProperties, ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
+import { Link } from 'wouter';
 import type { Score, Report } from '@/lib/store';
+import type { ApiErrorCode } from '@/lib/api';
+import { clearDraft, draftKey, flushDrafts, loadDraft, saveDraft, trackDraft, untrackDraft } from '@/lib/draft';
 import { useT } from '@/i18n';
+import { ALMOST_HINT_MS, SLOW_HINT_MS, isCoarsePointer, scrollBehavior, waitHintKey } from '@/lib/composer';
+
+export { shouldSubmitOnKey, placeholderFor, isCoarsePointer, prefersReducedMotion, scrollBehavior } from '@/lib/composer';
 
 // 값은 CSS 변수(index.css의 --l-*)라 라이트/다크 전환을 따른다.
 export const T = {
@@ -24,6 +31,8 @@ export const T = {
 export const mono = 'var(--font-mono)';
 export const serif = 'var(--font-serif)';
 export const sans = 'var(--font-sans)';
+/** 한국어 본문용. Agent G의 --font-body(Pretendard 스택)가 없으면 sans로 떨어진다. */
+export const body = 'var(--font-body, var(--font-sans))';
 
 export const labelStyle: CSSProperties = {
   fontFamily: mono,
@@ -79,6 +88,8 @@ export const panelStyle: CSSProperties = {
 export const FOCUS_CSS = `
 .lg-btn:focus-visible,.lg-field:focus-visible,.lg-scale:focus-visible{outline:2px solid ${T.amber};outline-offset:2px}
 .lg-field:focus{border-color:${T.borderMid}!important}
+.lg-field[aria-busy="true"]{opacity:.7}
+@media (pointer:coarse){.lg-btn{min-height:44px}}
 @keyframes lg-dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @keyframes lg-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.lg-dot,.lg-fade{animation:none!important}}
@@ -92,13 +103,36 @@ export function Label({ children, style }: { children: ReactNode; style?: CSSPro
   return <div style={{ ...labelStyle, ...style }}>{children}</div>;
 }
 
+const sr = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const;
+
+/** 화면에는 안 보이고 스크린리더에만 읽히는 문구. */
+export function SrOnly({ children }: { children: ReactNode }) {
+  return <span className="sr-only" style={sr}>{children}</span>;
+}
+
+/** 새 AI 답변 하나만 읽어 주는 라이브 영역. 대화 전체에 aria-live를 걸지 않는다. */
+export function SrLatest({ text }: { text?: string }) {
+  return (
+    <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" style={sr}>
+      {text ?? ''}
+    </div>
+  );
+}
+
 export function TypingDots({ label }: { label?: string }) {
   const t = useT('session');
+  const [key, setKey] = useState<ReturnType<typeof waitHintKey>>(null);
+  useEffect(() => {
+    const a = setTimeout(() => setKey(waitHintKey(SLOW_HINT_MS)), SLOW_HINT_MS);
+    const b = setTimeout(() => setKey(waitHintKey(ALMOST_HINT_MS)), ALMOST_HINT_MS);
+    return () => {
+      clearTimeout(a);
+      clearTimeout(b);
+    };
+  }, []);
   return (
-    <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '16px 0' }}>
-      <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-        {label ?? t('uiTyping')}
-      </span>
+    <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '16px 0' }}>
+      <SrOnly>{label ?? t('uiTyping')}</SrOnly>
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -107,22 +141,30 @@ export function TypingDots({ label }: { label?: string }) {
           style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: T.creamMid, animation: `lg-dot 1.2s ${i * 0.18}s infinite` }}
         />
       ))}
+      {key && <span style={{ fontFamily: body, fontSize: 12, color: T.creamMid, marginLeft: 8 }}>{t(key)}</span>}
     </div>
   );
 }
 
-export function ErrorLine({ message, onRetry, retryLabel }: { message: string; onRetry?: () => void; retryLabel?: string }) {
+export function ErrorLine({ message, code, onRetry, retryLabel }: { message: string; code?: ApiErrorCode; onRetry?: () => void; retryLabel?: string }) {
   const t = useT('session');
+  const quota = code === 'quota';
   return (
     <div
       role="alert"
       style={{ border: `1px solid ${T.error}`, padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}
     >
-      <span style={{ fontFamily: sans, fontSize: 12, color: T.cream, lineHeight: 1.6 }}>{message}</span>
-      {onRetry && (
-        <button type="button" className="lg-btn" onClick={onRetry} style={{ ...btnGhost, padding: '6px 14px', fontSize: 10 }}>
-          {retryLabel ?? t('uiRetry')}
-        </button>
+      <span style={{ fontFamily: body, fontSize: 12, color: T.cream, lineHeight: 1.6 }}>{quota ? t('uiQuotaLine') : message}</span>
+      {quota ? (
+        <Link href="/dashboard/subscription" className="lg-btn" style={{ ...btnGhost, padding: '6px 14px', fontSize: 11, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+          {t('uiQuotaLink')}
+        </Link>
+      ) : (
+        onRetry && (
+          <button type="button" className="lg-btn" onClick={onRetry} style={{ ...btnGhost, padding: '6px 14px', fontSize: 11 }}>
+            {retryLabel ?? t('uiRetry')}
+          </button>
+        )
       )}
     </div>
   );
@@ -295,5 +337,56 @@ export function Survey({ value, onChange }: { value?: { differentFromAI: number;
       <Scale name={t('uiSurveyAria2')} value={value?.selfAuthored} onChange={set('selfAuthored')} ends={[t('uiSurveyEnd2a'), t('uiSurveyEnd2b')]} />
       {done && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('uiSurveySaved')}</span>}
     </div>
+  );
+}
+
+
+/* ───── 입력창 보조 ───── */
+
+/**
+ * 답변을 기다리는 동안 textarea를 disabled로 만들면 포커스가 사라진다.
+ * 대신 readOnly로 두고, 로딩이 끝나면 포커스가 입력창 주변이나 body에 있었던 경우에만 되돌린다.
+ */
+export function useRefocusAfterLoading(ref: RefObject<HTMLTextAreaElement | null>, loading: boolean) {
+  const prev = useRef(loading);
+  const had = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (loading) {
+      const a = document.activeElement;
+      had.current = !a || a === document.body || a === el || !!el?.parentElement?.contains(a);
+    } else if (prev.current && had.current) {
+      el?.focus({ preventScroll: true });
+    }
+    prev.current = loading;
+  }, [loading, ref]);
+}
+
+/** 쓰던 글을 경로+slot 키로 보관·복원한다. rescue(text)는 401로 튕기기 직전 보낸 글을 되살리는 용도. */
+export function useDraft(slot: string, value: string, setValue: (v: string) => void) {
+  const key = useRef(draftKey(typeof location === 'undefined' ? '/' : location.pathname, slot)).current;
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  useEffect(() => {
+    const d = loadDraft(key);
+    if (d && !valueRef.current) setValue(d);
+    return () => {
+      saveDraft(key, valueRef.current);
+      untrackDraft(key);
+    };
+    // 마운트 때 한 번만
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  useEffect(() => {
+    trackDraft(key, value);
+    const id = setTimeout(() => (value.trim() ? saveDraft(key, value) : clearDraft(key)), 400);
+    return () => clearTimeout(id);
+  }, [key, value]);
+  return useCallback(
+    (text: string) => {
+      trackDraft(key, text);
+      flushDrafts();
+    },
+    [key],
   );
 }
