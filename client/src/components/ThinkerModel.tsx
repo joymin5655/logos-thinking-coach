@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
@@ -30,6 +31,14 @@ interface ThinkerModelProps {
 
 export default function ThinkerModel({ className, style }: ThinkerModelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dark = useTheme().theme === "dark";
+  // 장면 생성 effect가 채우고, 테마 effect가 값만 바꾼다(GLB를 다시 읽지 않는다).
+  const rigRef = useRef<{
+    renderer: THREE.WebGLRenderer;
+    ambient: THREE.AmbientLight;
+    rim: THREE.DirectionalLight;
+    material: THREE.MeshStandardMaterial;
+  } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -74,7 +83,8 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     // ── LIGHTS ──
     // 검정 배경 조명 v2: 스포트라이트 효과와 연동하여 동상을 크림/골드로 밝게 부각
     // Ambient: 적당한 기본 가시성
-    scene.add(new THREE.AmbientLight(0xf0ebe0, 0.12));
+    const ambient = new THREE.AmbientLight(0xf0ebe0, 0.12);
+    scene.add(ambient);
 
     // Key Light: 크림-화이트, 좌상단 앞 → 주 그림자
     const keyLight = new THREE.DirectionalLight(0xfff8f0, 3.2);
@@ -128,6 +138,8 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     const envRT = pmremGenerator.fromScene(neutralEnvScene);
     scene.environment = envRT.texture;
     pmremGenerator.dispose();
+
+    rigRef.current = { renderer, ambient, rim: rimLight, material };
 
     // ── LOAD GLB ──
     const group = new THREE.Group();
@@ -234,8 +246,20 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
         container.removeChild(renderer.domElement);
       }
       latestRenderCanvas = null;
+      rigRef.current = null;
     };
   }, []);
+
+  // 테마: 다크 = 어두운 배경에 림라이트로 분리, 라이트 = 크림 배경 위에서 윤곽이 읽히도록 앰비언트를 올리고 노출을 낮춘다.
+  useEffect(() => {
+    const rig = rigRef.current;
+    if (!rig) return;
+    rig.renderer.toneMappingExposure = dark ? 1.35 : 1.0;
+    rig.ambient.intensity = dark ? 0.12 : 0.55;
+    rig.rim.color.set(dark ? 0xffd580 : 0xb98a3a);
+    rig.rim.intensity = dark ? 2.0 : 1.2;
+    rig.material.color.set(dark ? 0x2a2520 : 0x3a332a);
+  }, [dark]);
 
   return (
     <div

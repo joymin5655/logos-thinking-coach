@@ -65,7 +65,7 @@ export type ArenaRecord = {
   side: 'pro' | 'con';
   startedAt: string;
   completedAt?: string;
-  turns: { role: 'user' | 'assistant'; content: string; at: string }[];
+  turns: { role: 'user' | 'assistant'; content: string; at: string; targetsClaim?: string }[];
   result?: {
     consistency: number;
     evidence: number;

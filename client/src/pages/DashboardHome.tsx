@@ -1,9 +1,9 @@
 /*
  * DashboardHome.tsx — LOGOS 성장 대시보드
- * 모든 숫자는 이 기기에 저장된 실제 기록에서 나온다. 기록이 없으면 빈 상태 문구를 보여준다.
+ * 모든 숫자는 내 계정의 실제 기록(이 기기의 캐시)에서 나온다. 기록이 없으면 빈 상태 문구를 보여준다.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -12,16 +12,26 @@ import { ALL_FIELDS, MAX_FIELDS, loadFields, saveFields, type Field } from '@/li
 import { FIELD_COLOR } from '@/lib/colors';
 import { todaysTopic } from '@/lib/topics';
 import { buildDailyArgueIcs, downloadFile } from '@/lib/ics';
+import { formatDate, useLocale, useT } from '@/i18n';
 import {
   REDIAGNOSE_DAYS, addDays, avgDelta, completionRate, computeStreak, daysUntilRediagnosis, exportJSON,
   isoWeekKey, localDate, pickComparison, toISODate, useStore, weekdayIndex,
 } from '@/lib/store';
 
-const DAY_KO = ['월', '화', '수', '목', '금', '토', '일'];
-const fmtMD = (iso: string) => {
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-};
+// Field는 데이터에 쓰이는 한국어 키다. 화면에는 이 키로 사전의 표시 이름을 찾아 쓴다.
+const FIELD_KEY = {
+  '기술·사회': 'fieldTechSociety',
+  '사회': 'fieldSociety',
+  '경제': 'fieldEconomy',
+  '철학': 'fieldPhilosophy',
+  '윤리': 'fieldEthics',
+  '노동': 'fieldLabor',
+  '커리어': 'fieldCareer',
+  '라이프스타일': 'fieldLifestyle',
+  '교육': 'fieldEducation',
+} as const satisfies Record<Field, string>;
+
+const fmtMD = (iso: string) => formatDate(iso);
 
 function Kpi({ label, n, sub }: { label: string; n: string; sub: string }) {
   return (
@@ -34,12 +44,15 @@ function Kpi({ label, n, sub }: { label: string; n: string; sub: string }) {
 }
 
 export default function DashboardHome() {
+  const t = useT('dashboard');
+  const { locale } = useLocale();
   const [, navigate] = useLocation();
   const store = useStore();
   const [fields, setFields] = useState<Field[]>(() => loadFields());
   const [draft, setDraft] = useState<Field[]>([]);
   const [skipDiag, setSkipDiag] = useState(false);
-  const topic = useMemo(() => todaysTopic(), []);
+  // locale이 바뀌면 주제 제목도 다시 가져온다
+  const topic = useMemo(() => todaysTopic(), [locale]);
 
   useEffect(() => {
     const sync = () => setFields(loadFields());
@@ -76,9 +89,10 @@ export default function DashboardHome() {
   const recent = [...store.sessions].reverse().slice(0, 3);
 
   const weekStart = addDays(today, -weekdayIndex(today));
-  const week = DAY_KO.map((ko, i) => {
+  const week = [0, 1, 2, 3, 4, 5, 6].map((i) => {
     const date = addDays(weekStart, i);
     const froze = streak.freezeDates.includes(date) || store.streak.freezesUsed[isoWeekKey(date)] === date;
+    const ko = formatDate(new Date(`${date}T00:00:00`), { weekday: 'short' });
     return { ko, date, done: store.streak.days.includes(date), froze, isToday: date === today, future: date > today };
   });
 
@@ -86,11 +100,11 @@ export default function DashboardHome() {
     const tomorrow = todaysTopic(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
     const ics = buildDailyArgueIcs(tomorrow.title, `${window.location.origin}/dashboard/argue`);
     downloadFile('logos-daily-argue.ics', ics, 'text/calendar;charset=utf-8');
-    toast('내일 아침 8시 일정을 내려받았어요. 캘린더 앱에서 열어 주세요.');
+    toast(t('calendarToast'));
   };
   const exportData = () => {
     downloadFile(`logos-export-${today}.json`, exportJSON(), 'application/json');
-    toast('기록을 내려받았어요.');
+    toast(t('exportDone'));
   };
 
   const toggleDraft = (f: Field) =>
@@ -105,89 +119,88 @@ export default function DashboardHome() {
   const showDiagInvite = (!lastDiag && !skipDiag) || (lastDiag && rediagDue);
 
   return (
-    <DashboardLayout title="대시보드" titleEn="Dashboard">
+    <DashboardLayout title={t('title')} titleEn="Dashboard">
       <FocusStyle />
       <div style={{ display: 'grid', gap: 24, maxWidth: 1080 }}>
         <div style={{ display: 'grid', gap: 6 }}>
-          <Label>Growth</Label>
+          <Label>{t('eyebrow')}</Label>
           <h2 style={{ fontFamily: serif, fontWeight: 600, fontSize: 'clamp(1.6rem, 4vw, 2.1rem)', color: T.cream, letterSpacing: '-0.02em', margin: 0 }}>
-            오늘도 깊이 생각하세요
+            {t('heading')}
           </h2>
           <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, margin: 0, lineHeight: 1.8 }}>
-            베타 기간에는 모든 기능을 무료로 쓸 수 있어요. 기록은 이 기기에만 저장됩니다.
+            {t('intro')}{' '}
+            <Link href="/privacy" style={{ color: T.cream }}>{t('privacyLink')}</Link>
           </p>
         </div>
 
         {showDiagInvite && (
           <div style={{ ...panelStyle, borderColor: T.cream, display: 'grid', gap: 10 }}>
-            <Label>{lastDiag ? '재진단' : '3분 사고력 진단'}</Label>
+            <Label>{lastDiag ? t('diagRe') : t('diagFirst')}</Label>
             <p style={{ margin: 0, fontFamily: serif, fontSize: 20, lineHeight: 1.4, color: T.cream }}>
-              {lastDiag
-                ? `${REDIAGNOSE_DAYS}일이 지났어요. 다시 재서 얼마나 달라졌는지 볼까요?`
-                : '먼저 지금의 기준점을 만들어 둘까요? 3분이면 됩니다.'}
+              {lastDiag ? t('diagReLead', { days: REDIAGNOSE_DAYS }) : t('diagFirstLead')}
             </p>
             <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>
-              {lastDiag ? `지난 진단은 ${lastDiag.score.total}점이었어요.` : '한 문항에 짧게 쓰면 AI가 추정 점수를 냅니다. 4주 뒤 같은 방식으로 다시 재서 변화를 보여 드려요.'}
+              {lastDiag ? t('diagLast', { score: lastDiag.score.total }) : t('diagFirstBody', { days: REDIAGNOSE_DAYS })}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/diagnostic')}>{lastDiag ? '재진단 하기' : '3분 진단 시작'}</button>
-              {!lastDiag && <button type="button" className="lg-btn" style={btnGhost} onClick={() => setSkipDiag(true)}>나중에 할게요</button>}
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/diagnostic')}>{lastDiag ? t('diagReButton') : t('diagFirstButton')}</button>
+              {!lastDiag && <button type="button" className="lg-btn" style={btnGhost} onClick={() => setSkipDiag(true)}>{t('diagLater')}</button>}
             </div>
           </div>
         )}
 
         {fields.length === 0 && (
           <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
-            <Label>관심 분야 · 선택</Label>
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>고르면 오늘의 논증 주제에 반영돼요. 최대 {MAX_FIELDS}개, 건너뛰어도 됩니다.</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="group" aria-label="관심 분야">
+            <Label>{t('fieldPickLabel')}</Label>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('fieldPickLead', { max: MAX_FIELDS })}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="group" aria-label={t('fieldGroup')}>
               {ALL_FIELDS.map((opt) => {
                 const picked = draft.includes(opt.value);
                 const atCap = !picked && draft.length >= MAX_FIELDS;
                 return (
                   <button key={opt.value} type="button" className="lg-btn" aria-pressed={picked} onClick={() => toggleDraft(opt.value)} disabled={atCap}
-                    style={{ ...btnGhost, padding: '8px 14px', fontSize: 11, textTransform: 'none', letterSpacing: '0.05em', backgroundColor: picked ? T.cream : 'transparent', color: picked ? T.black : atCap ? T.creamDim : T.creamMid, borderColor: picked ? T.cream : T.borderMid, cursor: atCap ? 'not-allowed' : 'pointer' }}>
-                    {opt.value}
+                    style={{ ...btnGhost, padding: '8px 14px', fontSize: 11, textTransform: 'none', letterSpacing: '0.05em', backgroundColor: picked ? T.cream : 'transparent', color: picked ? 'var(--l-on-fg)' : atCap ? T.creamDim : T.creamMid, borderColor: picked ? T.cream : T.borderMid, cursor: atCap ? 'not-allowed' : 'pointer' }}>
+                    {t(FIELD_KEY[opt.value])}
                   </button>
                 );
               })}
             </div>
-            <div><button type="button" className="lg-btn" style={{ ...btnPrimary, opacity: draft.length ? 1 : 0.4 }} disabled={!draft.length} onClick={commitFields}>저장</button></div>
+            <div><button type="button" className="lg-btn" style={{ ...btnPrimary, opacity: draft.length ? 1 : 0.4 }} disabled={!draft.length} onClick={commitFields}>{t('save')}</button></div>
           </div>
         )}
 
         {/* KPI */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 1, backgroundColor: T.border, border: `1px solid ${T.border}` }}>
-          <Kpi label="연속 기록" n={`${streak.count}일`} sub={streak.freezesLeftThisWeek > 0 ? '이번 주 쉬어가기 1회 남음' : '이번 주 쉬어가기를 썼어요'} />
-          <Kpi label="세션 완주율" n={comp.rate === null ? '—' : `${Math.round(comp.rate * 100)}%`} sub={comp.started ? `시작 ${comp.started} · 완주 ${comp.completed}` : '아직 시작한 세션이 없어요'} />
-          <Kpi label="세션 내 평균 상승" n={delta === null ? '—' : `${delta > 0 ? '+' : ''}${Math.round(delta)}`} sub={delta === null ? '완주한 세션이 쌓이면 보여요' : '처음 주장 → 최종 정리'} />
+          <Kpi label={t('kpiStreak')} n={t('days', { n: streak.count })} sub={streak.freezesLeftThisWeek > 0 ? t('freezeLeft') : t('freezeUsed')} />
+          <Kpi label={t('kpiCompletion')} n={comp.rate === null ? '—' : `${Math.round(comp.rate * 100)}%`} sub={comp.started ? t('startedCompleted', { started: comp.started, completed: comp.completed }) : t('noneStarted')} />
+          <Kpi label={t('kpiDelta')} n={delta === null ? '—' : `${delta > 0 ? '+' : ''}${Math.round(delta)}`} sub={delta === null ? t('deltaEmpty') : t('deltaSub')} />
           <Kpi
-            label="진단 변화"
+            label={t('kpiDiag')}
             n={!lastDiag ? '—' : prevDiag ? `${prevDiag.score.total}→${lastDiag.score.total}` : `${lastDiag.score.total}→?`}
-            sub={!lastDiag ? '3분 진단으로 기준점을 만들어요' : dueIn === 0 ? '재진단 할 수 있어요' : `재진단까지 ${dueIn}일`}
+            sub={!lastDiag ? t('diagKpiEmpty') : dueIn === 0 ? t('diagKpiDue') : t('diagKpiIn', { n: dueIn ?? 0 })}
           />
         </div>
 
         {/* 오늘의 논증 + 주간 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           <div style={{ border: `1px solid ${T.cream}`, padding: 18, display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
-            <Label>오늘의 논증 · 10분</Label>
+            <Label>{t('argueLabel')}</Label>
             <p style={{ fontFamily: serif, fontSize: 19, lineHeight: 1.4, margin: 0, color: T.cream }}>"{topic.title}"</p>
-            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>입장을 고르고 근거를 쓰면, LOGOS가 가장 약한 고리를 세 번 묻습니다.</p>
+            <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('argueLead')}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{doneToday ? '한 번 더' : '시작하기'}</button>
-              <button type="button" className="lg-btn" style={btnGhost} onClick={addToCalendar}>내일 아침 8시 캘린더에 추가</button>
+              <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/argue')}>{doneToday ? t('argueAgain') : t('argueStart')}</button>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={addToCalendar}>{t('addToCalendar')}</button>
             </div>
-            {doneToday && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>오늘 논증을 마쳤어요.</span>}
+            {doneToday && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('argueDone')}</span>}
           </div>
           <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
-            <Label>이번 주</Label>
+            <Label>{t('week')}</Label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
               {week.map((d) => (
                 <div key={d.date} style={{ display: 'grid', gap: 4, justifyItems: 'center', fontFamily: mono, fontSize: 10, color: T.creamMid }}>
                   <i
                     role="img"
-                    aria-label={`${d.ko}요일 ${d.done ? '기록함' : d.froze ? '쉬어감' : d.future ? '아직 안 옴' : '기록 없음'}`}
+                    aria-label={t(d.done ? 'dayDone' : d.froze ? 'dayFroze' : d.future ? 'dayFuture' : 'dayNone', { day: d.ko })}
                     style={{
                       width: '100%', aspectRatio: '1', maxWidth: 34, display: 'block',
                       border: `1px solid ${d.isToday ? T.amber : d.done ? T.cream : T.border}`,
@@ -200,7 +213,7 @@ export default function DashboardHome() {
               ))}
             </div>
             <p style={{ margin: 0, fontSize: 13, color: T.creamMid, borderLeft: `2px solid ${T.border}`, paddingLeft: 12, lineHeight: 1.7 }}>
-              빗금 = 쉬어가기(주 1회). 하루 놓쳐도 기록이 끊기지 않아요.
+              {t('weekLegend')}
             </p>
           </div>
         </div>
@@ -208,40 +221,40 @@ export default function DashboardHome() {
         {/* 추이 + 비교 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           <div style={{ display: 'grid', gap: 8, minWidth: 0, alignContent: 'start' }}>
-            <Label>세션 점수 추이 (최종 정리 기준 · AI 추정치)</Label>
+            <Label>{t('trendLabel')}</Label>
             {trend.length >= 2 ? (
-              <div style={{ height: 180 }} role="img" aria-label={`최근 ${trend.length}회 점수: ${trend[0].score}에서 ${trend[trend.length - 1].score}`}>
+              <div style={{ height: 180 }} role="img" aria-label={t('trendAria', { n: trend.length, from: trend[0].score, to: trend[trend.length - 1].score })}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trend} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
-                    <CartesianGrid stroke="rgba(240,235,224,0.10)" vertical={false} />
+                    <CartesianGrid stroke="var(--l-border)" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontFamily: 'Space Mono', fontSize: 10, fill: T.creamMid }} axisLine={false} tickLine={false} width={40} />
-                    <Tooltip contentStyle={{ backgroundColor: T.black, border: `1px solid ${T.borderMid}`, fontFamily: 'Space Mono', fontSize: 11 }} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} formatter={(v: number) => [`${v}점`, '최종 정리']} />
+                    <Tooltip contentStyle={{ backgroundColor: T.black, border: `1px solid ${T.borderMid}`, fontFamily: 'Space Mono', fontSize: 11 }} labelStyle={{ color: T.creamMid }} itemStyle={{ color: T.cream }} formatter={(v: number) => [t('points', { n: v }), t('finalSummary')]} />
                     <Line type="monotone" dataKey="score" stroke={T.accent} strokeWidth={2} dot={{ r: 3, fill: T.accent, stroke: T.accent }} activeDot={{ r: 5, fill: T.amber, stroke: T.amber }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
               <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-                세션을 2번 완주하면 점수 추이가 그려져요. 지금까지 완주 {trend.length}회.
+                {t('trendEmpty', { n: trend.length })}
               </p>
             )}
           </div>
           <div style={{ display: 'grid', gap: 10, minWidth: 0, alignContent: 'start' }}>
-            <Label>{compare ? (compare.sameTopic ? `한 달 전의 나와 비교 · 같은 주제 "${compare.older.topic}"` : '예전의 나와 비교') : '한 달 전의 나와 비교'}</Label>
+            <Label>{compare ? (compare.sameTopic ? t('compareSame', { topic: compare.older.topic }) : t('compareOld')) : t('compareDefault')}</Label>
             {compare ? (
               <>
-                <Quote>{fmtMD(compare.older.startedAt)}: "{compare.older.finalSummary ?? compare.older.firstClaim}"</Quote>
-                <Quote after>{fmtMD(compare.newer.startedAt)}: "{compare.newer.finalSummary ?? compare.newer.firstClaim}"</Quote>
+                <Quote>{t('quoteLine', { date: fmtMD(compare.older.startedAt), text: compare.older.finalSummary ?? compare.older.firstClaim ?? '' })}</Quote>
+                <Quote after>{t('quoteLine', { date: fmtMD(compare.newer.startedAt), text: compare.newer.finalSummary ?? compare.newer.firstClaim ?? '' })}</Quote>
               </>
             ) : (
               <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-                완주한 기록이 2개 이상 쌓이면 예전 내 생각과 지금 생각을 나란히 볼 수 있어요. 3주 넘게 지난 기록이 있으면 그것과 먼저 비교합니다.
+                {t('compareEmpty')}
               </p>
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>기록은 이 기기에만 저장돼요</span>
-              <button type="button" className="lg-btn" style={btnGhost} onClick={exportData}>파일럿용 기록 내보내기 (JSON)</button>
+              <span style={{ fontFamily: mono, fontSize: 11, padding: '3px 8px', border: `1px solid ${T.border}`, color: T.creamMid }}>{t('savedBadge')}</span>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={exportData}>{t('exportButton')}</button>
             </div>
           </div>
         </div>
@@ -249,14 +262,14 @@ export default function DashboardHome() {
         {fields.length > 0 && (
           <div style={{ display: 'grid', gap: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Label>분야별 완주 횟수</Label>
-              <button type="button" className="lg-btn" onClick={() => { saveFields([]); setDraft([]); }} style={{ ...btnGhost, border: 'none', padding: '2px 0', fontSize: 10, textDecoration: 'underline' }}>분야 재선택</button>
+              <Label>{t('fieldCounts')}</Label>
+              <button type="button" className="lg-btn" onClick={() => { saveFields([]); setDraft([]); }} style={{ ...btnGhost, border: 'none', padding: '2px 0', fontSize: 10, textDecoration: 'underline' }}>{t('fieldReset')}</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
               {fieldCounts.map(({ f, n }) => (
                 <div key={f} style={{ ...panelStyle, padding: 14, display: 'grid', gap: 4, borderTop: `2px solid ${FIELD_COLOR[f]}` }}>
-                  <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{f}</span>
-                  <span style={{ fontFamily: serif, fontSize: 24, color: T.cream }}>{n}<span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}> 회</span></span>
+                  <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t(FIELD_KEY[f])}</span>
+                  <span style={{ fontFamily: serif, fontSize: 24, color: T.cream }}>{n}<span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}> {t('timesUnit')}</span></span>
                 </div>
               ))}
             </div>
@@ -264,10 +277,10 @@ export default function DashboardHome() {
         )}
 
         <div style={{ display: 'grid', gap: 10 }}>
-          <Label>최근 기록</Label>
+          <Label>{t('recent')}</Label>
           {recent.length === 0 ? (
             <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7, border: `1px dashed ${T.border}`, padding: 16 }}>
-              아직 기록이 없어요. 오늘의 논증이나 소크라테스 코칭으로 첫 기록을 만들어 보세요.
+              {t('recentEmpty')}
             </p>
           ) : (
             recent.map((s) => (
@@ -275,7 +288,7 @@ export default function DashboardHome() {
                 style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '14px 0', background: 'none', border: 'none', borderTop: `1px solid ${T.border}`, color: T.cream, cursor: 'pointer' }}>
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, overflowWrap: 'anywhere' }}>{s.topic}</span>
-                  <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{fmtMD(s.startedAt)} · {s.kind === 'argue' ? '오늘의 논증' : '코칭'} · {s.completedAt ? '완주' : '진행 중'}</span>
+                  <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{fmtMD(s.startedAt)} · {s.kind === 'argue' ? t('kindArgue') : t('kindCoaching')} · {s.completedAt ? t('done') : t('inProgress')}</span>
                 </span>
                 {s.scoreAfter && <span style={{ fontFamily: serif, fontSize: 24, flexShrink: 0 }}>{s.scoreAfter.total}</span>}
               </button>

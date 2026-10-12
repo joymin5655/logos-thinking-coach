@@ -1,4 +1,5 @@
 /* ics.ts — 캘린더(.ics) 단일 이벤트 생성. 로컬 시각 기준 floating time. */
+import { getLocale, translate, type Locale } from '../i18n';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -37,21 +38,21 @@ export function foldLine(line: string): string {
 }
 
 /** 내일 08:00 (로컬) 시작, 10분짜리 이벤트. */
-export function buildDailyArgueIcs(topic: string, url: string, now = new Date()): string {
+export function buildDailyArgueIcs(topic: string, url: string, now = new Date(), locale?: Locale): string {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
   const end = new Date(start.getTime() + 10 * 60_000);
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//LOGOS//Daily Argue//KO',
+    `PRODID:-//LOGOS//Daily Argue//${(locale ?? getLocale()).toUpperCase()}`,
     'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:logos-argue-${stamp(start)}@logos`,
     `DTSTAMP:${utcStamp(now)}`,
     `DTSTART:${stamp(start)}`,
     `DTEND:${stamp(end)}`,
-    `SUMMARY:${esc('LOGOS 오늘의 논증 (10분)')}`,
-    `DESCRIPTION:${esc(`${topic}\n${url}`)}`,
+    `SUMMARY:${esc(translate('ics', 'summary', undefined, locale))}`,
+    `DESCRIPTION:${esc(`${translate('ics', 'description', { topic }, locale)}\n${url}`)}`,
     `URL:${url}`,
     'END:VEVENT',
     'END:VCALENDAR',

@@ -64,25 +64,3 @@ export function clearFields() {
     /* ignore */
   }
 }
-
-/** 분야 -> mock 레벨 매핑. 첫 분야가 가장 높은 레벨. */
-export function fieldRankMock(field: Field, index: number): { lv: number; ko: string; en: string; badge: string; progress: number } {
-  // 첫 선호 분야: Lv. 5, 두번째: Lv. 3, 세번째: Lv. 2 (mock)
-  const lv = Math.max(1, 5 - index * 2 + (field.length % 2));
-  const map: { lv: number; ko: string; en: string; badge: string }[] = [
-    { lv: 1, ko: '수련자',   en: 'Novice',       badge: '◇' },
-    { lv: 2, ko: '질문자',   en: 'Inquirer',     badge: '◈' },
-    { lv: 3, ko: '논증가',   en: 'Reasoner',     badge: '◆' },
-    { lv: 4, ko: '회의자',   en: 'Skeptic',      badge: '◉' },
-    { lv: 5, ko: '변증가',   en: 'Dialectician', badge: '◎' },
-    { lv: 6, ko: '비판자',   en: 'Critic',       badge: '✦' },
-    { lv: 7, ko: '해석자',   en: 'Interpreter',  badge: '✧' },
-    { lv: 8, ko: '사색가',   en: 'Contemplator', badge: '✪' },
-    { lv: 9, ko: '소피스트', en: 'Sophos',       badge: '✯' },
-  ];
-  const idx = Math.min(map.length - 1, Math.max(0, lv - 1));
-  const tier = map[idx];
-  // mock 진행률
-  const progress = ((field.length * 23 + index * 17) % 80) + 10;
-  return { ...tier, progress };
-}

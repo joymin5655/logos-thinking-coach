@@ -4,6 +4,7 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import type { Score, Report } from '@/lib/store';
+import { useT } from '@/i18n';
 
 // 값은 CSS 변수(index.css의 --l-*)라 라이트/다크 전환을 따른다.
 export const T = {
@@ -40,7 +41,7 @@ export const btnPrimary: CSSProperties = {
   textTransform: 'uppercase',
   padding: '10px 20px',
   backgroundColor: T.cream,
-  color: T.black,
+  color: 'var(--l-on-fg)',
   border: `1px solid ${T.cream}`,
   cursor: 'pointer',
 };
@@ -91,11 +92,12 @@ export function Label({ children, style }: { children: ReactNode; style?: CSSPro
   return <div style={{ ...labelStyle, ...style }}>{children}</div>;
 }
 
-export function TypingDots({ label = 'LOGOS가 질문을 고르는 중' }: { label?: string }) {
+export function TypingDots({ label }: { label?: string }) {
+  const t = useT('session');
   return (
     <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '16px 0' }}>
       <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-        {label}
+        {label ?? t('uiTyping')}
       </span>
       {[0, 1, 2].map((i) => (
         <span
@@ -109,7 +111,8 @@ export function TypingDots({ label = 'LOGOS가 질문을 고르는 중' }: { lab
   );
 }
 
-export function ErrorLine({ message, onRetry, retryLabel = '다시 시도' }: { message: string; onRetry?: () => void; retryLabel?: string }) {
+export function ErrorLine({ message, onRetry, retryLabel }: { message: string; onRetry?: () => void; retryLabel?: string }) {
+  const t = useT('session');
   return (
     <div
       role="alert"
@@ -118,7 +121,7 @@ export function ErrorLine({ message, onRetry, retryLabel = '다시 시도' }: { 
       <span style={{ fontFamily: sans, fontSize: 12, color: T.cream, lineHeight: 1.6 }}>{message}</span>
       {onRetry && (
         <button type="button" className="lg-btn" onClick={onRetry} style={{ ...btnGhost, padding: '6px 14px', fontSize: 10 }}>
-          {retryLabel}
+          {retryLabel ?? t('uiRetry')}
         </button>
       )}
     </div>
@@ -135,26 +138,28 @@ export function CharCount({ value, max }: { value: string; max: number }) {
 
 /* ───── 루브릭 ───── */
 
-export const AXES: { key: 'consistency' | 'evidence' | 'defense'; label: string; max: number }[] = [
-  { key: 'consistency', label: '논리적 일관성', max: 30 },
-  { key: 'evidence', label: '근거의 구체성', max: 40 },
-  { key: 'defense', label: '방어력·메타인지', max: 30 },
+export const AXES: { key: 'consistency' | 'evidence' | 'defense'; labelKey: 'axisConsistency' | 'axisEvidence' | 'axisDefense'; max: number }[] = [
+  { key: 'consistency', labelKey: 'axisConsistency', max: 30 },
+  { key: 'evidence', labelKey: 'axisEvidence', max: 40 },
+  { key: 'defense', labelKey: 'axisDefense', max: 30 },
 ];
 
 /** before가 있으면 앰버 눈금으로 처음 점수를 표시한다. */
 export function RubricBars({ after, before }: { after: Score; before?: Score }) {
+  const t = useT('session');
   return (
     <div style={{ display: 'grid', gap: 12 }}>
       {AXES.map((ax) => {
         const a = after[ax.key];
         const b = before?.[ax.key];
+        const label = t(ax.labelKey);
         return (
           <div key={ax.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(6.5em, 9em) 1fr auto', gap: 10, alignItems: 'center', fontSize: 13, color: T.cream }}>
-            <span>{ax.label}</span>
+            <span>{label}</span>
             <span
               role="img"
-              aria-label={`${ax.label} ${b !== undefined ? `${b}점에서 ` : ''}${a}점, 만점 ${ax.max}`}
-              style={{ height: 8, backgroundColor: 'rgba(240,235,224,0.08)', position: 'relative', display: 'block' }}
+              aria-label={b !== undefined ? t('uiRubricAriaFrom', { label, a, b, max: ax.max }) : t('uiRubricAria', { label, a, max: ax.max })}
+              style={{ height: 8, backgroundColor: T.faint, position: 'relative', display: 'block' }}
             >
               <i style={{ position: 'absolute', inset: '0 auto 0 0', width: `${(a / ax.max) * 100}%`, backgroundColor: T.accent }} />
               {b !== undefined && (
@@ -181,16 +186,17 @@ export function BigScore({ n, label, dim, sub }: { n: number; label: string; dim
   );
 }
 
-export function DeltaRow({ before, after, beforeLabel = '처음 주장', afterLabel = '최종 정리' }: { before: number; after: number; beforeLabel?: string; afterLabel?: string }) {
+export function DeltaRow({ before, after, beforeLabel, afterLabel }: { before: number; after: number; beforeLabel?: string; afterLabel?: string }) {
+  const t = useT('session');
   const d = after - before;
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 14, alignItems: 'center' }}>
-      <BigScore n={before} label={beforeLabel} dim />
-      <div aria-label={`${Math.abs(d)}점 ${d >= 0 ? '상승' : '하락'}`} style={{ textAlign: 'center', fontFamily: mono, color: d > 0 ? T.amber : T.creamMid, display: 'grid', gap: 2, fontSize: 11 }}>
+      <BigScore n={before} label={beforeLabel ?? t('uiBeforeClaim')} dim />
+      <div aria-label={t(d >= 0 ? 'uiRise' : 'uiFall', { n: Math.abs(d) })} style={{ textAlign: 'center', fontFamily: mono, color: d > 0 ? T.amber : T.creamMid, display: 'grid', gap: 2, fontSize: 11 }}>
         <strong style={{ fontSize: 22 }}>{d > 0 ? `+${d}` : d}</strong>
-        {d > 0 ? '납득까지' : d === 0 ? '변화 없음' : '다시 볼 지점'}
+        {d > 0 ? t('uiToConviction') : d === 0 ? t('uiNoChange') : t('uiRevisit')}
       </div>
-      <BigScore n={after} label={afterLabel} />
+      <BigScore n={after} label={afterLabel ?? t('uiAfterFinal')} />
     </div>
   );
 }
@@ -204,6 +210,7 @@ export function Quote({ children, after }: { children: ReactNode; after?: boolea
 }
 
 export function ReportBlocks({ report }: { report: Report }) {
+  const t = useT('session');
   const list = (items: string[], ordered?: boolean) => {
     const Tag = ordered ? 'ol' : 'ul';
     return (
@@ -217,21 +224,21 @@ export function ReportBlocks({ report }: { report: Report }) {
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div style={{ display: 'grid', gap: 8 }}>
-        <Label>막힌 지점</Label>
+        <Label>{t('uiStuck')}</Label>
         {list(report.stuckPoints, true)}
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
-        <Label>당연하게 여긴 전제</Label>
+        <Label>{t('uiAssumptions')}</Label>
         {list(report.assumptions)}
       </div>
       {report.turningPoint && (
         <div style={{ display: 'grid', gap: 8 }}>
-          <Label>생각이 움직인 순간</Label>
+          <Label>{t('uiTurning')}</Label>
           <Quote after>{report.turningPoint}</Quote>
         </div>
       )}
       <div style={{ display: 'grid', gap: 8 }}>
-        <Label>스스로에게 던질 질문</Label>
+        <Label>{t('uiNextQ')}</Label>
         {list(report.nextQuestions)}
       </div>
     </div>
@@ -258,7 +265,7 @@ function Scale({ value, onChange, name, ends }: { value?: number; onChange: (n: 
               fontFamily: mono,
               cursor: 'pointer',
               backgroundColor: value === n ? T.cream : 'transparent',
-              color: value === n ? T.black : T.cream,
+              color: value === n ? 'var(--l-on-fg)' : T.cream,
               border: `1px solid ${value === n ? T.cream : T.borderMid}`,
             }}
           >
@@ -275,17 +282,18 @@ function Scale({ value, onChange, name, ends }: { value?: number; onChange: (n: 
 }
 
 export function Survey({ value, onChange }: { value?: { differentFromAI: number; selfAuthored: number }; onChange: (v: { differentFromAI: number; selfAuthored: number }) => void }) {
+  const t = useT('session');
   const set = (k: 'differentFromAI' | 'selfAuthored') => (n: number) =>
     onChange({ differentFromAI: value?.differentFromAI ?? 0, selfAuthored: value?.selfAuthored ?? 0, [k]: n });
   const done = !!value && value.differentFromAI > 0 && value.selfAuthored > 0;
   return (
     <div style={{ display: 'grid', gap: 14, borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
-      <Label>10초 설문 · 검증 데이터로 쓰여요</Label>
-      <p style={{ margin: 0, fontSize: 14, color: T.cream }}>일반 AI와 대화할 때와 달랐나요?</p>
-      <Scale name="일반 AI와의 차이, 1점에서 5점" value={value?.differentFromAI} onChange={set('differentFromAI')} ends={['똑같았다', '완전히 달랐다']} />
-      <p style={{ margin: 0, fontSize: 14, color: T.cream }}>이 결론을 내가 스스로 냈다고 느끼나요?</p>
-      <Scale name="스스로 냈다는 느낌, 1점에서 5점" value={value?.selfAuthored} onChange={set('selfAuthored')} ends={['아니다', '그렇다']} />
-      {done && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>저장했어요.</span>}
+      <Label>{t('uiSurveyLabel')}</Label>
+      <p style={{ margin: 0, fontSize: 14, color: T.cream }}>{t('uiSurveyQ1')}</p>
+      <Scale name={t('uiSurveyAria1')} value={value?.differentFromAI} onChange={set('differentFromAI')} ends={[t('uiSurveyEnd1a'), t('uiSurveyEnd1b')]} />
+      <p style={{ margin: 0, fontSize: 14, color: T.cream }}>{t('uiSurveyQ2')}</p>
+      <Scale name={t('uiSurveyAria2')} value={value?.selfAuthored} onChange={set('selfAuthored')} ends={[t('uiSurveyEnd2a'), t('uiSurveyEnd2b')]} />
+      {done && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>{t('uiSurveySaved')}</span>}
     </div>
   );
 }

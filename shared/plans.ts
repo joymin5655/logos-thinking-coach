@@ -1,17 +1,26 @@
-export type PlanFeature = { text: string; included: boolean };
+// 요금제 정의. 문구는 i18n(pricing 네임스페이스)의 키로만 갖고, 화면이 useT('pricing')으로 풀어 쓴다.
+// Free의 이용 한도는 shared/quotas.ts에서 가져와 서버 한도와 항상 같다.
+import { QUOTAS } from './quotas';
+
+export type PlanFeature = {
+  /** pricing 사전의 키 */
+  key: string;
+  vars?: Record<string, string | number>;
+  included: boolean;
+};
 
 export type Plan = {
   id: 'free' | 'pro' | 'team';
   name: string;
   price: number;
-  period: string;
-  description: string;
+  /** pricing 사전의 키 (월 · 월 10인) */
+  periodKey: string;
+  descKey: string;
   features: PlanFeature[];
-  current?: boolean;
   highlight?: boolean;
   /** 결제 미지원(Hobby 플랜) — 가격은 예정가이고 CTA는 사전 알림 */
   comingSoon?: boolean;
-  cta: string;
+  ctaKey: string;
 };
 
 export const PLANS: Plan[] = [
@@ -19,61 +28,52 @@ export const PLANS: Plan[] = [
     id: 'free',
     name: 'Free',
     price: 0,
-    period: '월',
-    description: '진입 장벽 없이 시작하세요',
+    periodKey: 'periodMonth',
+    descKey: 'freeDesc',
     features: [
-      { text: 'Session 1 (논증) — 일 3회', included: true },
-      { text: 'Session 2 (코칭) — 일 1회', included: true },
-      { text: 'Session 3 (AI 아레나) — 무제한', included: true },
-      { text: '기본 논리력 스코어', included: true },
-      { text: '분야별 기본 랭킹', included: true },
-      { text: '상세 세션 리포트', included: false },
-      { text: 'User vs User 아레나', included: false },
+      { key: 'featCoaching', vars: { n: QUOTAS.session.perDay }, included: true },
+      { key: 'featArgue', vars: { n: QUOTAS.argue.perDay }, included: true },
+      { key: 'featArena', vars: { n: QUOTAS.arena.perDay }, included: true },
+      { key: 'featDiagnostic', included: true },
+      { key: 'featReport', included: true },
+      { key: 'featSync', included: true },
+      { key: 'featPvp', included: false },
     ],
-    current: true,
-    cta: '현재 플랜',
+    ctaKey: 'ctaCurrent',
   },
   {
     id: 'pro',
     name: 'Pro',
     price: 9900,
-    period: '월',
-    description: '핵심 수익원 · 깊이 있는 사고 경험',
+    periodKey: 'periodMonth',
+    descKey: 'proDesc',
     features: [
-      { text: '전 세션 무제한', included: true },
-      { text: '상세 세션 리포트', included: true },
-      { text: '성장 히스토리 분석', included: true },
-      { text: 'User vs User 아레나', included: true },
-      { text: '고급 랭킹 통계', included: true },
-      { text: 'AI 개선 피드백', included: true },
-      { text: '팀 기능', included: false },
+      { key: 'featMoreQuota', included: true },
+      { key: 'featPvp', included: true },
+      { key: 'featGrowth', included: true },
+      { key: 'featFeedback', included: true },
+      { key: 'featTeam', included: false },
     ],
     highlight: true,
     comingSoon: true,
-    cta: '출시 예정 · 사전 알림',
+    ctaKey: 'ctaNotify',
   },
   {
     id: 'team',
     name: 'Team',
     price: 99000,
-    period: '월 (10인)',
-    description: '학원·기업·교육기관을 위한 B2B 확장',
+    periodKey: 'periodMonthTeam',
+    descKey: 'teamDesc',
     features: [
-      { text: 'Pro 기능 전체 포함', included: true },
-      { text: '학원·기업 맞춤형 운영', included: true },
-      { text: '그룹 세션 관리', included: true },
-      { text: '관리자 대시보드', included: true },
-      { text: '진도·리포트 일괄 관리', included: true },
-      { text: '교육기관 파트너십', included: true },
-      { text: '추가 멤버 확장', included: true },
+      { key: 'featProAll', included: true },
+      { key: 'featGroup', included: true },
+      { key: 'featAdmin', included: true },
+      { key: 'featProgress', included: true },
     ],
     comingSoon: true,
-    cta: '출시 예정 · 사전 알림',
+    ctaKey: 'ctaNotify',
   },
 ];
-
-export const BETA_NOTE = '현재 베타 기간에는 모든 기능을 무료로 써 볼 수 있어요.';
-export const NOTIFY_TOAST = '출시되면 알려드릴게요.';
 
 export const YEARLY_DISCOUNT = 0.2; // 20% off when paying annually
 
