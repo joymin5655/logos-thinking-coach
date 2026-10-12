@@ -9,7 +9,7 @@ import type { Score, Report } from '@/lib/store';
 import type { ApiErrorCode } from '@/lib/api';
 import { clearDraft, draftKey, flushDrafts, loadDraft, saveDraft, trackDraft, untrackDraft } from '@/lib/draft';
 import { useT } from '@/i18n';
-import { ALMOST_HINT_MS, SLOW_HINT_MS, isCoarsePointer, scrollBehavior, waitHintKey } from '@/lib/composer';
+import { ALMOST_HINT_MS, SLOW_HINT_MS, focusNearInput, isCoarsePointer, scrollBehavior, waitHintKey } from '@/lib/composer';
 
 export { shouldSubmitOnKey, placeholderFor, isCoarsePointer, prefersReducedMotion, scrollBehavior } from '@/lib/composer';
 
@@ -345,17 +345,18 @@ export function Survey({ value, onChange }: { value?: { differentFromAI: number;
 
 /**
  * 답변을 기다리는 동안 textarea를 disabled로 만들면 포커스가 사라진다.
- * 대신 readOnly로 두고, 로딩이 끝나면 포커스가 입력창 주변이나 body에 있었던 경우에만 되돌린다.
+ * 대신 readOnly로 두고, 로딩 시작과 끝 모두 포커스가 입력창 주변이나 body에 있을 때만 되돌린다.
+ * (기다리는 동안 다른 곳으로 옮긴 포커스는 빼앗지 않는다)
  */
 export function useRefocusAfterLoading(ref: RefObject<HTMLTextAreaElement | null>, loading: boolean) {
   const prev = useRef(loading);
   const had = useRef(false);
   useEffect(() => {
     const el = ref.current;
+    const near = () => focusNearInput(document.activeElement, el, document.body);
     if (loading) {
-      const a = document.activeElement;
-      had.current = !a || a === document.body || a === el || !!el?.parentElement?.contains(a);
-    } else if (prev.current && had.current && !isCoarsePointer()) {
+      had.current = near();
+    } else if (prev.current && had.current && near() && !isCoarsePointer()) {
       // 터치 기기에선 다시 포커스하면 답을 읽기 전에 키보드가 올라와 화면을 가린다
       el?.focus({ preventScroll: true });
     }
