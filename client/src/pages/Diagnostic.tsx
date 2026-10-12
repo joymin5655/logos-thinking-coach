@@ -8,8 +8,9 @@ import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
-  TypingDots, ErrorLine, CharCount, RubricBars, BigScore, sans } from '@/components/logos-ui';
-import { coach, errorMessage, handleAuthError } from '@/lib/api';
+  TypingDots, ErrorLine, CharCount, RubricBars, BigScore, sans, useDraft } from '@/components/logos-ui';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { formatDate, useT } from '@/i18n';
 import { addDiagnostic, daysUntilRediagnosis, newId, nextDiagnosticDate, toISODate, useStore, type DiagnosticRecord } from '@/lib/store';
@@ -37,8 +38,11 @@ export default function Diagnostic() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState<ApiErrorCode | undefined>();
   const [result, setResult] = useState<DiagnosticRecord | null>(null);
   const [left, setLeft] = useState(TOTAL_SEC);
+  usePageMeta('diagnostic', { noindex: true });
+  const rescue = useDraft('essay', text, setText);
 
   const writing = taking || !last;
   useEffect(() => {
@@ -60,10 +64,12 @@ export default function Diagnostic() {
       };
       addDiagnostic(rec);
       sidRef.current = newId();
+      setText(''); // 제출이 끝났으니 보관해 둔 초안도 함께 비운다
       setResult(rec);
     } catch (e) {
-      if (handleAuthError(e, navigate)) return;
+      if (handleAuthError(e, navigate, () => rescue(body))) return;
       setError(errorMessage(e));
+      setErrorKind(errorCode(e));
     } finally {
       setLoading(false);
     }
@@ -136,7 +142,7 @@ export default function Diagnostic() {
           </div>
           <label htmlFor="diag" style={sr}>{t('answerAria')}</label>
           <textarea id="diag" className="lg-field" value={text} onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT))}
-            rows={8} maxLength={MAX_TEXT} disabled={loading} style={textareaStyle} placeholder={t('placeholder')} />
+            rows={8} maxLength={MAX_TEXT} readOnly={loading} aria-busy={loading} style={textareaStyle} placeholder={t('placeholder')} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, color: T.creamMid }}>{t('noRight')}</span>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -148,7 +154,7 @@ export default function Diagnostic() {
           </div>
           {short && text.length > 0 && <span style={{ fontFamily: mono, fontSize: 10, color: T.creamDim }}>{t('minChars', { min: MIN_TEXT })}</span>}
           {loading && <TypingDots label={t('scoring')} />}
-          {error && <ErrorLine message={error} onRetry={() => void submit()} />}
+          {error && <ErrorLine message={error} code={errorKind} onRetry={() => void submit()} />}
         </div>
         <button type="button" className="lg-btn" style={{ ...btnGhost, border: 'none', textDecoration: 'underline', justifySelf: 'start', padding: 0 }} onClick={() => navigate('/dashboard')}>
           {t('skip')}

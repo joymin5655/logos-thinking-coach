@@ -10,9 +10,11 @@ import { Link, useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, sans, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
-  TypingDots, ErrorLine, CharCount, Quote,
+  TypingDots, ErrorLine, CharCount, Quote, RubricBars, SrLatest,
+  shouldSubmitOnKey, placeholderFor, useRefocusAfterLoading, useDraft, scrollBehavior,
 } from '@/components/logos-ui';
-import { coach, errorMessage, handleAuthError, type ArenaSide } from '@/lib/api';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode, type ArenaSide } from '@/lib/api';
 import { SEMANTIC, SEMANTIC_DARK } from '@/lib/colors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { arenaRecord, loadStore, newId, recordActivity, upsertArena, type ArenaRecord } from '@/lib/store';
@@ -23,16 +25,11 @@ const ROUNDS_TOTAL = 3;
 const MAX_MESSAGE = 1000;
 
 type Step = 'topic' | 'side' | 'debate';
-type Failure = { kind: 'turn'; error: string; message: string } | { kind: 'judge'; error: string };
+type Failure = { kind: 'turn'; error: string; code?: ApiErrorCode; message: string } | { kind: 'judge'; error: string; code?: ApiErrorCode };
 
 const DIFF_KEY = { easy: 'diffEasy', medium: 'diffMedium', hard: 'diffHard' } as const;
 const DIFF_DOTS: Record<ArenaDifficulty, number> = { easy: 1, medium: 2, hard: 3 };
 const VERDICT_KEY = { win: 'verdictWin', draw: 'verdictDraw', lose: 'verdictLose' } as const;
-const AXES = [
-  { key: 'consistency', label: 'axisConsistency', max: 30 },
-  { key: 'evidence', label: 'axisEvidence', max: 40 },
-  { key: 'defense', label: 'axisDefense', max: 30 },
-] as const;
 const sr = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const;
 const tiny = { fontFamily: mono, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' } as const;
 
@@ -49,7 +46,11 @@ export default function Arena() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState<Failure | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  usePageMeta('arena', { noindex: true });
+  useRefocusAfterLoading(inputRef, loading);
+  const rescue = useDraft('main', input, setInput);
 
   const commit = (next: ArenaRecord) => {
     recRef.current = next;
@@ -58,7 +59,7 @@ export default function Arena() {
     if (next.turns.some((x) => x.role === 'user')) upsertArena(next);
   };
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [rec?.turns.length, loading]);
+  useEffect(() => { composerRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' }); }, [rec?.turns.length, loading]);
 
   const sideLabel = (s: ArenaSide) => t(s);
   const tt = (tp: ArenaTopic) => tp[locale];
@@ -95,7 +96,7 @@ export default function Arena() {
       recordActivity();
     } catch (e) {
       if (handleAuthError(e, navigate)) return;
-      setFailed({ kind: 'judge', error: errorMessage(e) });
+      setFailed({ kind: 'judge', error: errorMessage(e), code: errorCode(e) });
     } finally {
       setLoading(false);
     }
@@ -126,8 +127,8 @@ export default function Arena() {
       });
       ok = round >= ROUNDS_TOTAL;
     } catch (e) {
-      if (handleAuthError(e, navigate)) return;
-      setFailed({ kind: 'turn', error: errorMessage(e), message });
+      if (handleAuthError(e, navigate, () => rescue(message))) return;
+      setFailed({ kind: 'turn', error: errorMessage(e), code: errorCode(e), message });
     } finally {
       setLoading(false);
     }
@@ -147,7 +148,7 @@ export default function Arena() {
   };
 
   const layout = (children: React.ReactNode) => (
-    <DashboardLayout title={t('pageTitle')} titleEn="Arena">
+    <DashboardLayout title={t('pageTitle')} titleEn={t('titleEn')}>
       <FocusStyle />
       {children}
     </DashboardLayout>
@@ -159,7 +160,7 @@ export default function Arena() {
       <div style={{ maxWidth: 900, display: 'grid', gap: 20 }}>
         <div style={{ display: 'grid', gap: 8 }}>
           <Label>{t('topicLabel')}</Label>
-          <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, lineHeight: 1.9, margin: 0, maxWidth: 620 }}>{t('topicIntro')}</p>
+          <p className="l-prose" style={{ fontSize: 13, color: T.creamMid, lineHeight: 1.9, margin: 0, maxWidth: 620 }}>{t('topicIntro')}</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
           {ARENA_TOPICS.map((tp) => {
@@ -175,7 +176,7 @@ export default function Arena() {
                   {tp.hot && <span style={{ marginLeft: 'auto', color: T.amber }}>{t('hot')}</span>}
                 </span>
                 <span style={{ fontFamily: serif, fontWeight: 600, fontSize: 17, lineHeight: 1.35 }}>{l.title}</span>
-                <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, lineHeight: 1.7 }}>{l.description}</span>
+                <span className="l-prose" style={{ fontSize: 12, color: T.creamMid }}>{l.description}</span>
               </button>
             );
           })}
@@ -199,7 +200,7 @@ export default function Arena() {
         <div style={{ ...panelStyle, display: 'grid', gap: 8 }}>
           <Label>{t('selectedTopic')} · {tl.category}</Label>
           <h2 style={{ fontFamily: serif, fontWeight: 600, fontSize: 22, color: T.cream, margin: 0, lineHeight: 1.3 }}>{tl.title}</h2>
-          <p style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, lineHeight: 1.7, margin: 0 }}>{tl.description}</p>
+          <p className="l-prose" style={{ fontSize: 12, color: T.creamMid, margin: 0 }}>{tl.description}</p>
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
           <Label>{t('sideLabel')}</Label>
@@ -208,12 +209,12 @@ export default function Arena() {
               <button key={s} type="button" className="lg-btn" onClick={() => begin(s)}
                 style={{ ...panelStyle, textAlign: 'left', cursor: 'pointer', color: T.cream, display: 'grid', gap: 8 }}>
                 <span style={{ fontFamily: serif, fontWeight: 600, fontSize: 24 }}>{t(s)}</span>
-                <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, lineHeight: 1.7 }}>{t(s === 'pro' ? 'proDesc' : 'conDesc')}</span>
+                <span className="l-prose" style={{ fontSize: 12, color: T.creamMid }}>{t(s === 'pro' ? 'proDesc' : 'conDesc')}</span>
               </button>
             ))}
           </div>
         </div>
-        <p style={{ fontFamily: mono, fontSize: 11, color: T.creamMid, borderTop: `1px solid ${T.border}`, paddingTop: 14, margin: 0, lineHeight: 1.8 }}>
+        <p className="l-prose" style={{ fontSize: 12, color: T.creamMid, borderTop: `1px solid ${T.border}`, paddingTop: 14, margin: 0, lineHeight: 1.8 }}>
           {t('sideNote', { total: ROUNDS_TOTAL, max: MAX_MESSAGE })}
         </p>
       </div>,
@@ -249,17 +250,7 @@ export default function Arena() {
               <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{t('thresholds')}</span>
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {AXES.map((ax) => (
-              <div key={ax.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(6.5em, 9em) 1fr auto', gap: 10, alignItems: 'center', fontSize: 13, color: T.cream }}>
-                <span>{t(ax.label)}</span>
-                <span role="img" aria-label={`${t(ax.label)} ${res[ax.key]} / ${ax.max}`} style={{ height: 8, backgroundColor: T.faint, position: 'relative', display: 'block' }}>
-                  <i style={{ position: 'absolute', inset: '0 auto 0 0', width: `${Math.min(100, (res[ax.key] / ax.max) * 100)}%`, backgroundColor: T.accent }} />
-                </span>
-                <span style={{ fontFamily: mono, fontSize: 12, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{res[ax.key]} / {ax.max}</span>
-              </div>
-            ))}
-          </div>
+          <RubricBars after={res} />
           <div style={{ display: 'grid', gap: 6 }}>
             <Label>{t('rationale')}</Label>
             <p style={{ margin: 0, fontFamily: sans, fontSize: 13, color: T.creamMid, borderLeft: `2px solid ${T.border}`, paddingLeft: 12, lineHeight: 1.7 }}>
@@ -287,7 +278,9 @@ export default function Arena() {
               : t('vsAverage', { n: res.total, avg, diff: diff > 0 ? `+${diff}` : String(diff) })}
           </p>
           <div style={{ display: 'grid', gap: 8 }}>
-            <button type="button" className="lg-btn" style={btnPrimary} onClick={reset}>{t('again')}</button>
+            <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard')}>{t('goHome')}</button>
+            <button type="button" className="lg-btn" style={btnGhost} onClick={() => navigate('/dashboard/history?kind=arena')}>{t('toHistory')}</button>
+            <button type="button" className="lg-btn" style={btnGhost} onClick={reset}>{t('again')}</button>
           </div>
         </div>
       </div>,
@@ -314,7 +307,8 @@ export default function Arena() {
         </div>
       </div>
 
-      <div style={panelStyle} aria-live="polite">
+      <SrLatest text={lastIsAi ? rec.turns[rec.turns.length - 1].content : ''} />
+      <div style={panelStyle}>
         {rec.turns.length === 0 && (
           <p style={{ margin: 0, fontFamily: serif, fontSize: 18, lineHeight: 1.7, color: T.cream }}>{t('firstPrompt', { side: sideLabel(side) })}</p>
         )}
@@ -324,24 +318,24 @@ export default function Arena() {
           return (
             <div key={i} style={{ padding: '16px 0', borderBottom: i < rec.turns.length - 1 ? `1px solid ${T.border}` : 'none', display: 'grid', gap: 6 }}>
               <span style={{ ...tiny, color: ai ? T.creamMid : T.creamDim }}>{ai ? t('opponent') : t('you', { side: sideLabel(side) })}</span>
-              <p style={{ margin: 0, fontFamily: ai ? serif : mono, fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
+              <p className={ai ? undefined : 'l-prose'} style={{ margin: 0, ...(ai ? { fontFamily: serif } : {}), fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
               {ai && claim && <span style={{ fontFamily: mono, fontSize: 10, color: T.creamDim, lineHeight: 1.6 }}>{t('targets', { claim })}</span>}
             </div>
           );
         })}
         {loading && <TypingDots label={finished ? t('judging') : t('thinking')} />}
-        <div ref={endRef} />
       </div>
 
-      {failed?.kind === 'turn' && <ErrorLine message={failed.error} onRetry={() => void runTurn(failed.message, false)} retryLabel={t('retryTurn')} />}
-      {failed?.kind === 'judge' && <ErrorLine message={failed.error} onRetry={() => void judge()} retryLabel={t('retryJudge')} />}
+      <div ref={composerRef} style={{ display: 'grid', gap: 16 }}>
+      {failed?.kind === 'turn' && <ErrorLine message={failed.error} code={failed.code} onRetry={() => void runTurn(failed.message, false)} retryLabel={t('retryTurn')} />}
+      {failed?.kind === 'judge' && <ErrorLine message={failed.error} code={failed.code} onRetry={() => void judge()} retryLabel={t('retryJudge')} />}
 
       {!finished && (
         <div style={{ display: 'grid', gap: 8 }}>
           <label htmlFor="arena-input" style={sr}>{t('inputLabel')}</label>
-          <textarea id="arena-input" className="lg-field" value={input} onChange={(e) => setInput(e.target.value.slice(0, MAX_MESSAGE))}
-            onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) submit(); }}
-            placeholder={t('placeholder')} rows={4} maxLength={MAX_MESSAGE} disabled={!canWrite} style={textareaStyle} />
+          <textarea id="arena-input" ref={inputRef} className="lg-field" value={input} onChange={(e) => setInput(e.target.value.slice(0, MAX_MESSAGE))}
+            onKeyDown={(e) => { if (shouldSubmitOnKey(e)) { e.preventDefault(); submit(); } }}
+            placeholder={placeholderFor(t('placeholder'))} rows={4} maxLength={MAX_MESSAGE} readOnly={!canWrite} aria-busy={loading} style={textareaStyle} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <CharCount value={input} max={MAX_MESSAGE} />
             <button type="button" className="lg-btn" onClick={submit} disabled={!canWrite || !input.trim()}
@@ -349,6 +343,7 @@ export default function Arena() {
           </div>
         </div>
       )}
+      </div>
     </div>,
   );
 }

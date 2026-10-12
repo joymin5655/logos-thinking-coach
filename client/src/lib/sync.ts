@@ -4,6 +4,7 @@
  * 로컬이 먼저다. 기록이 바뀌면 outbox(id·kind만, localStorage)에 올리고 1초 디바운스로 upsert한다.
  * 실패해도 outbox는 그대로 남고 백오프로 다시 시도한다. 로그인하면 서버 기록을 받아 id 기준으로 병합한다.
  */
+import { clearAllDrafts } from './draft';
 import { useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
 import { translate } from '../i18n';
@@ -335,6 +336,7 @@ export async function onSignIn(uid: string) {
     // 공용 기기에서 다른 계정의 기록이 섞이지 않게 캐시와 outbox를 버린다
     writeOutbox([]);
     clearLocal();
+    clearAllDrafts();
   }
   updateStore((s) => ({ ...s, ownerId: uid }));
   await flush();
@@ -356,6 +358,7 @@ export async function signOutFlow(): Promise<boolean> {
   generation += 1;
   writeOutbox([]);
   clearLocal();
+  clearAllDrafts();
   await supabase?.auth.signOut();
   return true;
 }

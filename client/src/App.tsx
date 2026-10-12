@@ -1,28 +1,34 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Landing from "./pages/Landing";
-import About from "./pages/About";
-import Features from "./pages/Features";
-import Pricing from "./pages/Pricing";
-import DashboardHome from "./pages/DashboardHome";
-import Argue from "./pages/Argue";
-import ThinkingSession from "./pages/ThinkingSession";
-import Arena from "./pages/Arena";
-import Analytics from "./pages/Analytics";
-import SessionHistory from "./pages/SessionHistory";
-import Subscription from "./pages/Subscription";
-import Diagnostic from "./pages/Diagnostic";
-import Login from "./pages/Login";
-import AuthCallback from "./pages/AuthCallback";
-import Settings from "./pages/Settings";
-import Privacy from "./pages/Privacy";
-import Admin from "./pages/Admin";
 import RequireAuth from "./components/RequireAuth";
 import { AuthProvider } from "./lib/auth";
+
+// 페이지는 라우트별 청크로 나눈다(특히 Landing의 three.js가 다른 화면으로 번지지 않게).
+const Landing = lazy(() => import("./pages/Landing"));
+const About = lazy(() => import("./pages/About"));
+const Features = lazy(() => import("./pages/Features"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const DashboardHome = lazy(() => import("./pages/DashboardHome"));
+const Argue = lazy(() => import("./pages/Argue"));
+const ThinkingSession = lazy(() => import("./pages/ThinkingSession"));
+const Arena = lazy(() => import("./pages/Arena"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const SessionHistory = lazy(() => import("./pages/SessionHistory"));
+const Subscription = lazy(() => import("./pages/Subscription"));
+const Diagnostic = lazy(() => import("./pages/Diagnostic"));
+const Login = lazy(() => import("./pages/Login"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Admin = lazy(() => import("./pages/Admin"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
+// 청크를 받는 동안 배경만 채워 레이아웃이 튀지 않게 한다.
+const RouteFallback = () => <div aria-hidden="true" style={{ minHeight: "100dvh", background: "var(--l-bg)" }} />;
 
 // 공개: /, /about, /features, /pricing, /privacy, /login, /auth/callback, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
 const guard = (Page: React.ComponentType) => () => (
@@ -43,6 +49,7 @@ const GuardedAdmin = guard(Admin);
 
 function Router() {
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/about" component={About} />
@@ -64,6 +71,7 @@ function Router() {
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 

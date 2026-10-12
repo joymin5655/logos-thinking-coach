@@ -1,6 +1,9 @@
 import type { settings as Ko } from '../ko/settings';
 
 export const settings: Record<keyof typeof Ko, string> = {
+  titleEn: '',
+  planPro: 'Pro',
+  planTeam: 'Team',
   title: 'Settings',
   notReady: 'Sign-in is not available yet.',
   prefsHeading: 'Language and theme',

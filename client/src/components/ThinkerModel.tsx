@@ -12,7 +12,7 @@
  *   → 실제 금속/대리석 느낌의 3D 입체감
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -32,12 +32,16 @@ interface ThinkerModelProps {
 export default function ThinkerModel({ className, style }: ThinkerModelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dark = useTheme().theme === "dark";
+  // 모델이 뜨기 전·WebGL을 못 쓸 때는 포스터(로고)를 보여준다.
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   // 장면 생성 effect가 채우고, 테마 effect가 값만 바꾼다(GLB를 다시 읽지 않는다).
   const rigRef = useRef<{
     renderer: THREE.WebGLRenderer;
     ambient: THREE.AmbientLight;
     rim: THREE.DirectionalLight;
     material: THREE.MeshStandardMaterial;
+    invalidate: () => void;
   } | null>(null);
 
   useEffect(() => {
@@ -45,11 +49,19 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     if (!container) return;
 
     // ── RENDERER ──
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance",
-    });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+    } catch (err) {
+      // WebGL 미지원·컨텍스트 생성 실패 → 정적 포스터로 대체
+      console.warn("WebGL unavailable:", err);
+      setFailed(true);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -139,7 +151,6 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     scene.environment = envRT.texture;
     pmremGenerator.dispose();
 
-    rigRef.current = { renderer, ambient, rim: rimLight, material };
 
     // ── LOAD GLB ──
     const group = new THREE.Group();
@@ -177,6 +188,8 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
 
         group.add(model);
         modelLoaded = true;
+        setReady(true);
+        invalidate();
       },
       undefined,
       (err) => {
@@ -196,13 +209,29 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
         mesh.castShadow = true;
         group.add(mesh);
         modelLoaded = true;
+        setReady(true);
+        invalidate();
       }
     );
 
     // ── ANIMATE ──
-    let animId: number;
+    // 탭이 숨겨지거나 화면 밖이면 루프를 멈춘다. 모션 감소 설정이면 연속 회전 없이 필요할 때 한 프레임만 그린다.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animId = 0;
     let lastTime = 0;
+    let onScreen = true;
     const ROT_SPEED = 0.004;
+
+    const draw = () => {
+      renderer.render(scene, camera);
+
+      // Copy to offscreen for PixelDotGrid
+      const ctx = offscreen.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+        ctx.drawImage(renderer.domElement, 0, 0);
+      }
+    };
 
     const animate = (time: number) => {
       animId = requestAnimationFrame(animate);
@@ -213,17 +242,42 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
         rotY += ROT_SPEED * dt;
         group.rotation.y = rotY;
       }
+      draw();
+    };
 
-      renderer.render(scene, camera);
-
-      // Copy to offscreen for PixelDotGrid
-      const ctx = offscreen.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, offscreen.width, offscreen.height);
-        ctx.drawImage(renderer.domElement, 0, 0);
+    const stop = () => {
+      cancelAnimationFrame(animId);
+      animId = 0;
+    };
+    const sync = () => {
+      const shouldRun = onScreen && !document.hidden && !reduceMotion.matches;
+      if (shouldRun && !animId) {
+        lastTime = performance.now();
+        animId = requestAnimationFrame(animate);
+      } else if (!shouldRun) {
+        stop();
+        if (reduceMotion.matches) invalidate();
       }
     };
-    animId = requestAnimationFrame(animate);
+    // 정지 상태(모션 감소 등)에서 장면이 바뀌면 한 프레임만 다시 그린다.
+    let pending = 0;
+    function invalidate() {
+      if (animId || pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        draw();
+      });
+    }
+
+    rigRef.current = { renderer, ambient, rim: rimLight, material, invalidate };
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      sync();
+    });
+    io.observe(container);
+    document.addEventListener("visibilitychange", sync);
+    reduceMotion.addEventListener("change", sync);
+    sync();
 
     // ── RESIZE ──
     const onResize = () => {
@@ -234,11 +288,16 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
       renderer.setSize(nw, nh);
       offscreen.width = nw;
       offscreen.height = nh;
+      invalidate();
     };
     window.addEventListener("resize", onResize);
 
     return () => {
-      cancelAnimationFrame(animId);
+      stop();
+      cancelAnimationFrame(pending);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+      reduceMotion.removeEventListener("change", sync);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
       material.dispose();
@@ -259,13 +318,32 @@ export default function ThinkerModel({ className, style }: ThinkerModelProps) {
     rig.rim.color.set(dark ? 0xffd580 : 0xb98a3a);
     rig.rim.intensity = dark ? 2.0 : 1.2;
     rig.material.color.set(dark ? 0x2a2520 : 0x3a332a);
+    rig.invalidate();
   }, [dark]);
 
   return (
     <div
       ref={containerRef}
       className={className}
+      aria-hidden="true"
       style={{ position: "relative", overflow: "hidden", ...style }}
-    />
+    >
+      {/* 포스터: 모델이 뜨기 전·WebGL 실패 시 보이고, 로드되면 서서히 사라진다. */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+          opacity: ready && !failed ? 0 : 1,
+          transition: "opacity 600ms ease",
+          background: "radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--l-fg) 10%, transparent), transparent 65%)",
+        }}
+      >
+        <img src="/logo.png" alt="" className="logo-mark" draggable={false} style={{ width: "28%", maxWidth: 160, opacity: 0.35 }} />
+      </div>
+    </div>
   );
 }

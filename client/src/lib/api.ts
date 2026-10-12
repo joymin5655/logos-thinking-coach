@@ -4,6 +4,7 @@
  */
 import { getLocale, translate } from '../i18n';
 import { supabase } from './supabase';
+import { flushDrafts } from './draft';
 
 export type Stage = '표면' | '도전' | '핵심' | '통합';
 export type Control = 'DEEPEN' | 'ENOUGH' | 'THINK';
@@ -132,16 +133,20 @@ export async function coach<R extends Req>(payload: R): Promise<ResOf<R['action'
   return data as ResOf<R['action']>;
 }
 
+export const errorCode = (e: unknown): ApiErrorCode | undefined => (e instanceof ApiError ? e.code : undefined);
+
 export function errorMessage(e: unknown): string {
   return e instanceof Error && e.message ? e.message : translate('errors', 'network');
 }
 
 /**
  * 로그인이 필요한 오류(401)면 /login?next=현재 경로로 보내고 true를 돌려준다.
- * 호출한 쪽은 true면 오류 문구를 띄우지 않아도 된다.
+ * 호출한 쪽은 true면 오류 문구를 띄우지 않아도 된다. 쓰던 입력(draft.ts)은 이동 전에 저장한다.
  */
-export function handleAuthError(e: unknown, navigate: (to: string) => void): boolean {
+export function handleAuthError(e: unknown, navigate: (to: string) => void, rescue?: () => void): boolean {
   if (!(e instanceof ApiError) || e.code !== 'auth') return false;
+  rescue?.(); // 방금 보낸 글을 로그인 뒤에 되살리도록 초안으로 남긴다
+  flushDrafts();
   navigate(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
   return true;
 }

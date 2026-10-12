@@ -11,8 +11,11 @@ import { toast } from 'sonner';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
-  TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, ReportBlocks, Survey, sans } from '@/components/logos-ui';
-import { coach, errorMessage, handleAuthError, type Control, type Stage, type ScoreRes, type SessionReportRes } from '@/lib/api';
+  TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, ReportBlocks, Survey, sans, SrLatest,
+  shouldSubmitOnKey, placeholderFor, isCoarsePointer, useRefocusAfterLoading, useDraft, scrollBehavior } from '@/components/logos-ui';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { pickResume, stageOf, stageStep } from '@/lib/resume';
+import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode, type Control, type Stage, type ScoreRes, type SessionReportRes } from '@/lib/api';
 import { useT } from '@/i18n';
 import { newId, recordActivity, upsertSession, useStore, type SessionRecord, type Turn } from '@/lib/store';
 
@@ -34,7 +37,6 @@ const toScore = (s: ScoreRes) => ({ consistency: s.consistency, evidence: s.evid
 const toReport = (r: SessionReportRes) => ({ stuckPoints: r.stuckPoints, assumptions: r.assumptions, nextQuestions: r.nextQuestions, turningPoint: r.turningPoint });
 const toHistory = (turns: Turn[], n: number) => turns.slice(-n).map((t) => ({ role: t.role, content: t.content.slice(0, MAX_MESSAGE) }));
 const stageIdx = (s: Stage) => STAGES.indexOf(s);
-const stageOf = (r: SessionRecord): Stage => [...r.turns].reverse().find((t) => t.role === 'assistant' && t.stage)?.stage ?? '표면';
 
 export default function ThinkingSession() {
   const [, navigate] = useLocation();
@@ -47,11 +49,18 @@ export default function ThinkingSession() {
   const recRef = useRef<SessionRecord | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState<{ error: string; retry: Pending } | null>(null);
+  const [failed, setFailed] = useState<{ error: string; code?: ApiErrorCode; retry: Pending } | null>(null);
   const [thinkOffer, setThinkOffer] = useState(false);
   const [summary, setSummary] = useState('');
   const [scoringErr, setScoringErr] = useState('');
-  const endRef = useRef<HTMLDivElement>(null);
+  const [scoringCode, setScoringCode] = useState<ApiErrorCode | undefined>();
+  const composerRef = useRef<HTMLDivElement>(null);
+  const msgRef = useRef<HTMLTextAreaElement>(null);
+  const topicRef = useRef<HTMLTextAreaElement>(null);
+  usePageMeta('session', { noindex: true });
+  useRefocusAfterLoading(msgRef, loading);
+  const rescue = useDraft('msg', input, setInput);
+  const summaryRescue = useDraft('summary', summary, setSummary);
 
   const commit = (next: SessionRecord) => {
     recRef.current = next;
@@ -64,13 +73,10 @@ export default function ThinkingSession() {
   };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    composerRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
   }, [rec?.turns.length, loading]);
 
-  const resumable = useMemo(
-    () => [...store.sessions].reverse().find((s) => s.kind === 'session' && !s.completedAt && s.turns.some((t) => t.role === 'user')),
-    [store.sessions],
-  );
+  const resumable = useMemo(() => pickResume(store), [store.sessions]);
 
   const currentStage: Stage = rec ? stageOf(rec) : '표면';
   const userTurns = rec?.turns.filter((t) => t.role === 'user').length ?? 0;
@@ -98,12 +104,27 @@ export default function ThinkingSession() {
     recRef.current = s;
     setRec(s);
     setTopic(s.topic);
-    setSummary(s.finalSummary ?? '');
+    // 복원된 정리 초안이 있으면 그것을 우선한다(401로 튕겼다 돌아온 경우)
+    setSummary((v) => (v.trim() ? v : s.finalSummary ?? ''));
     // 마지막 저장 턴이 사용자 턴이면 답을 못 받은 채 끊긴 것 — 재시도 상태로 복원
     const last = s.turns[s.turns.length - 1];
+    // 같은 글이 입력창 초안과 재시도 버튼에 동시에 남으면 두 번 보낼 수 있다
+    if (last?.role === 'user') setInput((v) => (v.trim() === last.content.trim() ? '' : v));
     setFailed(last?.role === 'user' ? { error: t('resumeFailed'), retry: { message: last.content, control: last.control } } : null);
     setPhase('session');
   };
+
+  // 대시보드 "이어서 하기"가 ?resume=<id>로 들어오면 인트로를 건너뛰고 바로 복원한다
+  const resumedFromUrl = useRef(false);
+  useEffect(() => {
+    if (resumedFromUrl.current || !resumable || phase !== 'intro') return;
+    const id = new URLSearchParams(window.location.search).get('resume');
+    if (id && id === resumable.id) {
+      resumedFromUrl.current = true;
+      resume(resumable);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumable]);
 
   // 첫 주장 채점은 대화와 병렬로 미리 해 둔다. 실패하면 마지막 정리 때 다시 시도한다.
   const scoreAnchorInBackground = (claim: string, topicText: string, sessionId: string) => {
@@ -150,8 +171,8 @@ export default function ThinkingSession() {
       });
       if (control === 'THINK') setThinkOffer(true);
     } catch (e) {
-      if (handleAuthError(e, navigate)) return;
-      setFailed({ error: errorMessage(e), retry: { message, control } });
+      if (handleAuthError(e, navigate, () => rescue(message))) return;
+      setFailed({ error: errorMessage(e), code: errorCode(e), retry: { message, control } });
     } finally {
       setLoading(false);
     }
@@ -186,7 +207,7 @@ export default function ThinkingSession() {
     if (after.status === 'fulfilled' && after.value) { next.scoreAfter = toScore(after.value); next.promptVersion = after.value.promptVersion; }
     if (report.status === 'fulfilled' && report.value) next.report = toReport(report.value);
     const firstErr = [before, after, report].find((r): r is PromiseRejectedResult => r.status === 'rejected');
-    if (firstErr && handleAuthError(firstErr.reason, navigate)) {
+    if (firstErr && handleAuthError(firstErr.reason, navigate, () => summaryRescue(finalText))) {
       commit(next);
       return;
     }
@@ -198,6 +219,7 @@ export default function ThinkingSession() {
     } else {
       commit(next);
       setScoringErr(firstErr ? errorMessage(firstErr.reason) : t('partialFail'));
+      setScoringCode(firstErr ? errorCode(firstErr.reason) : undefined);
     }
   };
 
@@ -220,47 +242,67 @@ export default function ThinkingSession() {
 
   /* ───────── INTRO ───────── */
   if (phase === 'intro') {
+    const examples = [
+      { tag: 'tagWorry', text: 'ex1' },
+      { tag: 'tagDecision', text: 'ex2' },
+      { tag: 'tagClaim', text: 'ex3' },
+      { tag: 'tagClaim', text: 'ex4' },
+    ] as const;
     return (
       <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
         <FocusStyle />
-        <div style={{ maxWidth: 560, margin: '24px auto', display: 'grid', gap: 16 }}>
-          {resumable && (
-            <div style={{ ...panelStyle, display: 'grid', gap: 10 }}>
-              <Label>{t('resumeLabel')}</Label>
-              <p style={{ margin: 0, fontFamily: serif, fontSize: 16, color: T.cream, overflowWrap: 'anywhere' }}>"{resumable.topic}"</p>
-              <p style={{ margin: 0, fontFamily: mono, fontSize: 11, color: T.creamMid }}>
-                {t('resumeInfo', { stage: stageName(resumable.stageReached), n: resumable.turns.filter((x) => x.role === 'user').length })}
-              </p>
-              <div><button type="button" className="lg-btn" style={btnGhost} onClick={() => resume(resumable)}>{t('resumeBtn')}</button></div>
-            </div>
-          )}
-          <div style={{ border: `1px solid ${T.border}`, backgroundColor: T.panel }}>
-            <div style={{ padding: '22px 22px 18px' }}>
-              <Label style={{ marginBottom: 10 }}>{t('initLabel')}</Label>
-              <h2 style={{ fontFamily: serif, fontSize: 28, fontWeight: 600, color: T.cream, lineHeight: 1.2, margin: '0 0 8px' }}>{t('introHeading')}</h2>
-              <p style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, lineHeight: 1.8, margin: '0 0 16px' }}>
-                {t('introLead')}
-              </p>
-              <label htmlFor="topic" style={sr}>{t('topicAria')}</label>
-              <textarea
-                id="topic"
-                className="lg-field"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value.slice(0, MAX_TOPIC))}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); startSession(); } }}
-                placeholder={t('topicPlaceholder')}
-                maxLength={MAX_TOPIC}
-                rows={4}
-                style={{ ...textareaStyle, resize: 'none' }}
-              />
-            </div>
-            <div style={{ padding: '10px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${T.border}` }}>
-              <CharCount value={topic} max={MAX_TOPIC} />
+        <div style={{ maxWidth: 640, display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <h2 style={{ fontFamily: serif, fontSize: 28, fontWeight: 600, color: T.cream, lineHeight: 1.2, margin: 0 }}>{t('introHeading2')}</h2>
+            <p className="l-prose" style={{ fontSize: 13, color: T.creamMid, margin: 0 }}>{t('introNote')}</p>
+          </div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            <label htmlFor="topic" style={sr}>{t('topicAria')}</label>
+            <textarea
+              id="topic"
+              ref={topicRef}
+              className="lg-field"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value.slice(0, MAX_TOPIC))}
+              onKeyDown={(e) => { if (shouldSubmitOnKey(e)) { e.preventDefault(); startSession(); } }}
+              placeholder={t('topicPlaceholder')}
+              maxLength={MAX_TOPIC}
+              rows={3}
+              style={{ ...textareaStyle, resize: 'none' }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <CharCount value={topic} max={MAX_TOPIC} />
+                {!isCoarsePointer() && <span style={{ fontFamily: mono, fontSize: 11, color: T.creamDim }}>{t('introEnterHint')}</span>}
+              </span>
               <button type="button" className="lg-btn" onClick={startSession} disabled={!topic.trim()} style={{ ...btnPrimary, ...(topic.trim() ? {} : btnDisabled) }}>
                 {t('startBtn')}
               </button>
             </div>
           </div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Label>{t('exampleLabel')}</Label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {examples.map((ex) => (
+                <button
+                  key={ex.text} type="button" className="lg-btn"
+                  onClick={() => { setTopic(t(ex.text).slice(0, MAX_TOPIC)); topicRef.current?.focus(); }}
+                  style={{ ...btnGhost, textTransform: 'none', letterSpacing: 'normal', textAlign: 'left', display: 'inline-flex', gap: 8, alignItems: 'baseline', fontFamily: 'var(--font-body)', fontWeight: 400 }}
+                >
+                  <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>{t(ex.tag)}</span>
+                  <span style={{ fontSize: 13 }}>{t(ex.text)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          {resumable && (
+            <button
+              type="button" className="lg-btn" onClick={() => resume(resumable)}
+              style={{ border: `1px dashed ${T.borderMid}`, background: 'none', color: T.cream, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, overflowWrap: 'anywhere' }}
+            >
+              {t('resumeRow', { topic: resumable.topic, n: stageStep(resumable) })}
+            </button>
+          )}
         </div>
       </DashboardLayout>
     );
@@ -289,7 +331,8 @@ export default function ThinkingSession() {
               className="lg-field"
               value={summary}
               onChange={(e) => setSummary(e.target.value.slice(0, MAX_SUMMARY))}
-              disabled={phase === 'scoring'}
+              readOnly={phase === 'scoring'}
+              aria-busy={phase === 'scoring'}
               rows={7}
               maxLength={MAX_SUMMARY}
               placeholder={t('summaryPlaceholder')}
@@ -314,7 +357,7 @@ export default function ThinkingSession() {
               </div>
             </div>
             {busy && <TypingDots label={t('scoringDots')} />}
-            {scoringErr && <ErrorLine message={scoringErr} onRetry={() => void submitSummary()} />}
+            {scoringErr && <ErrorLine message={scoringErr} code={scoringCode} onRetry={() => void submitSummary()} />}
           </div>
         </div>
       </DashboardLayout>
@@ -361,16 +404,36 @@ export default function ThinkingSession() {
   const controlsDisabled = loading || needsFirstAnswer;
   const showSynthesisPrompt = canSummarize && !loading && !failed && lastTurn?.role === 'assistant';
 
+  // ≤640px에서는 사이드 패널이 입력창 아래로 밀리므로, 입력창 위에 같은 조절 버튼을 한 줄로 둔다.
+  const controlsRow = (cls: string) => (
+    <div className={cls} role="group" aria-label={t('controls')} style={{ gap: 6 }}>
+      {(['DEEPEN', 'ENOUGH', 'THINK'] as Control[]).map((c) => (
+        <button
+          key={c} type="button" className="lg-btn"
+          onClick={() => send(c)}
+          disabled={controlsDisabled}
+          style={{ ...btnGhost, flex: 1, padding: '8px 6px', letterSpacing: '0.02em', textTransform: 'none', ...(controlsDisabled ? btnDisabled : {}) }}
+        >
+          {t(CONTROL_KEY[c])}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
+      <style>{`.lg-ctrl-compact{display:none}.lg-ctrl-full{display:grid}
+@media (max-width:640px){.lg-ctrl-compact{display:flex}.lg-ctrl-full{display:none}}
+@media (min-width:641px){.lg-sticky-aside{position:sticky;top:76px;max-height:calc(100dvh / var(--ui-scale, 1) - 92px);overflow-y:auto}}`}</style>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
         <div style={{ flex: '2 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 6, flexWrap: 'wrap' }}>
             <Label>{t('subject')}</Label>
             <span style={{ fontFamily: mono, fontSize: 12, color: T.creamMid, overflowWrap: 'anywhere' }}>{rec.topic}</span>
           </div>
-          <div aria-live="polite">
+          <SrLatest text={lastTurn?.role === 'assistant' ? lastTurn.content : ''} />
+          <div>
             {rec.turns.map((turn, i) => {
               const ai = turn.role === 'assistant';
               return (
@@ -391,7 +454,7 @@ export default function ThinkingSession() {
                       <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.18em', color: T.creamDim, padding: '2px 6px', border: `1px solid ${T.border}` }}>{t(CONTROL_KEY[turn.control])}</span>
                     )}
                   </div>
-                  <p style={{ margin: 0, fontFamily: ai ? serif : mono, fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
+                  <p className={ai ? undefined : 'l-prose'} style={{ margin: 0, ...(ai ? { fontFamily: serif } : {}), fontSize: ai ? 18 : 14, lineHeight: 1.7, color: ai ? T.cream : T.creamMid, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{turn.content}</p>
                 </div>
               );
             })}
@@ -400,7 +463,7 @@ export default function ThinkingSession() {
 
           {failed && (
             <div style={{ marginTop: 12 }}>
-              <ErrorLine message={failed.error} onRetry={() => void runTurn(failed.retry.message, failed.retry.control, false)} retryLabel={t('resendLast')} />
+              <ErrorLine message={failed.error} code={failed.code} onRetry={() => void runTurn(failed.retry.message, failed.retry.control, false)} retryLabel={t('resendLast')} />
             </div>
           )}
 
@@ -423,18 +486,21 @@ export default function ThinkingSession() {
             </div>
           )}
 
-          <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
+          <div ref={composerRef} style={{ marginTop: 16, display: 'grid', gap: 8 }}>
+            {controlsRow('lg-ctrl-compact')}
             <label htmlFor="msg" style={sr}>{t('msgAria')}</label>
             <textarea
               id="msg"
+              ref={msgRef}
               className="lg-field"
               value={input}
               onChange={(e) => setInput(e.target.value.slice(0, MAX_MESSAGE))}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
-              placeholder={needsFirstAnswer ? t('firstPlaceholder') : t('msgPlaceholder')}
+              onKeyDown={(e) => { if (shouldSubmitOnKey(e)) { e.preventDefault(); send(); } }}
+              placeholder={placeholderFor(needsFirstAnswer ? t('firstPlaceholder') : t('msgPlaceholder'))}
               rows={3}
               maxLength={MAX_MESSAGE}
-              disabled={loading}
+              readOnly={loading}
+              aria-busy={loading}
               style={textareaStyle}
             />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
@@ -444,10 +510,9 @@ export default function ThinkingSession() {
               </button>
             </div>
           </div>
-          <div ref={endRef} />
         </div>
 
-        <aside style={{ flex: '1 1 260px', maxWidth: '100%', display: 'grid', gap: 16 }}>
+        <aside className="lg-sticky-aside" style={{ flex: '1 1 260px', maxWidth: '100%', display: 'grid', gap: 16 }}>
           <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
             <Label>{t('progress')}</Label>
             <div style={{ display: 'flex', gap: 6 }} role="img" aria-label={t('stageAria', { n: stageIdx(currentStage) + 1, stage: stageName(currentStage) })}>
@@ -463,7 +528,7 @@ export default function ThinkingSession() {
             <p style={{ margin: 0, fontSize: 12, color: T.creamMid }}>{t(`stageDesc${STAGE_KEY[currentStage]}`)}</p>
           </div>
 
-          <div style={{ ...panelStyle, display: 'grid', gap: 8 }}>
+          <div className="lg-ctrl-full" style={{ ...panelStyle, gap: 8 }}>
             <Label>{t('controls')}</Label>
             {(['DEEPEN', 'ENOUGH', 'THINK'] as Control[]).map((c) => (
               <button
@@ -473,7 +538,7 @@ export default function ThinkingSession() {
                 style={{ ...btnGhost, textAlign: 'left', display: 'grid', gap: 2, letterSpacing: '0.04em', textTransform: 'none', ...(controlsDisabled ? btnDisabled : {}) }}
               >
                 <span style={{ fontWeight: 700 }}>{t(CONTROL_KEY[c])}</span>
-                <span style={{ fontSize: 10, color: T.creamMid }}>{t(CONTROL_HINT[c])}</span>
+                <span style={{ fontSize: 11, color: T.creamMid }}>{t(CONTROL_HINT[c])}</span>
               </button>
             ))}
             {needsFirstAnswer && <p style={{ margin: 0, fontSize: 11, color: T.creamDim }}>{t('needFirst')}</p>}

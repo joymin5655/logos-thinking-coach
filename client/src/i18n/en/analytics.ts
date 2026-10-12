@@ -11,6 +11,7 @@ export const analytics: Record<keyof typeof Ko, string> = {
   kindArgue: 'Argument',
   kindSession: 'Coaching',
   kindDiagnostic: 'Diagnostic',
+  kindArena: 'Arena',
   serTotal: 'Total',
   serConsistency: 'Consistency',
   serEvidence: 'Evidence',

@@ -20,7 +20,8 @@ import { marketing } from './marketing';
 import { topics } from './topics';
 import { ics } from './ics';
 import { notFound } from './notFound';
+import { meta } from './meta';
 
 // 네임스페이스 목록은 여기서만 고정한다. 페이지 작업은 각자의 ko/<ns>.ts·en/<ns>.ts만 수정한다.
-export const ko = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound };
+export const ko = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta };
 export type Dict = typeof ko;

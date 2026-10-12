@@ -2,7 +2,7 @@
 
 > **Audited:** 2026-05-15
 > **Sources:** `LOGOS_경진대회_피치덱.pptx` (15 slides), `LOGOS_모두의창업_지원서.docx` (Q1-Q4)
-> **Target:** `logos-thinking-coach` repo + Vercel 라이브 (https://logos-thinking-coach.vercel.app)
+> **Target:** `logos-thinking-coach` repo + Vercel 라이브 (https://lo9os.org)
 
 ---
 

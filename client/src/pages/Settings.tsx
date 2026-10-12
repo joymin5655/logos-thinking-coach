@@ -9,7 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { T, mono, serif, sans, Label, btnPrimary, btnGhost, btnDisabled, panelStyle, FocusStyle } from '@/components/logos-ui';
+import { T, mono, serif, sans, body, Label, btnPrimary, btnGhost, btnDisabled, panelStyle, FocusStyle } from '@/components/logos-ui';
 import { useTheme, type ThemePref } from '@/contexts/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +17,9 @@ import { flush, pullAll, resetSync } from '@/lib/sync';
 import { clearLocal, exportJSON, toISODate, updateStore } from '@/lib/store';
 import { downloadFile } from '@/lib/ics';
 import { formatDate, useLocale, useT, type Locale } from '@/i18n';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { ALL_FIELDS, MAX_FIELDS, clearFields, loadFields, saveFields, type Field } from '@/lib/preferences';
+import { FIELD_KEY } from '@/lib/fieldKeys';
 
 type WaitRow = { plan: string; created_at: string };
 
@@ -32,7 +35,7 @@ function Section({ heading, children }: { heading: string; children: ReactNode }
   );
 }
 
-const lead = { margin: 0, fontFamily: sans, fontSize: 13, lineHeight: 1.7, color: T.creamMid } as const;
+const lead = { margin: 0, fontFamily: body, letterSpacing: 'normal', fontSize: 13, lineHeight: 1.7, color: T.creamMid } as const;
 
 function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -53,11 +56,14 @@ function resetLocalFor(uid: string) {
 
 export default function Settings() {
   const t = useT('settings');
+  const td = useT('dashboard');
   const [, navigate] = useLocation();
   const { locale, setLocale } = useLocale();
   const { pref, setPref } = useTheme();
   const { user, ready } = useAuth();
   const uid = user?.id;
+  usePageMeta('settings', { noindex: true });
+  const planLabel = (p: string) => (p === 'pro' ? t('planPro') : p === 'team' ? t('planTeam') : p);
 
   const [exporting, setExporting] = useState(false);
   const [waitlist, setWaitlist] = useState<WaitRow[] | null>(null);
@@ -66,6 +72,13 @@ export default function Settings() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [typed, setTyped] = useState('');
+  const [fields, setFields] = useState<Field[]>(() => loadFields());
+  const toggleField = (f: Field) => {
+    const next = fields.includes(f) ? fields.filter((x) => x !== f) : fields.length >= MAX_FIELDS ? fields : [...fields, f];
+    setFields(next);
+    if (next.length) saveFields(next);
+    else clearFields();
+  };
 
   const loadWaitlist = useCallback(async () => {
     if (!supabase || !uid) return;
@@ -150,7 +163,7 @@ export default function Settings() {
   ];
 
   return (
-    <DashboardLayout title={t('title')} titleEn="Settings">
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
       <div style={{ display: 'grid', gap: 20, maxWidth: 760 }}>
         <Section heading={t('prefsHeading')}>
@@ -165,6 +178,22 @@ export default function Settings() {
             <div role="group" aria-label={t('theme')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {themes.map((o) => <Choice key={o.v} active={pref === o.v} onClick={() => setPref(o.v)}>{o.label}</Choice>)}
             </div>
+          </div>
+        </Section>
+
+        <Section heading={td('fieldPickLabel')}>
+          <p style={lead}>{td('fieldPickLead', { max: MAX_FIELDS })}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="group" aria-label={td('fieldGroup')}>
+            {ALL_FIELDS.map((opt) => {
+              const picked = fields.includes(opt.value);
+              const atCap = !picked && fields.length >= MAX_FIELDS;
+              return (
+                <button key={opt.value} type="button" className="lg-btn" aria-pressed={picked} disabled={atCap} onClick={() => toggleField(opt.value)}
+                  style={{ ...btnGhost, padding: '8px 14px', fontSize: 11, textTransform: 'none', letterSpacing: '0.05em', backgroundColor: picked ? T.cream : 'transparent', color: picked ? 'var(--l-on-fg)' : atCap ? T.creamDim : T.creamMid, borderColor: picked ? T.cream : T.borderMid, cursor: atCap ? 'not-allowed' : 'pointer' }}>
+                  {td(FIELD_KEY[opt.value])}
+                </button>
+              );
+            })}
           </div>
         </Section>
 
@@ -193,7 +222,7 @@ export default function Settings() {
                   {waitlist.map((r) => (
                     <li key={r.plan} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '10px 0', borderTop: `1px solid ${T.border}` }}>
                       <span style={{ fontFamily: mono, fontSize: 12, color: T.cream }}>
-                        <strong style={{ textTransform: 'capitalize' }}>{r.plan}</strong>
+                        <strong>{planLabel(r.plan)}</strong>
                         <span style={{ color: T.creamMid }}> · {t('waitlistSince', { date: formatDate(r.created_at, { year: 'numeric', month: 'short', day: 'numeric' }) })}</span>
                       </span>
                       <button type="button" className="lg-btn" style={{ ...btnGhost, padding: '6px 12px', fontSize: 10 }} onClick={() => void cancelWaitlist(r.plan)}>

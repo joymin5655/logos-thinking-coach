@@ -21,5 +21,6 @@ import { marketing } from './marketing';
 import { topics } from './topics';
 import { ics } from './ics';
 import { notFound } from './notFound';
+import { meta } from './meta';
 
-export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound };
+export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta };

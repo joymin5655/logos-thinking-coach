@@ -1,5 +1,8 @@
 // 한국어 원문(기준 사전). 키를 추가하면 en/settings.ts에도 같은 키가 있어야 타입 검사를 통과한다.
 export const settings = {
+  titleEn: 'Settings',
+  planPro: 'Pro',
+  planTeam: 'Team',
   title: '설정',
   notReady: '로그인 기능 준비 중이에요.',
   // 언어·테마

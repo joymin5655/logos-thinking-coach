@@ -5,18 +5,24 @@ import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import { T, mono, serif, Label, btnPrimary, btnGhost, panelStyle, FocusStyle, DeltaRow, Quote, RubricBars, ReportBlocks, sans } from '@/components/logos-ui';
-import { formatDate, useT } from '@/i18n';
-import { sessionDelta, useStore, type SessionRecord } from '@/lib/store';
+import { formatDate, useLocale, useT } from '@/i18n';
+import { usePageMeta } from '@/lib/usePageMeta';
+import { sessionDelta, useStore, type ArenaRecord, type SessionRecord } from '@/lib/store';
 import type { Stage } from '@/lib/api';
+import { ARENA_TOPICS } from '../../../shared/arenaTopics';
 
 const STAGE_KEY = { 표면: 'Surface', 도전: 'Challenge', 핵심: 'Core', 통합: 'Integrate' } as const satisfies Record<Stage, string>;
 
-type Filter = 'all' | 'session' | 'argue';
+type Filter = 'all' | 'session' | 'argue' | 'arena';
 const FILTERS = [
   { v: 'all', key: 'filterAll' },
   { v: 'session', key: 'filterCoaching' },
   { v: 'argue', key: 'filterArgue' },
+  { v: 'arena', key: 'filterArena' },
 ] as const satisfies readonly { v: Filter; key: string }[];
+const VERDICT_SHORT = { win: 'verdictW', draw: 'verdictD', lose: 'verdictL' } as const;
+const VERDICT_FULL = { win: 'verdictWin', draw: 'verdictDraw', lose: 'verdictLose' } as const;
+type Row = { kind: 'session' | 'argue'; id: string; at: string; s: SessionRecord } | { kind: 'arena'; id: string; at: string; a: ArenaRecord };
 const fmt = (iso: string) => formatDate(iso, { year: 'numeric', month: '2-digit', day: '2-digit' });
 
 function Detail({ s }: { s: SessionRecord }) {
@@ -48,7 +54,7 @@ function Detail({ s }: { s: SessionRecord }) {
         {showLog && (
           <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
             {s.turns.map((turn, i) => (
-              <p key={i} style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: turn.role === 'assistant' ? T.cream : T.creamMid, fontFamily: turn.role === 'assistant' ? serif : mono, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              <p key={i} className={turn.role === 'assistant' ? undefined : 'l-prose'} style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: turn.role === 'assistant' ? T.cream : T.creamMid, ...(turn.role === 'assistant' ? { fontFamily: serif } : {}), whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                 <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.2em', color: T.creamDim, marginRight: 8 }}>{turn.role === 'assistant' ? 'LOGOS' : t('you')}</span>
                 {turn.content}
               </p>
@@ -60,25 +66,62 @@ function Detail({ s }: { s: SessionRecord }) {
   );
 }
 
+function ArenaDetail({ a }: { a: ArenaRecord }) {
+  const ta = useT('arena');
+  const res = a.result;
+  const lessons = res?.lessons.filter((l) => l.lesson.trim() || l.quote.trim()) ?? [];
+  return (
+    <div style={{ display: 'grid', gap: 18, padding: '4px 0 20px' }}>
+      {res ? (
+        <>
+          <RubricBars after={{ ...res }} />
+          <p style={{ margin: 0, fontFamily: sans, fontSize: 12, color: T.creamMid, lineHeight: 1.7 }}>{res.rationale} {ta('aiEstimate')}</p>
+          {lessons.map((l, i) => (
+            <div key={i} style={{ display: 'grid', gap: 8 }}>
+              {l.quote.trim() && <Quote>"{l.quote}"</Quote>}
+              <p className="l-prose" style={{ margin: 0, fontSize: 13, color: T.cream, overflowWrap: 'anywhere' }}>{l.lesson}</p>
+            </div>
+          ))}
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{ta('notJudged')}</p>
+      )}
+    </div>
+  );
+}
+
 export default function SessionHistory() {
   const t = useT('history');
   const tSession = useT('session');
   const [, navigate] = useLocation();
   const store = useStore();
-  const [filter, setFilter] = useState<Filter>('all');
+  const { locale } = useLocale();
+  const ta = useT('arena');
+  usePageMeta('history', { noindex: true });
+  const [filter, setFilter] = useState<Filter>(() => {
+    const k = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('kind');
+    return FILTERS.some((f) => f.v === k) ? (k as Filter) : 'all';
+  });
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
 
-  const list = useMemo(
-    () =>
-      [...store.sessions]
-        .reverse()
-        .filter((s) => (filter === 'all' || s.kind === filter) && (!q || s.topic.includes(q) || (s.finalSummary ?? '').includes(q) || (s.firstClaim ?? '').includes(q))),
-    [store.sessions, filter, q],
-  );
+  const arenaTitle = (a: ArenaRecord) => ARENA_TOPICS.find((x) => x.id === a.topicId)?.[locale].title ?? a.topicId;
+  const list = useMemo(() => {
+    const rows: Row[] = [
+      ...store.sessions.map((s): Row => ({ kind: s.kind === 'argue' ? 'argue' : 'session', id: s.id, at: s.startedAt, s })),
+      ...(store.arenas ?? []).map((a): Row => ({ kind: 'arena', id: a.id, at: a.startedAt, a })),
+    ].sort((x, y) => y.at.localeCompare(x.at));
+    const has = (text: string | undefined) => (text ?? '').includes(q);
+    return rows.filter(
+      (r) =>
+        (filter === 'all' || r.kind === filter) &&
+        (!q || (r.kind === 'arena' ? has(arenaTitle(r.a)) : has(r.s.topic) || has(r.s.finalSummary) || has(r.s.firstClaim))),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.sessions, store.arenas, filter, q, locale]);
 
   return (
-    <DashboardLayout title={t('title')} titleEn="Session History">
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
       <div style={{ display: 'grid', gap: 16, maxWidth: 860 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
@@ -97,29 +140,53 @@ export default function SessionHistory() {
           </label>
         </div>
 
-        {store.sessions.length === 0 ? (
+        {store.sessions.length === 0 && (store.arenas ?? []).length === 0 ? (
           <div style={{ ...panelStyle, display: 'grid', gap: 12 }}>
             <p style={{ margin: 0, fontFamily: serif, fontSize: 18, color: T.cream }}>{t('emptyTitle')}</p>
             <p style={{ margin: 0, fontSize: 13, color: T.creamMid, lineHeight: 1.7 }}>{t('emptyBody')}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/session')}>{t('coachingButton')}</button>
               <button type="button" className="lg-btn" style={btnGhost} onClick={() => navigate('/dashboard/argue')}>{t('argueButton')}</button>
+              <button type="button" className="lg-btn" style={btnGhost} onClick={() => navigate('/dashboard/arena')}>{t('filterArena')}</button>
             </div>
           </div>
         ) : list.length === 0 ? (
           <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{t('noMatch')}</p>
         ) : (
           <div>
-            {list.map((s) => {
+            {list.map((row) => {
+              const isOpen = open === row.id;
+              if (row.kind === 'arena') {
+                const a = row.a;
+                const v = a.result?.verdict;
+                return (
+                  <div key={row.id} style={{ borderTop: `1px solid ${T.border}` }}>
+                    <button type="button" className="lg-btn" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : row.id)}
+                      style={{ width: '100%', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '16px 0', background: 'none', border: 'none', color: T.cream, cursor: 'pointer' }}>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, marginBottom: 3, overflowWrap: 'anywhere' }}>{arenaTitle(a)}</span>
+                        <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>
+                          {fmt(a.startedAt)} · {t('kindArena')} · {t('arenaSide', { side: ta(a.side) })}{v ? '' : ` · ${t('arenaPending')}`}
+                        </span>
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
+                        {v && <span title={ta(VERDICT_FULL[v])} aria-label={ta(VERDICT_FULL[v])} style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, border: `1px solid ${T.borderMid}`, padding: '1px 6px', color: v === 'win' ? T.amber : T.creamMid }}>{t(VERDICT_SHORT[v])}</span>}
+                        {a.result && <span style={{ fontFamily: serif, fontSize: 24 }}>{a.result.total}</span>}
+                      </span>
+                    </button>
+                    {isOpen && <ArenaDetail a={a} />}
+                  </div>
+                );
+              }
+              const s = row.s;
               const d = sessionDelta(s);
-              const isOpen = open === s.id;
               return (
                 <div key={s.id} style={{ borderTop: `1px solid ${T.border}` }}>
                   <button type="button" className="lg-btn" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : s.id)}
                     style={{ width: '100%', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', textAlign: 'left', padding: '16px 0', background: 'none', border: 'none', color: T.cream, cursor: 'pointer' }}>
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontFamily: mono, fontSize: 13, fontWeight: 700, marginBottom: 3, overflowWrap: 'anywhere' }}>{s.topic}</span>
-                      <span style={{ fontFamily: mono, fontSize: 10, color: T.creamMid }}>
+                      <span style={{ fontFamily: mono, fontSize: 11, color: T.creamMid }}>
                         {fmt(s.startedAt)} · {s.kind === 'argue' ? t('kindArgue') : t('kindCoaching')} · {s.completedAt ? t('done') : t('inProgress', { stage: tSession(`stage${STAGE_KEY[s.stageReached]}`) })}
                       </span>
                     </span>

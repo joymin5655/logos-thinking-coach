@@ -13,6 +13,8 @@ export const auth: Record<keyof typeof Ko, string> = {
   callbackError: "We couldn't sign you in",
   callbackNoSession: "We didn't receive your sign-in details. Please try again.",
   backToLogin: 'Back to sign in',
+  callbackTimeout: 'The sign-in response never arrived. Please try again.',
+  retryLogin: 'Sign in again',
   checking: 'Checking…',
   migrated: 'Saved {n} records to your account',
   signOutConfirm: "{n} records haven't been saved to the server yet. If you sign out now, they will be lost. Sign out anyway?",

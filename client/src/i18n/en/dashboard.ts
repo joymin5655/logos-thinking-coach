@@ -1,11 +1,21 @@
 import type { dashboard as Ko } from '../ko/dashboard';
 
 export const dashboard: Record<keyof typeof Ko, string> = {
+  titleEn: '',
   title: 'Dashboard',
   eyebrow: 'Growth',
   heading: 'Think deeply again today',
   intro: 'The Free plan is free during the beta. Your records are saved to your account, and AI responses are generated through Anthropic.',
   privacyLink: 'Privacy Policy',
+  eyebrowLine: '{date} · {n}-day streak',
+  heroResume: 'Resume · {mode}',
+  resumeBtn: 'Continue',
+  stageOf: 'Step {n}/4',
+  diagRowFirst: 'Set your baseline with the 3-min diagnostic · Start →',
+  diagRowRe: 'Time to re-take the diagnostic · Start →',
+  kpiArena: 'Arena record',
+  arenaWdl: '{w}W {d}D {l}L',
+  arenaSub: '{n} finished matches',
   diagRe: 'Re-diagnosis',
   diagFirst: '3-minute thinking diagnostic',
   diagReLead: '{days} days have passed. Want to measure again and see what changed?',
@@ -75,6 +85,7 @@ export const dashboard: Record<keyof typeof Ko, string> = {
   recentEmpty: 'No records yet. Start with the daily argument or Socratic coaching.',
   kindArgue: 'Daily argument',
   kindCoaching: 'Coaching',
+  kindArena: 'Arena',
   done: 'Finished',
   inProgress: 'In progress',
 };
