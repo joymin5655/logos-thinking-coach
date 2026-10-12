@@ -5,18 +5,19 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Score, Report } from '@/lib/store';
 
+// 값은 CSS 변수(index.css의 --l-*)라 라이트/다크 전환을 따른다.
 export const T = {
-  black: '#0A0A0A',
-  panel: '#111111',
-  cream: '#F0EBE0',
-  creamMid: 'rgba(240,235,224,0.58)',
-  creamDim: 'rgba(240,235,224,0.30)',
-  border: 'rgba(240,235,224,0.14)',
-  borderMid: 'rgba(240,235,224,0.24)',
-  faint: 'rgba(240,235,224,0.05)',
-  accent: '#C8C0A8',
-  amber: '#E8A33A',
-  error: '#E8552E',
+  black: 'var(--l-bg)',
+  panel: 'var(--l-panel)',
+  cream: 'var(--l-fg)',
+  creamMid: 'var(--l-fg-mid)',
+  creamDim: 'var(--l-fg-dim)',
+  border: 'var(--l-border)',
+  borderMid: 'var(--l-border-mid)',
+  faint: 'var(--l-faint)',
+  accent: 'var(--l-accent)',
+  amber: 'var(--l-amber)',
+  error: 'var(--l-error)',
 } as const;
 
 export const mono = 'var(--font-mono)';
