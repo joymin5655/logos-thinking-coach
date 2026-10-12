@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "calc(100dvh / var(--ui-scale))",
         width: "100%",
         display: "flex",
         alignItems: "center",

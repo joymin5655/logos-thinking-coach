@@ -38,7 +38,7 @@ export default function AuthCallback() {
   }, [loading, user, navigate]);
 
   return (
-    <div style={{ minHeight: '100vh', background: T.black, color: T.cream, fontFamily: mono, display: 'grid', placeItems: 'center', padding: 20 }}>
+    <div style={{ minHeight: 'calc(100dvh / var(--ui-scale))', background: T.black, color: T.cream, fontFamily: mono, display: 'grid', placeItems: 'center', padding: 20 }}>
       {error ? (
         <div role="alert" style={{ ...panelStyle, maxWidth: 400, display: 'grid', gap: 14 }}>
           <h1 style={{ margin: 0, fontSize: 14, color: T.error }}>{t('callbackError')}</h1>

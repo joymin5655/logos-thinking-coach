@@ -175,7 +175,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-75 transition-opacity"
           >
-            <img src="/logo.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+            <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
             {!collapsed && (
               <span
                 style={{

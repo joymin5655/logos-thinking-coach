@@ -13,7 +13,7 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
   const [path] = useLocation();
   if (loading) {
     return (
-      <div role="status" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: T.black, color: T.creamMid, fontFamily: mono, fontSize: 11, letterSpacing: '0.18em' }}>
+      <div role="status" style={{ minHeight: 'calc(100dvh / var(--ui-scale))', display: 'grid', placeItems: 'center', background: T.black, color: T.creamMid, fontFamily: mono, fontSize: 11, letterSpacing: '0.18em' }}>
         {t('checking')}
       </div>
     );

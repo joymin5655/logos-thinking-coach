@@ -71,7 +71,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
             textDecoration: 'none',
           }}
         >
-          <img src="/logo.png" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+          <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
           <span
             style={{
               fontFamily: "var(--font-mono)",
@@ -219,7 +219,7 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
               height: '100%',
             }}
           >
-            <img src="/logo.png" alt="LOGOS" style={{ width: '14px', height: '14px', objectFit: 'contain', opacity: 0.45 }} />
+            <img src="/logo.png" className="logo-mark" alt="LOGOS" style={{ width: '14px', height: '14px', objectFit: 'contain', opacity: 0.45 }} />
             <span
               style={{
                 fontFamily: "var(--font-mono)",

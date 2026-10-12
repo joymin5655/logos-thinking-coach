@@ -32,10 +32,10 @@ export default function Login() {
 
   const disabled = busy || loading || !ready;
   return (
-    <div style={{ minHeight: '100vh', background: T.black, color: T.cream, fontFamily: mono, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: 'calc(100dvh / var(--ui-scale))', background: T.black, color: T.cream, fontFamily: mono, display: 'flex', flexDirection: 'column' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: `1px solid ${T.border}` }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, color: T.cream, textDecoration: 'none' }}>
-          <img src="/logo.png" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} />
+          <img src="/logo.png" className="logo-mark" alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} />
           <span style={{ fontWeight: 700, fontSize: 11, letterSpacing: '0.22em' }}>LOGOS</span>
         </Link>
         <PrefsToggle />

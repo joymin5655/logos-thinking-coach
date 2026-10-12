@@ -188,6 +188,13 @@
   .fit-viewport {
     height: calc(100dvh / var(--ui-scale));
   }
+  /* logo.png는 흰색 마크라 라이트 테마에서는 반전해 먹색으로 보이게 한다. */
+  .logo-mark {
+    filter: invert(1);
+  }
+  .dark .logo-mark {
+    filter: none;
+  }
   @keyframes logos-marquee-left {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
