@@ -355,7 +355,8 @@ export function useRefocusAfterLoading(ref: RefObject<HTMLTextAreaElement | null
     if (loading) {
       const a = document.activeElement;
       had.current = !a || a === document.body || a === el || !!el?.parentElement?.contains(a);
-    } else if (prev.current && had.current) {
+    } else if (prev.current && had.current && !isCoarsePointer()) {
+      // 터치 기기에선 다시 포커스하면 답을 읽기 전에 키보드가 올라와 화면을 가린다
       el?.focus({ preventScroll: true });
     }
     prev.current = loading;
@@ -371,7 +372,8 @@ export function useDraft(slot: string, value: string, setValue: (v: string) => v
     const d = loadDraft(key);
     if (d && !valueRef.current) setValue(d);
     return () => {
-      saveDraft(key, valueRef.current);
+      // 빈 값으로 지우지 않는다 — 401 직전 rescue()가 남긴 초안을 언마운트가 덮어쓰면 안 된다(삭제는 디바운스·clearDraft 담당)
+      if (valueRef.current.trim()) saveDraft(key, valueRef.current);
       untrackDraft(key);
     };
     // 마운트 때 한 번만

@@ -60,3 +60,18 @@ export function flushDrafts(s: Store | null = store()): void {
 export function untrackDraft(key: string): void {
   live.delete(key);
 }
+
+/** 로그아웃·계정 전환 때 — 같은 탭의 다음 계정이 이전 사용자의 글을 복원하지 않게 모두 지운다. */
+export function clearAllDrafts(s: Store | null = store()): void {
+  live.clear();
+  if (!s || !('length' in s)) return;
+  try {
+    const st = s as Storage;
+    for (let i = st.length - 1; i >= 0; i--) {
+      const k = st.key(i);
+      if (k?.startsWith(PREFIX)) st.removeItem(k);
+    }
+  } catch {
+    /* 무시 */
+  }
+}

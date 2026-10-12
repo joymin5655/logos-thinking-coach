@@ -104,9 +104,12 @@ export default function ThinkingSession() {
     recRef.current = s;
     setRec(s);
     setTopic(s.topic);
-    setSummary(s.finalSummary ?? '');
+    // 복원된 정리 초안이 있으면 그것을 우선한다(401로 튕겼다 돌아온 경우)
+    setSummary((v) => (v.trim() ? v : s.finalSummary ?? ''));
     // 마지막 저장 턴이 사용자 턴이면 답을 못 받은 채 끊긴 것 — 재시도 상태로 복원
     const last = s.turns[s.turns.length - 1];
+    // 같은 글이 입력창 초안과 재시도 버튼에 동시에 남으면 두 번 보낼 수 있다
+    if (last?.role === 'user') setInput((v) => (v.trim() === last.content.trim() ? '' : v));
     setFailed(last?.role === 'user' ? { error: t('resumeFailed'), retry: { message: last.content, control: last.control } } : null);
     setPhase('session');
   };
@@ -420,7 +423,7 @@ export default function ThinkingSession() {
   return (
     <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
-      <style>{`.lg-ctrl-compact{display:none}
+      <style>{`.lg-ctrl-compact{display:none}.lg-ctrl-full{display:grid}
 @media (max-width:640px){.lg-ctrl-compact{display:flex}.lg-ctrl-full{display:none}}
 @media (min-width:641px){.lg-sticky-aside{position:sticky;top:76px;max-height:calc(100dvh / var(--ui-scale, 1) - 92px);overflow-y:auto}}`}</style>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
@@ -525,7 +528,7 @@ export default function ThinkingSession() {
             <p style={{ margin: 0, fontSize: 12, color: T.creamMid }}>{t(`stageDesc${STAGE_KEY[currentStage]}`)}</p>
           </div>
 
-          <div className="lg-ctrl-full" style={{ ...panelStyle, display: 'grid', gap: 8 }}>
+          <div className="lg-ctrl-full" style={{ ...panelStyle, gap: 8 }}>
             <Label>{t('controls')}</Label>
             {(['DEEPEN', 'ENOUGH', 'THINK'] as Control[]).map((c) => (
               <button

@@ -84,7 +84,7 @@ function ArenaDetail({ a }: { a: ArenaRecord }) {
           ))}
         </>
       ) : (
-        <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{ta('judging')}</p>
+        <p style={{ margin: 0, fontSize: 13, color: T.creamMid }}>{ta('notJudged')}</p>
       )}
     </div>
   );

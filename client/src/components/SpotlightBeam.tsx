@@ -120,7 +120,8 @@ export default function SpotlightBeam({ className, style, color = 'cream' }: Spo
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particlesRef.current.forEach(p => { p.update(); p.draw(ctx); });
-      animRef.current = requestAnimationFrame(animate);
+      // 모션 감소 설정이면 첫 프레임만 그리고 멈춘다
+      if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) animRef.current = requestAnimationFrame(animate);
     };
 
     resize();

@@ -149,6 +149,7 @@ export default function Argue() {
       next.stageReached = '통합';
       commit(next);
       recordActivity();
+      setSummary(''); // 제출이 끝난 정리 글이 다음 논증의 초안으로 되살아나지 않게
       setPhase('complete');
     } else {
       commit(next);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { draftKey, saveDraft, loadDraft, clearDraft, trackDraft, untrackDraft, flushDrafts } from '../draft';
+import { draftKey, saveDraft, loadDraft, clearDraft, trackDraft, untrackDraft, flushDrafts, clearAllDrafts } from '../draft';
 
 const mem = () => {
   const m = new Map<string, string>();
@@ -56,5 +56,22 @@ describe('draft', () => {
     expect(s.m.has('k2')).toBe(false);
     expect(s.m.has('k3')).toBe(false);
     untrackDraft('k1');
+  });
+
+  it('clearAllDrafts removes only draft keys (sign-out / account switch)', () => {
+    const m = new Map<string, string>();
+    const st = {
+      getItem: (k: string) => m.get(k) ?? null,
+      setItem: (k: string, v: string) => void m.set(k, v),
+      removeItem: (k: string) => void m.delete(k),
+      key: (i: number) => [...m.keys()][i] ?? null,
+      get length() { return m.size; },
+    } as unknown as Storage;
+    saveDraft(draftKey('/dashboard/argue'), 'a', st);
+    saveDraft(draftKey('/dashboard/session', 'msg'), 'b', st);
+    st.setItem('other', 'keep');
+    clearAllDrafts(st);
+    expect(m.has('other')).toBe(true);
+    expect(m.size).toBe(1);
   });
 });

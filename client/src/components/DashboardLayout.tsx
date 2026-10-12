@@ -185,6 +185,11 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
   const [kbd, setKbd] = useState(false); // 모바일에서 입력창에 포커스가 있으면(키보드가 올라오면) 탭바를 숨긴다
   const mainRef = useRef<HTMLElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const closeMore = () => {
+    setMoreOpen(false);
+    moreBtnRef.current?.focus();
+  };
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
@@ -201,11 +206,22 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
   useEffect(() => setMoreOpen(false), [location]);
   useEffect(() => {
     if (!moreOpen) return;
+    const items = () => Array.from(sheetRef.current?.querySelectorAll<HTMLElement>('a[href], button') ?? []);
+    items()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMoreOpen(false);
         moreBtnRef.current?.focus();
+        return;
       }
+      // 시트 안에서만 Tab이 돌게 한다(aria-modal)
+      if (e.key !== 'Tab') return;
+      const list = items();
+      if (!list.length) return;
+      const i = list.indexOf(document.activeElement as HTMLElement);
+      const next = e.shiftKey ? (i <= 0 ? list.length - 1 : i - 1) : (i === list.length - 1 ? 0 : i + 1);
+      e.preventDefault();
+      list[next].focus();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -567,9 +583,12 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
 
       {moreOpen && (
         <div className="dl-sheet" style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-          <div onClick={() => setMoreOpen(false)} aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} />
+          <div onClick={closeMore} aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} />
           <div
+            ref={sheetRef}
             role="dialog" aria-modal="true" aria-label={t('moreTitle')}
+            // 현재 페이지 링크를 눌러도 location이 그대로라 닫히지 않으므로 링크 클릭 때 직접 닫는다
+            onClick={(e) => { if ((e.target as HTMLElement).closest('a')) setMoreOpen(false); }}
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: BLACK, borderTop: `1px solid ${CREAM_DIM}`, padding: '8px 0', paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))', maxHeight: '80dvh', overflowY: 'auto' }}
           >
             {MORE_PATHS.map((m) => (
@@ -580,9 +599,13 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
             {user ? (
               <button type="button" onClick={() => { setMoreOpen(false); void signOut().then((done) => done && navigate('/')); }} style={{ ...sheetRow(false), width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>{t('signOut')}</button>
             ) : (
-              <Link href={`/login?next=${encodeURIComponent(location)}`} style={sheetRow(false)}>{t('signIn')}</Link>
+              <>
+                <Link href={`/login?next=${encodeURIComponent(location)}`} style={sheetRow(false)}>{t('signIn')}</Link>
+                {/* 모바일에선 사이드바가 숨겨져 비로그인 사용자가 언어·테마를 바꿀 곳이 여기뿐이다 */}
+                <div style={{ padding: '8px 20px' }}><PrefsToggle /></div>
+              </>
             )}
-            <button type="button" onClick={() => { setMoreOpen(false); moreBtnRef.current?.focus(); }} style={{ ...sheetRow(false), width: '100%', background: 'none', border: 'none', borderTop: `1px solid ${CREAM_DIM}`, textAlign: 'left', cursor: 'pointer', color: CREAM_MID }}>{t('close')}</button>
+            <button type="button" onClick={closeMore} style={{ ...sheetRow(false), width: '100%', background: 'none', border: 'none', borderTop: `1px solid ${CREAM_DIM}`, textAlign: 'left', cursor: 'pointer', color: CREAM_MID }}>{t('close')}</button>
           </div>
         </div>
       )}

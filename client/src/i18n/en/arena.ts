@@ -31,6 +31,7 @@ export const arena: Record<keyof typeof Ko, string> = {
   thinking: 'The AI opponent is writing a rebuttal',
   retryTurn: 'Resend last turn',
   judging: 'The AI is scoring your arguments',
+  notJudged: 'This match ended without a verdict.',
   retryJudge: 'Score again',
   resultFor: '{side} side · {topic}',
   verdictWin: 'Win',

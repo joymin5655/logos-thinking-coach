@@ -30,6 +30,7 @@ export const arena = {
   thinking: 'AI 상대가 반박을 쓰는 중',
   retryTurn: '마지막 발언 다시 보내기',
   judging: 'AI가 내 발언을 채점하는 중',
+  notJudged: '판정 없이 끝난 경기예요.',
   retryJudge: '다시 채점',
   resultFor: '{side} 입장 · {topic}',
   verdictWin: '승리',
