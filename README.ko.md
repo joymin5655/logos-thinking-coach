@@ -140,6 +140,10 @@ DESIGN.md             색·타이포·레이아웃 규칙
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | `/api/coach` 요청·응답 규약 |
 | [DESIGN.md](DESIGN.md) | 디자인 시스템 |
 
+## 라이선스
+
+코드는 공개돼 있지만 권리는 모두 보유합니다. 읽는 것은 자유이고, 복제·재배포·서비스 운영에는 서면 허락이 필요합니다. 자세한 내용은 [LICENSE](LICENSE)에 있습니다.
+
 ## 연락처
 
 문의·피드백·제휴: **[contact@lo9os.org](mailto:contact@lo9os.org)** · [lo9os.org](https://lo9os.org)
