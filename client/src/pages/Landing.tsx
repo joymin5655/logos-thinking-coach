@@ -5,7 +5,7 @@
  * 공통 nav/footer는 MarketingLayout에서 처리.
  */
 import { useRef, useCallback, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import MarketingLayout from '@/components/MarketingLayout';
 import ThinkerModel from '@/components/ThinkerModel';
 import SpotlightBeam from '@/components/SpotlightBeam';
@@ -72,10 +72,13 @@ export default function Landing() {
         flexDirection: 'column',
       }}
     >
+      <div style={{ display: 'flex', alignItems: 'stretch', height: 28 }}>
       {/* 마퀴 스트립 (장식) */}
       <div
         aria-hidden="true"
         style={{
+          flex: 1,
+          minWidth: 0,
           height: 28,
           overflow: 'hidden',
           whiteSpace: 'nowrap',
@@ -111,7 +114,43 @@ export default function Landing() {
           ))}
         </div>
       </div>
-
+      <div style={{ display: 'flex', flexShrink: 0 }}>
+        <Link
+          href="/terms"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 12px',
+            borderLeft: `1px solid ${LINE}`,
+            fontFamily: "var(--font-mono)",
+            fontSize: '10px',
+            letterSpacing: '0.12em',
+            color: FG_MID,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tm('terms')}
+        </Link>
+        <Link
+          href="/privacy"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 12px',
+            borderLeft: `1px solid ${LINE}`,
+            fontFamily: "var(--font-mono)",
+            fontSize: '10px',
+            letterSpacing: '0.12em',
+            color: FG_MID,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tm('privacy')}
+        </Link>
+      </div>
+      </div>
     </footer>
   );
 
