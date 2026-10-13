@@ -6,6 +6,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { onSignIn, onSignedOut, signOutFlow } from './sync';
+import { getTouch } from './acquisition';
+import { getAnonId, privacyAllows, resetAnonymous, track } from './track';
+import { clearOnboardingLocal } from './onboarding';
 
 type AuthContextValue = {
   user: User | null;
@@ -30,6 +33,58 @@ export function safeNext(next: string | null | undefined, fallback = '/dashboard
   return next && /^\/(?!\/)/.test(next) && !next.includes('\\') ? next : fallback;
 }
 
+const claims = new Map<string, Promise<void>>();
+let claimGen = 0;
+
+/** 로그아웃 때 성공한 claim 캐시를 비운다 — 같은 계정으로 다시 로그인하면 새 익명 이벤트를 다시 잇는다. */
+export function clearClaims(): void {
+  claims.clear();
+  claimGen++;
+}
+
+/**
+ * 로그인 직후 프로필 행을 만들고(first-touch 보존) 30일 내 익명 이벤트를 내 계정에 잇는다. uid당 한 번만 보낸다.
+ * 새로 만들어졌으면 signup 이벤트. 실패는 삼키고, 다음 호출에서 다시 시도할 수 있게 비운다.
+ * GPC·DNT가 켜져 있으면 익명 id와 first-touch는 보내지 않는다(프로필 행만 만든다).
+ */
+export function claimProfile(uid: string): Promise<void> {
+  const cur = claims.get(uid);
+  if (cur) return cur;
+  const client = supabase;
+  if (!client) return Promise.resolve();
+  const gen = claimGen;
+  const p = (async () => {
+    try {
+      const { data, error } = await Promise.resolve().then(() => client.rpc('claim_profile', privacyAllows() ? { p_anon: getAnonId(), p_touch: getTouch() } : { p_anon: null, p_touch: null }));
+      if (error) {
+        claims.delete(uid);
+        return;
+      }
+      // 응답 사이에 로그아웃(claims 비움)됐다면 회전된 익명 id로 signup을 내지 않는다
+      if ((data as { created?: boolean } | null)?.created && gen === claimGen) track('signup');
+    } catch {
+      claims.delete(uid);
+    }
+  })();
+  claims.set(uid, p);
+  return p;
+}
+
+/**
+ * Join 페이지처럼 프로필(first-touch)이 먼저 만들어져야 하는 곳에서 기다린다.
+ * 로그인 전이면 곧바로 끝나고, 로그인돼 있으면 claimProfile이 끝나야 끝난다.
+ */
+export async function ensureProfile(): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (uid) await claimProfile(uid);
+  } catch {
+    /* 세션 확인 실패 — 기다릴 것이 없다 */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(!!supabase);
@@ -49,11 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signedInUid.current = uid;
       if (!uid) {
         onSignedOut(); // 만료·원격 로그아웃에서도 재시도 루프를 멈춘다
+        clearClaims();
+        resetAnonymous(); // 다음 사용자에게 익명 id·미전송 이벤트·first-touch가 이어지지 않게 한다
+        clearOnboardingLocal(); // 온보딩 건너뜀·완료 표시도 기기 단위라 함께 지운다
         setIsAdmin(false);
         setAdminUid(null);
         return;
       }
       void onSignIn(uid);
+      void claimProfile(uid);
       void Promise.resolve(client.rpc('is_admin')).then(
         ({ data, error }) => {
           if (cancelled || signedInUid.current !== uid) return;

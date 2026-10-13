@@ -259,7 +259,7 @@ export default function Landing() {
           </div>
 
           {/* CTA 버튼 */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <button
               type="button"
               className="mk-btn-primary"
@@ -301,6 +301,25 @@ export default function Landing() {
               {t('ctaMore')}
             </button>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/diagnostic')}
+            style={{
+              marginTop: 14,
+              minHeight: 44,
+              padding: '10px 0',
+              fontFamily: "var(--font-mono)",
+              fontSize: '12px',
+              letterSpacing: '0.12em',
+              color: FG,
+              background: 'none',
+              border: 'none',
+              borderBottom: `1px solid ${LINE}`,
+              cursor: 'pointer',
+            }}
+          >
+            {t('ctaTry')} →
+          </button>
 
           {/* 하단 기술 주석 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24 }} aria-hidden="true">

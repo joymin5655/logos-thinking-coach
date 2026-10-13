@@ -22,5 +22,9 @@ import { topics } from './topics';
 import { ics } from './ics';
 import { notFound } from './notFound';
 import { meta } from './meta';
+import { onboarding } from './onboarding';
+import { growth } from './growth';
+import { pilot } from './pilot';
+import { funnel } from './funnel';
 
-export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta };
+export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta, onboarding, growth, pilot, funnel };

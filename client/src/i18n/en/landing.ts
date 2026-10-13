@@ -5,6 +5,7 @@ export const landing: Record<keyof typeof Ko, string> = {
   heroLine2: 'Through Socratic dialogue, you',
   heroLine3: 'find the gaps in your own logic and think more deeply.',
   ctaStart: 'Get started',
+  ctaTry: 'Try the 3-minute check — no sign-up',
   ctaMore: 'Learn more',
   whyEyebrow: 'Why people start',
   compareEyebrow: 'Compare',

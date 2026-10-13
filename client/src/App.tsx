@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import RequireAuth from "./components/RequireAuth";
 import { AuthProvider } from "./lib/auth";
+import Telemetry from "./components/Telemetry";
 
 // 페이지는 라우트별 청크로 나눈다(특히 Landing의 three.js가 다른 화면으로 번지지 않게).
 const Landing = lazy(() => import("./pages/Landing"));
@@ -25,12 +26,14 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Join = lazy(() => import("./pages/Join"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // 청크를 받는 동안 배경만 채워 레이아웃이 튀지 않게 한다.
 const RouteFallback = () => <div aria-hidden="true" style={{ minHeight: "100dvh", background: "var(--l-bg)" }} />;
 
-// 공개: /, /about, /features, /pricing, /privacy, /login, /auth/callback, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
+// 공개: /, /about, /features, /pricing, /privacy, /login, /auth/callback, /join, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
 const guard = (Page: React.ComponentType) => () => (
   <RequireAuth>
     <Page />
@@ -46,6 +49,7 @@ const GuardedSessionHistory = guard(SessionHistory);
 const GuardedSubscription = guard(Subscription);
 const GuardedSettings = guard(Settings);
 const GuardedAdmin = guard(Admin);
+const GuardedOnboarding = guard(Onboarding);
 
 function Router() {
   return (
@@ -58,6 +62,8 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={AuthCallback} />
+      <Route path="/join" component={Join} />
+      <Route path="/welcome" component={GuardedOnboarding} />
       <Route path="/dashboard/diagnostic" component={Diagnostic} />
       <Route path="/dashboard" component={GuardedDashboardHome} />
       <Route path="/dashboard/argue" component={GuardedArgue} />
@@ -82,6 +88,7 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
+            <Telemetry />
             <Router />
           </TooltipProvider>
         </AuthProvider>

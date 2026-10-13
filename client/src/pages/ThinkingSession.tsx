@@ -14,6 +14,9 @@ import {
   TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, ReportBlocks, Survey, sans, SrLatest,
   shouldSubmitOnKey, placeholderFor, isCoarsePointer, useRefocusAfterLoading, useDraft, scrollBehavior } from '@/components/logos-ui';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { track } from '@/lib/track';
+import { authorship } from '@/lib/authorship';
+import { AuthorshipCard } from '@/components/growth/AuthorshipCard';
 import { pickResume, stageOf, stageStep } from '@/lib/resume';
 import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode, type Control, type Stage, type ScoreRes, type SessionReportRes } from '@/lib/api';
 import { useT } from '@/i18n';
@@ -77,6 +80,10 @@ export default function ThinkingSession() {
   }, [rec?.turns.length, loading]);
 
   const resumable = useMemo(() => pickResume(store), [store.sessions]);
+  // 세션 화면이 열린 것 — 첫 답변 전 이탈(admin_abandon) 측정용. 이어갈 세션이 있으면 resume:true(새 답변 기록이 없는 게 정상이라 이탈 집계에서 뺀다.
+  // 인트로에서 새로 시작해도 보수적으로 제외된다 — 이탈을 과대 집계하는 쪽보다 낫다).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { track('session_open', { resume: !!resumable }); }, []);
 
   const currentStage: Stage = rec ? stageOf(rec) : '표면';
   const userTurns = rec?.turns.filter((t) => t.role === 'user').length ?? 0;
@@ -373,6 +380,7 @@ export default function ThinkingSession() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
           <div style={{ ...panelStyle, flex: '1 1 340px', display: 'grid', gap: 20 }}>
             <Label>{t('reportTopic', { topic: rec.topic })}</Label>
+            {rec.finalSummary && <AuthorshipCard data={authorship(rec)} />}
             <DeltaRow before={b.total} after={a.total} />
             <div style={{ display: 'grid', gap: 10 }}>
               <Quote>{t('quoteFirst', { text: rec.firstClaim ?? '' })}</Quote>

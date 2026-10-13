@@ -10,7 +10,12 @@ import { usePageMeta } from '@/lib/usePageMeta';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { toCSV } from '@/lib/csv';
-import { toISODate } from '@/lib/store';
+import FunnelSection from '@/components/admin/FunnelSection';
+import AbandonSection from '@/components/admin/AbandonSection';
+import AcquisitionSection from '@/components/admin/AcquisitionSection';
+import ArmsSection from '@/components/admin/ArmsSection';
+import RaterExportSection from '@/components/admin/RaterExportSection';
+import { download, today } from '@/components/admin/shared';
 import { formatNumber, useLocale, useT } from '@/i18n';
 
 type KindStat = { started: number; completed: number; completion_rate: number | null; avg_delta: number | null; n_delta: number };
@@ -28,7 +33,7 @@ type Metrics = {
 
 const KINDS = ['session', 'argue', 'arena', 'diagnostic'] as const;
 const KIND_KEY = { session: 'kindSession', argue: 'kindArgue', arena: 'kindArena', diagnostic: 'kindDiagnostic' } as const;
-const RECORD_COLS = ['user_ref', 'kind', 'started_at', 'completed_at', 'score_before', 'score_after', 'survey_diff', 'survey_self', 'verdict', 'prompt_version'] as const;
+const RECORD_COLS = ['user_ref', 'kind', 'started_at', 'completed_at', 'score_before', 'score_after', 'survey_diff', 'survey_self', 'verdict', 'prompt_version', 'form', 'arm', 'first_source'] as const;
 const WAITLIST_COLS = ['email', 'plan', 'created_at'] as const;
 
 type Row = Record<string, unknown>;
@@ -40,19 +45,6 @@ const desc: CSSProperties = { fontFamily: sans, fontSize: 12, color: T.creamMid,
 const small: CSSProperties = { fontFamily: mono, fontSize: 11, color: T.creamMid, fontVariantNumeric: 'tabular-nums' };
 
 const isForbidden = (e: { code?: string } | null) => e?.code === '42501';
-// 파일명 날짜는 사용자 현지 날짜로
-const today = () => toISODate(new Date());
-
-function download(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
 
 function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
@@ -251,6 +243,11 @@ export default function Admin() {
           </>
         )}
 
+        <FunnelSection />
+        <AbandonSection />
+        <AcquisitionSection />
+        <ArmsSection />
+
         <Section title={t('secExport')} note={t('exportDesc')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {(['records', 'waitlist'] as const).map((w) => (
@@ -261,6 +258,8 @@ export default function Admin() {
           </div>
           {exportFailed && <div style={{ marginTop: 10 }}><ErrorLine message={t('exportFailed')} /></div>}
         </Section>
+
+        <RaterExportSection />
       </div>
     </DashboardLayout>
   );
