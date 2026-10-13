@@ -11,15 +11,15 @@ type Key = Parameters<ReturnType<typeof useT<'privacy'>>>[0];
 // 섹션별 문단·목록 개수. 키 이름은 s<N>p<i>, s<N>l<i>. 문단은 pre개가 목록 앞, 나머지가 목록 뒤.
 const SECTIONS = [
   { n: 1, pre: 1, l: 2, post: 0 },
-  { n: 2, pre: 1, l: 9, post: 1 },
+  { n: 2, pre: 1, l: 10, post: 1 },
   { n: 3, pre: 0, l: 8, post: 0 },
-  { n: 4, pre: 0, l: 5, post: 1 },
+  { n: 4, pre: 0, l: 6, post: 1 },
   { n: 5, pre: 1, l: 3, post: 1 },
   { n: 6, pre: 1, l: 4, post: 1 },
   { n: 7, pre: 1, l: 5, post: 1 },
   { n: 8, pre: 1, l: 4, post: 1 },
   { n: 9, pre: 1, l: 0, post: 0 },
-  { n: 10, pre: 1, l: 4, post: 2 },
+  { n: 10, pre: 1, l: 5, post: 2 },
   { n: 11, pre: 1, l: 5, post: 1 },
   { n: 12, pre: 1, l: 4, post: 0 },
   { n: 13, pre: 1, l: 0, post: 0 },

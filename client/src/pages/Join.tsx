@@ -9,6 +9,7 @@ import PrefsToggle from '@/components/PrefsToggle';
 import SignupConsent, { CONSENT_HINT_ID } from '@/components/SignupConsent';
 import { FocusStyle, T, body, btnDisabled, btnPrimary, mono, panelStyle, serif } from '@/components/logos-ui';
 import { ensureProfile, useAuth } from '@/lib/auth';
+import { clearPendingTermsConsent, markPendingTermsConsent } from '@/lib/termsConsent';
 import { fetchMyMeta, joinCohort, parseCohortCode, type JoinErrorCode } from '@/lib/cohort';
 import { useT } from '@/i18n';
 import { usePageMeta } from '@/lib/usePageMeta';
@@ -96,7 +97,9 @@ export default function Join() {
     setRedirecting(true);
     setSignInFailed(false);
     putConsentFlag(code);
+    markPendingTermsConsent();
     if (!(await signIn(`/join?c=${encodeURIComponent(code)}`))) {
+      clearPendingTermsConsent();
       setSignInFailed(true);
       setRedirecting(false);
     }
