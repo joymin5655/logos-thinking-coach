@@ -105,6 +105,12 @@ export function Label({ children, style }: { children: ReactNode; style?: CSSPro
 
 const sr = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const;
 
+/** AI 상호작용 화면 상단의 상시 한 줄 고지. 조용한 보조 텍스트로만 보인다. */
+export function AiNotice() {
+  const t = useT('common');
+  return <p style={{ margin: '0 0 12px', fontFamily: body, fontSize: 12, lineHeight: 1.6, letterSpacing: 'normal', color: T.creamDim }}>{t('aiNotice')}</p>;
+}
+
 /** 화면에는 안 보이고 스크린리더에만 읽히는 문구. */
 export function SrOnly({ children }: { children: ReactNode }) {
   return <span className="sr-only" style={sr}>{children}</span>;

@@ -25,6 +25,7 @@ const Login = lazy(() => import("./pages/Login"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Join = lazy(() => import("./pages/Join"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -33,7 +34,7 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 // 청크를 받는 동안 배경만 채워 레이아웃이 튀지 않게 한다.
 const RouteFallback = () => <div aria-hidden="true" style={{ minHeight: "100dvh", background: "var(--l-bg)" }} />;
 
-// 공개: /, /about, /features, /pricing, /privacy, /login, /auth/callback, /join, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
+// 공개: /, /about, /features, /pricing, /privacy, /terms, /login, /auth/callback, /join, /dashboard/diagnostic, /404. 나머지는 로그인 필요.
 const guard = (Page: React.ComponentType) => () => (
   <RequireAuth>
     <Page />
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/features" component={Features} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/join" component={Join} />

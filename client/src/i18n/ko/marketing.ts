@@ -6,6 +6,7 @@ export const marketing = {
   start: '시작하기',
   marquee: 'LOGOS · 생각의 코치 · THINK DEEPER · 소크라테스 · APORIA · 논리적 확신 · ',
   privacy: '개인정보 처리방침',
+  terms: '이용약관',
   errorTitle: '예기치 않은 오류가 발생했어요.',
   errorReload: '페이지 새로고침',
 } as const;

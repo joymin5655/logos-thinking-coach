@@ -256,7 +256,7 @@ export default function ThinkingSession() {
       { tag: 'tagClaim', text: 'ex4' },
     ] as const;
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <FocusStyle />
         <div style={{ maxWidth: 640, display: 'grid', gap: 18 }}>
           <div style={{ display: 'grid', gap: 6 }}>
@@ -322,7 +322,7 @@ export default function ThinkingSession() {
     const busy = phase === 'scoring' && !scoringErr;
     const short = summary.trim().length < MIN_SUMMARY;
     return (
-      <DashboardLayout title={t('summaryTitle')} titleEn={t('summaryTitleEn')}>
+      <DashboardLayout title={t('summaryTitle')} titleEn={t('summaryTitleEn')} aiNotice>
         <FocusStyle />
         <div style={{ maxWidth: 640, margin: '24px auto', display: 'grid', gap: 16 }}>
           <div style={{ ...panelStyle, display: 'grid', gap: 14 }}>
@@ -375,7 +375,7 @@ export default function ThinkingSession() {
   if (phase === 'complete' && rec.scoreBefore && rec.scoreAfter && rec.report) {
     const { scoreBefore: b, scoreAfter: a, report } = rec;
     return (
-      <DashboardLayout title={t('reportTitle')} titleEn={t('reportTitleEn')}>
+      <DashboardLayout title={t('reportTitle')} titleEn={t('reportTitleEn')} aiNotice>
         <FocusStyle />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
           <div style={{ ...panelStyle, flex: '1 1 340px', display: 'grid', gap: 20 }}>
@@ -429,7 +429,7 @@ export default function ThinkingSession() {
   );
 
   return (
-    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
       <FocusStyle />
       <style>{`.lg-ctrl-compact{display:none}.lg-ctrl-full{display:grid}
 @media (max-width:640px){.lg-ctrl-compact{display:flex}.lg-ctrl-full{display:none}}

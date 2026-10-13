@@ -21,7 +21,7 @@ export const pilot: Record<keyof typeof Ko, string> = {
   joinNow: 'Join',
   joining: 'Joining…',
   checking: 'Checking…',
-  ageNote: 'You must be 14 or older to take part',
+  ageNote: 'You must be 18 or older to take part',
   privacyLink: 'Privacy policy',
   noCodeTitle: 'You need a pilot code',
   noCodeBody: 'Please come back through the link you were given. The address must end with a code (?c=…).',

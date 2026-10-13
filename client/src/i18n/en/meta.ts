@@ -13,6 +13,8 @@ export const meta: Record<keyof typeof Ko, string> = {
   pricingDesc: 'Start free and upgrade when you need more. Compare LOGOS plans.',
   privacyTitle: 'Privacy Policy',
   privacyDesc: 'What personal data LOGOS collects, why, how long it is kept, and your rights.',
+  termsTitle: 'Terms of Service',
+  termsDesc: 'The conditions for using LOGOS, notes on AI output, and the duties and liability of users and the operator.',
   joinTitle: 'Join the pilot',
   joinDesc: 'Join the LOGOS pilot study. Review the consent form and confirm your cohort code.',
   onboardingTitle: 'Get started',

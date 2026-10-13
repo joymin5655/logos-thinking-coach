@@ -128,7 +128,7 @@ export default function Diagnostic() {
 
   if (shown) {
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <FocusStyle />
         <div style={{ maxWidth: 640, display: 'grid', gap: 16 }}>
           <div style={{ ...panelStyle, display: 'grid', gap: 18 }}>
@@ -169,7 +169,7 @@ export default function Diagnostic() {
 
   if (!metaDone) {
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <div role="status" style={{ fontFamily: mono, fontSize: 11, letterSpacing: '0.18em', color: T.creamMid }}>{ta('checking')}</div>
       </DashboardLayout>
     );
@@ -179,7 +179,7 @@ export default function Diagnostic() {
   const ss = String(Math.abs(left) % 60).padStart(2, '0');
   const short = text.trim().length < MIN_TEXT;
   return (
-    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
       <FocusStyle />
       <div style={{ maxWidth: 640, display: 'grid', gap: 16 }}>
         <div style={{ ...panelStyle, display: 'grid', gap: 16 }}>

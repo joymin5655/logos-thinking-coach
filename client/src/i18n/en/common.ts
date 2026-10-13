@@ -1,6 +1,7 @@
 import type { common as Ko } from '../ko/common';
 
 export const common: Record<keyof typeof Ko, string> = {
+  aiNotice: 'LOGOS coach is an AI and can be wrong.',
   themeLight: 'Light mode',
   themeDark: 'Dark mode',
   themeToggle: 'Toggle color theme',

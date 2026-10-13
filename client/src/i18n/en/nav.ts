@@ -16,6 +16,7 @@ export const nav: Record<keyof typeof Ko, string> = {
   plan: 'Free · Beta',
   settings: 'Settings',
   privacy: 'Privacy policy',
+  terms: 'Terms of service',
   admin: 'Admin',
   signOut: 'Sign out',
   signIn: 'Sign in',

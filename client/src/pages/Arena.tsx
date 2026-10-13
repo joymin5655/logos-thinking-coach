@@ -148,7 +148,7 @@ export default function Arena() {
   };
 
   const layout = (children: React.ReactNode) => (
-    <DashboardLayout title={t('pageTitle')} titleEn={t('titleEn')}>
+    <DashboardLayout title={t('pageTitle')} titleEn={t('titleEn')} aiNotice>
       <FocusStyle />
       {children}
     </DashboardLayout>

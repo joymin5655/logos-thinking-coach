@@ -4,6 +4,7 @@ import { nav } from './nav';
 import { auth } from './auth';
 import { settings } from './settings';
 import { privacy } from './privacy';
+import { terms } from './terms';
 import { pricing } from './pricing';
 import { arena } from './arena';
 import { admin } from './admin';
@@ -27,4 +28,4 @@ import { growth } from './growth';
 import { pilot } from './pilot';
 import { funnel } from './funnel';
 
-export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta, onboarding, growth, pilot, funnel };
+export const en: { [N in keyof Dict]: Record<keyof Dict[N], string> } = { common, nav, auth, settings, privacy, terms, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta, onboarding, growth, pilot, funnel };

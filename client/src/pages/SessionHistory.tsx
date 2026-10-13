@@ -121,7 +121,7 @@ export default function SessionHistory() {
   }, [store.sessions, store.arenas, filter, q, locale]);
 
   return (
-    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
       <FocusStyle />
       <div style={{ display: 'grid', gap: 16, maxWidth: 860 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
