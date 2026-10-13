@@ -8,6 +8,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Stage, Control, Position } from './api';
 import { translate } from '../i18n';
+import { DIAGNOSTIC_FORMS, formFromPromptIndex, type DiagnosticForm } from '../../../shared/diagnosticForms';
 
 export const STORE_KEY = 'logos.v1';
 export const STORE_VERSION = 1;
@@ -58,7 +59,8 @@ export type SessionRecord = {
   promptVersion: string;
 };
 
-export type DiagnosticRecord = { id?: string; at: string; prompt: string; text: string; score: Score };
+/** form: 문항 폼(f0..f3). 폼 도입 전 기록에는 없다 — diagnosticForm()으로 역추적한다. */
+export type DiagnosticRecord = { id?: string; at: string; prompt: string; text: string; score: Score; form?: DiagnosticForm };
 
 export type ArenaRecord = {
   id: string;
@@ -430,9 +432,20 @@ export function arenaRecord(arenas: ArenaRecord[] = []): { w: number; d: number;
   return r;
 }
 
-/** 서버에서 받은 데이터로 로컬 캐시를 통째로 바꾼다(변경 알림 없음 — 동기화 전용). */
+const replacedListeners = new Set<() => void>();
+
+/** replaceAll(서버 동기화)로 저장소가 통째로 바뀐 뒤마다 호출된다. 기록별 변경 알림(onRecordChange)은 따로 오지 않는다. 해제 함수를 돌려준다. */
+export function onStoreReplaced(cb: () => void) {
+  replacedListeners.add(cb);
+  return () => {
+    replacedListeners.delete(cb);
+  };
+}
+
+/** 서버에서 받은 데이터로 로컬 캐시를 통째로 바꾼다(기록별 변경 알림 없음 — onStoreReplaced로만 알린다. 동기화 전용). */
 export function replaceAll(data: LogosStore) {
   writeStore({ ...data, arenas: data.arenas ?? [], ownerId: data.ownerId ?? null });
+  replacedListeners.forEach((fn) => fn());
 }
 
 /** 로컬 캐시를 비운다(로그아웃·다른 계정 전환). 새 participantId가 만들어진다. */
@@ -450,6 +463,31 @@ export function recordActivity(now = new Date()) {
     for (const d of info.freezeDates) freezesUsed[isoWeekKey(d)] = d;
     return { ...s, streak: { days, freezesUsed } };
   });
+}
+
+/**
+ * 진단 기록이 받은 폼. form이 있으면 그것, 없으면(옛 기록) 문항 텍스트를 ko/en 사전과 맞춰 찾고,
+ * 그래도 없으면 옛 방식(기록 순번 % 4)으로 추정한다. index = 기록 배열에서의 위치.
+ */
+export function diagnosticForm(rec: DiagnosticRecord, index: number): DiagnosticForm {
+  if (rec.form) return rec.form;
+  for (const locale of ['ko', 'en'] as const) {
+    const i = DIAGNOSTIC_FORMS.findIndex((_, n) => translate('diagnostic', `prompt${n}` as 'prompt0', undefined, locale) === rec.prompt);
+    if (i >= 0) return formFromPromptIndex(i);
+  }
+  return formFromPromptIndex(index % DIAGNOSTIC_FORMS.length);
+}
+
+/**
+ * 기존 진단 기록이 받은 폼들, 오래된 것부터 (pickForm의 used).
+ * since(파일럿 최초 참가 시각)를 주면 그 이후 기록만 센다 — 참가 전 진단은 채점 대상이 아니므로 사전/사후 순서에서 뺀다.
+ */
+export function usedDiagnosticForms(diagnostics: DiagnosticRecord[], since?: string | null): DiagnosticForm[] {
+  const t = since ? Date.parse(since) : NaN;
+  return diagnostics
+    .map((d, i) => ({ d, i }))
+    .filter(({ d }) => Number.isNaN(t) || Date.parse(d.at) >= t)
+    .map(({ d, i }) => diagnosticForm(d, i));
 }
 
 export function addDiagnostic(rec: DiagnosticRecord) {

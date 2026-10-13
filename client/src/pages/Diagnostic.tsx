@@ -4,7 +4,7 @@
  * 타이머는 부드러운 안내일 뿐 입력을 막지 않는다.
  */
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   T, mono, serif, Label, btnPrimary, btnGhost, btnDisabled, textareaStyle, panelStyle, FocusStyle,
@@ -13,7 +13,11 @@ import { usePageMeta } from '@/lib/usePageMeta';
 import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { formatDate, useT } from '@/i18n';
-import { addDiagnostic, daysUntilRediagnosis, newId, nextDiagnosticDate, toISODate, useStore, type DiagnosticRecord } from '@/lib/store';
+import { addDiagnostic, daysUntilRediagnosis, newId, nextDiagnosticDate, toISODate, useStore, usedDiagnosticForms, type DiagnosticRecord } from '@/lib/store';
+import { fetchMyMetaResult } from '@/lib/cohort';
+import { track } from '@/lib/track';
+import { DIAGNOSTIC_FORMS, pickForm, type DiagnosticForm } from '../../../shared/diagnosticForms';
+import { QUOTAS } from '../../../shared/quotas';
 
 export const DIAGNOSTIC_PROMPTS = ['prompt0', 'prompt1', 'prompt2', 'prompt3'] as const; // diagnostic 사전의 키
 const MAX_TEXT = 2000;
@@ -25,14 +29,47 @@ const fmtDate = (iso: string) => formatDate(new Date(iso.length === 10 ? `${iso}
 
 export default function Diagnostic() {
   const [, navigate] = useLocation();
+  const fromWelcome = new URLSearchParams(useSearch()).get('from') === 'welcome'; // 온보딩에서 온 진단
   const store = useStore();
   const ta = useT('auth');
   const t = useT('diagnostic');
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const sidRef = useRef(newId()); // 재시도는 같은 sid로 보내 한도가 두 번 깎이지 않게 한다
   const last = store.diagnostics[store.diagnostics.length - 1];
   const prev = store.diagnostics[store.diagnostics.length - 2];
-  const prompt = t(DIAGNOSTIC_PROMPTS[store.diagnostics.length % DIAGNOSTIC_PROMPTS.length]);
+  // 파일럿 참가자(user_meta.cohort_code 있음 — arm은 블라인드라 읽지 않는다)는 사전/사후 폼을 교차 배정한다. 확인이 끝나기 전엔 문항을 보여 주지 않는다.
+  // 로그인 확인(authLoading)이 끝나기 전에는 비로그인으로 단정해 폼을 확정하지 않는다.
+  // 조회가 오류면 1회 재시도하고, 그래도 실패하면 비파일럿으로 진행한다(행 없음과는 다른 경로).
+  // joinedAt = 파일럿 최초 참가 시각: 참가 전에 쓴 진단은 사전/사후 순서에서 뺀다(서버 채점 대상 범위와 같다).
+  const [pilot, setPilot] = useState(false);
+  const [joinedAt, setJoinedAt] = useState<string | null>(null);
+  const [metaDone, setMetaDone] = useState(!authLoading && !user);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setPilot(false);
+      setJoinedAt(null);
+      setMetaDone(true);
+      setLeft(TOTAL_SEC);
+      return;
+    }
+    let cancelled = false;
+    setMetaDone(false);
+    void fetchMyMetaResult().then((r) => {
+      if (cancelled) return;
+      const meta = r.ok ? r.meta : null;
+      setPilot(!!meta?.cohort_code);
+      setJoinedAt(meta?.cohort_code ? meta.joined_at : null);
+      setMetaDone(true);
+      setLeft(TOTAL_SEC); // 문항이 보이는 순간부터 3분
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [locked, setLocked] = useState<DiagnosticForm | null>(null); // 쓰기 시작하면 동기화로 기록이 늘어도 문항을 바꾸지 않는다
+  const form = locked ?? pickForm({ used: usedDiagnosticForms(store.diagnostics, pilot ? joinedAt : null), seed: user?.id ?? store.participantId, pilot });
+  const prompt = t(DIAGNOSTIC_PROMPTS[DIAGNOSTIC_FORMS.indexOf(form)]);
 
   const [taking, setTaking] = useState(false);
   const [text, setText] = useState('');
@@ -45,6 +82,12 @@ export default function Diagnostic() {
   const rescue = useDraft('essay', text, setText);
 
   const writing = taking || !last;
+  const startedSid = useRef('');
+  useEffect(() => {
+    if (!writing || result || !metaDone || startedSid.current === sidRef.current) return;
+    startedSid.current = sidRef.current;
+    track('diagnostic_start', { form });
+  }, [writing, result, metaDone, form]);
   useEffect(() => {
     if (!writing || result) return;
     const id = setInterval(() => setLeft((s) => s - 1), 1000);
@@ -61,8 +104,11 @@ export default function Diagnostic() {
       const rec: DiagnosticRecord = {
         id: sidRef.current, at: new Date().toISOString(), prompt, text: body,
         score: { consistency: s.consistency, evidence: s.evidence, defense: s.defense, total: s.total, rationale: s.rationale },
+        form,
       };
       addDiagnostic(rec);
+      track('diagnostic_done', { form, score: s.total, guest: !user });
+      setLocked(null);
       sidRef.current = newId();
       setText(''); // 제출이 끝났으니 보관해 둔 초안도 함께 비운다
       setResult(rec);
@@ -110,12 +156,21 @@ export default function Diagnostic() {
               </span>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {!result && <button type="button" className="lg-btn" style={btnGhost} onClick={() => { setTaking(true); setText(''); setLeft(TOTAL_SEC); }}>{t('retake')}</button>}
-                <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/dashboard/session')}>{t('startFirst')}</button>
+                {result && fromWelcome && <button type="button" className="lg-btn" style={btnPrimary} onClick={() => navigate('/welcome')}>{t('nextStep')}</button>}
+                <button type="button" className="lg-btn" style={result && fromWelcome ? btnGhost : btnPrimary} onClick={() => navigate('/dashboard/session')}>{t('startFirst')}</button>
               </div>
             </div>
           </div>
           <button type="button" className="lg-btn" style={{ ...btnGhost, border: 'none', textDecoration: 'underline', justifySelf: 'start', padding: 0 }} onClick={() => navigate('/dashboard')}>{t('home')}</button>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!metaDone) {
+    return (
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+        <div role="status" style={{ fontFamily: mono, fontSize: 11, letterSpacing: '0.18em', color: T.creamMid }}>{ta('checking')}</div>
       </DashboardLayout>
     );
   }
@@ -141,7 +196,7 @@ export default function Diagnostic() {
             </p>
           </div>
           <label htmlFor="diag" style={sr}>{t('answerAria')}</label>
-          <textarea id="diag" className="lg-field" value={text} onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT))}
+          <textarea id="diag" className="lg-field" value={text} onChange={(e) => { setLocked((f) => f ?? form); setText(e.target.value.slice(0, MAX_TEXT)); }}
             rows={8} maxLength={MAX_TEXT} readOnly={loading} aria-busy={loading} style={textareaStyle} placeholder={t('placeholder')} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, color: T.creamMid }}>{t('noRight')}</span>
@@ -154,7 +209,14 @@ export default function Diagnostic() {
           </div>
           {short && text.length > 0 && <span style={{ fontFamily: mono, fontSize: 10, color: T.creamDim }}>{t('minChars', { min: MIN_TEXT })}</span>}
           {loading && <TypingDots label={t('scoring')} />}
-          {error && <ErrorLine message={error} code={errorKind} onRetry={() => void submit()} />}
+          {error && errorKind === 'quota' && !user ? (
+            <div role="alert" style={{ border: `1px solid ${T.borderMid}`, padding: '12px 14px', display: 'grid', gap: 10 }}>
+              <span style={{ fontFamily: sans, fontSize: 13, color: T.cream, lineHeight: 1.6 }}>{t('guestQuota', { n: QUOTAS.diagnostic.perDay })}</span>
+              <button type="button" className="lg-btn" style={{ ...btnGhost, justifySelf: 'start' }} onClick={() => navigate('/login?next=/dashboard/diagnostic')}>{ta('ctaButton')}</button>
+            </div>
+          ) : (
+            error && <ErrorLine message={error} code={errorKind} onRetry={() => void submit()} />
+          )}
         </div>
         <button type="button" className="lg-btn" style={{ ...btnGhost, border: 'none', textDecoration: 'underline', justifySelf: 'start', padding: 0 }} onClick={() => navigate('/dashboard')}>
           {t('skip')}

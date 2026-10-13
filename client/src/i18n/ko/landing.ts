@@ -4,6 +4,7 @@ export const landing = {
   heroLine2: '소크라테스의 문답법으로 당신은',
   heroLine3: '논리의 빈틈을 스스로 발견하고 더 깊이 사고합니다.',
   ctaStart: '시작하기',
+  ctaTry: '로그인 없이 3분 진단 해보기',
   ctaMore: '더 알아보기',
   whyEyebrow: '시작하는 이유',
   compareEyebrow: '비교',

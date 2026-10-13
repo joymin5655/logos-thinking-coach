@@ -20,6 +20,7 @@ import {
   upsertArena,
   addDiagnostic,
   onRecordChange,
+  onStoreReplaced,
   replaceAll,
   clearLocal,
   arenaRecord,
@@ -222,5 +223,20 @@ describe('저장소 정규화·변경 알림', () => {
     clearLocal();
     expect(loadStore().ownerId).toBeNull();
     expect(loadStore().sessions).toEqual([]);
+  });
+  it('onStoreReplaced는 replaceAll 뒤에만 불리고(기록 알림은 없음) 해제할 수 있다', () => {
+    const recs: string[] = [];
+    let n = 0;
+    const offRec = onRecordChange((k, id) => void recs.push(`${k}:${id}`));
+    const off = onStoreReplaced(() => void n++);
+    upsertSession(sess({ id: 's1' }));
+    expect(n).toBe(0);
+    replaceAll({ ...loadStore(), ownerId: 'u1' });
+    expect(n).toBe(1);
+    expect(recs).toEqual(['session:s1']);
+    off();
+    replaceAll({ ...loadStore() });
+    expect(n).toBe(1);
+    offRec();
   });
 });

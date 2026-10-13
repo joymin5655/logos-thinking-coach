@@ -13,6 +13,8 @@ import {
   TypingDots, ErrorLine, CharCount, RubricBars, DeltaRow, Quote, sans, SrLatest,
   shouldSubmitOnKey, placeholderFor, useRefocusAfterLoading, useDraft, scrollBehavior } from '@/components/logos-ui';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { authorship } from '@/lib/authorship';
+import { AuthorshipCard } from '@/components/growth/AuthorshipCard';
 import { coach, errorCode, errorMessage, handleAuthError, type ApiErrorCode, type Position } from '@/lib/api';
 import { todaysTopic } from '@/lib/topics';
 import { useLocale, useT } from '@/i18n';
@@ -211,6 +213,7 @@ export default function Argue() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
           <div style={{ ...panelStyle, flex: '2 1 340px', display: 'grid', gap: 20 }}>
             <Label>{t('completeLabel', { pos: posName(position), topic: topic.title })}</Label>
+            {rec.finalSummary && <AuthorshipCard data={authorship(rec)} />}
             <DeltaRow before={b.total} after={a.total} beforeLabel={t('beforeReason')} />
             <div style={{ display: 'grid', gap: 10 }}>
               <Quote>{t('quoteFirst', { text: rec.firstClaim ?? '' })}</Quote>

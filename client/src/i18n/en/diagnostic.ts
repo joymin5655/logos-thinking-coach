@@ -30,4 +30,6 @@ export const diagnostic: Record<keyof typeof Ko, string> = {
   scoring: 'Scoring',
   minChars: 'Write at least {min} characters to be scored.',
   skip: 'Skip for now',
+  guestQuota: "You've used today's guest diagnostics. Log in to take {n} more today.",
+  nextStep: 'Next step',
 };

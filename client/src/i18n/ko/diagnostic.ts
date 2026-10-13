@@ -29,4 +29,6 @@ export const diagnostic = {
   scoring: '채점하는 중',
   minChars: '{min}자 이상 써야 채점할 수 있어요.',
   skip: '지금은 건너뛰기',
+  guestQuota: '오늘 비회원 진단 한도를 다 썼어요. 로그인하면 하루 {n}번 더 할 수 있어요.',
+  nextStep: '다음 단계로',
 } as const;

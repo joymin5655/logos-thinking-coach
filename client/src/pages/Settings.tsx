@@ -12,6 +12,7 @@ import {
 import { T, mono, serif, sans, body, Label, btnPrimary, btnGhost, btnDisabled, panelStyle, FocusStyle } from '@/components/logos-ui';
 import { useTheme, type ThemePref } from '@/contexts/ThemeContext';
 import { useAuth } from '@/lib/auth';
+import { getAnonId, resetAnonymous } from '@/lib/track';
 import { supabase } from '@/lib/supabase';
 import { flush, pullAll, resetSync } from '@/lib/sync';
 import { clearLocal, exportJSON, toISODate, updateStore } from '@/lib/store';
@@ -20,6 +21,7 @@ import { formatDate, useLocale, useT, type Locale } from '@/i18n';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { ALL_FIELDS, MAX_FIELDS, clearFields, loadFields, saveFields, type Field } from '@/lib/preferences';
 import { FIELD_KEY } from '@/lib/fieldKeys';
+import { fetchMyMeta, withdrawConsent, type MyMeta } from '@/lib/cohort';
 
 type WaitRow = { plan: string; created_at: string };
 
@@ -72,6 +74,8 @@ export default function Settings() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [typed, setTyped] = useState('');
+  const [pilot, setPilot] = useState<MyMeta | null>(null);
+  const [pilotOpen, setPilotOpen] = useState(false);
   const [fields, setFields] = useState<Field[]>(() => loadFields());
   const toggleField = (f: Field) => {
     const next = fields.includes(f) ? fields.filter((x) => x !== f) : fields.length >= MAX_FIELDS ? fields : [...fields, f];
@@ -90,6 +94,15 @@ export default function Settings() {
   useEffect(() => {
     void loadWaitlist();
   }, [loadWaitlist]);
+
+  const loadPilot = useCallback(async () => {
+    if (!uid) return;
+    setPilot(await fetchMyMeta());
+  }, [uid]);
+
+  useEffect(() => {
+    void loadPilot();
+  }, [loadPilot]);
 
   const exportData = async () => {
     if (!uid) return;
@@ -117,18 +130,33 @@ export default function Settings() {
     setWaitlist((rows) => (rows ?? []).filter((r) => r.plan !== plan));
   };
 
+  const withdraw = async () => {
+    setBusy(true);
+    const ok = await withdrawConsent();
+    setBusy(false);
+    if (!ok) {
+      toast.error(t('pilotWithdrawFailed'));
+      return;
+    }
+    setPilotOpen(false);
+    toast(t('pilotWithdrawDone'));
+    await loadPilot();
+  };
+
   const deleteData = async () => {
     if (!supabase || !uid) return;
     setBusy(true);
     resetSync({ keepUid: true }); // 보낼 outbox를 먼저 비워 삭제 뒤에 되살아나지 않게 한다
-    const { error } = await supabase.rpc('delete_my_data');
+    const { error } = await supabase.rpc('delete_my_data', { p_anon: getAnonId() });
     if (error) {
       setBusy(false);
       toast.error(t('dataFailed'));
       return;
     }
     resetLocalFor(uid);
+    resetAnonymous(); // 이 기기의 익명 이벤트는 위 호출로 지웠으니 id도 새로 시작한다
     setWaitlist([]);
+    setPilot(null);
     setBusy(false);
     setDataOpen(false);
     toast(t('dataDone'));
@@ -146,6 +174,7 @@ export default function Settings() {
     }
     clearLocal();
     resetSync();
+    resetAnonymous();
     await supabase.auth.signOut({ scope: 'local' });
     setBusy(false);
     setAccountOpen(false);
@@ -234,6 +263,20 @@ export default function Settings() {
               )}
             </Section>
 
+            {pilot?.cohort_code && (
+              <Section heading={t('pilotHeading')}>
+                {pilot.consent_at ? (
+                  <>
+                    <p style={{ ...lead, color: T.cream }}>{t('pilotStatus', { code: pilot.cohort_code, date: toISODate(new Date(pilot.consent_at)) })}</p>
+                    <p style={lead}>{t('pilotLead')}</p>
+                    <div><button type="button" className="lg-btn" style={dangerBtn} onClick={() => setPilotOpen(true)}>{t('pilotWithdrawButton')}</button></div>
+                  </>
+                ) : (
+                  <p style={lead}>{t('pilotWithdrawn', { code: pilot.cohort_code })}</p>
+                )}
+              </Section>
+            )}
+
             <Section heading={t('dataHeading')}>
               <p style={lead}>{t('dataLead')}</p>
               <div><button type="button" className="lg-btn" style={dangerBtn} onClick={() => setDataOpen(true)}>{t('dataButton')}</button></div>
@@ -246,6 +289,25 @@ export default function Settings() {
           </>
         )}
       </div>
+
+      <AlertDialog open={pilotOpen} onOpenChange={(o) => !busy && setPilotOpen(o)}>
+        <AlertDialogContent style={dialogStyle}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={{ fontFamily: serif, fontSize: 20 }}>{t('pilotWithdrawTitle')}</AlertDialogTitle>
+            <AlertDialogDescription style={{ fontSize: 13, lineHeight: 1.7, color: T.creamMid }}>{t('pilotWithdrawBody')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy} style={{ borderRadius: 0, background: 'transparent', color: T.cream, borderColor: T.borderMid }}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => { e.preventDefault(); void withdraw(); }}
+              style={{ borderRadius: 0, backgroundColor: T.error, color: 'var(--l-on-fg)' }}
+            >
+              {busy ? t('pilotWithdrawing') : t('pilotWithdrawConfirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={dataOpen} onOpenChange={(o) => !busy && setDataOpen(o)}>
         <AlertDialogContent style={dialogStyle}>

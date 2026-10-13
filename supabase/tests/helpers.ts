@@ -9,12 +9,15 @@ const BOOTSTRAP = `
   create role anon nologin;
   create role authenticated nologin;
   grant usage on schema public to anon, authenticated;
+  -- 실제 Supabase의 기본값: public 스키마에 새로 만든 함수는 anon·authenticated가 실행할 수 있다(revoke를 빠뜨리면 공개된다).
+  alter default privileges in schema public grant execute on functions to anon, authenticated;
   create schema auth;
-  create table auth.users (id uuid primary key, email text);
+  create table auth.users (id uuid primary key, email text, created_at timestamptz not null default now());
   create function auth.jwt() returns jsonb language sql stable as
     $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
+  -- 트랜잭션 로컬 set_config가 끝나면 설정이 빈 문자열로 남으므로(실제 Supabase처럼) 빈 값은 null로 본다.
   create function auth.uid() returns uuid language sql stable as
-    $$ select nullif(current_setting('request.jwt.claims', true)::jsonb->>'sub', '')::uuid $$;
+    $$ select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub', '')::uuid $$;
   -- 실제 Supabase처럼 auth 스키마 사용 권한과 uid()/jwt() 실행 권한은 두 역할에 열려 있다(users 테이블은 아님).
   grant usage on schema auth to anon, authenticated;
   grant execute on function auth.uid(), auth.jwt() to anon, authenticated;

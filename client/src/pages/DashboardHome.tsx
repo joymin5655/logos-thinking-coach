@@ -2,7 +2,7 @@
  * DashboardHome.tsx — LOGOS 성장 대시보드
  * 모든 숫자는 내 계정의 실제 기록(이 기기의 캐시)에서 나온다. 기록이 없으면 빈 상태 문구를 보여준다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -16,6 +16,13 @@ import { todaysTopic } from '@/lib/topics';
 import { buildDailyArgueIcs, downloadFile } from '@/lib/ics';
 import { formatDate, useLocale, useT } from '@/i18n';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { recordCount, useOnboardingRedirect } from '@/lib/onboarding';
+import { loadDismissedDay, saveDismissedDay, streakRisk } from '@/lib/streakRisk';
+import { weeklyRecap } from '@/lib/recap';
+import { detectMilestones, keepNew, nextMilestone } from '@/lib/milestones';
+import { StreakRiskBanner } from '@/components/growth/StreakRiskBanner';
+import { WeeklyRecapCard } from '@/components/growth/WeeklyRecapCard';
+import { MilestoneStrip } from '@/components/growth/MilestoneStrip';
 import { ARENA_TOPICS } from '../../../shared/arenaTopics';
 import {
   REDIAGNOSE_DAYS, addDays, avgDelta, completionRate, computeStreak, daysUntilRediagnosis, exportJSON,
@@ -43,6 +50,10 @@ export default function DashboardHome() {
   usePageMeta('dashboard', { noindex: true });
   const [fields, setFields] = useState<Field[]>(() => loadFields());
   const [skipDiag, setSkipDiag] = useState(false);
+  useOnboardingRedirect();
+  // 1분마다 갱신: 연속 기록 배너의 남은 시간과 자정 넘김 처리
+  const [now, setNow] = useState(() => new Date());
+  const [dismissedDay, setDismissedDay] = useState(() => loadDismissedDay());
   // locale이 바뀌면 주제 제목도 다시 가져온다
   const topic = useMemo(() => todaysTopic(), [locale]);
 
@@ -52,7 +63,11 @@ export default function DashboardHome() {
     return () => window.removeEventListener('logos:fields-changed', sync);
   }, []);
 
-  const now = new Date();
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const today = toISODate(now);
   const streak = computeStreak(store.streak.days, today);
   const comp = completionRate(store.sessions);
@@ -72,6 +87,12 @@ export default function DashboardHome() {
         .map((s) => ({ label: fmtMD(s.completedAt!), score: s.scoreAfter!.total })),
     [store.sessions],
   );
+  const risk = streakRisk(store, now, dismissedDay);
+  const hasRecords = recordCount(store) > 0;
+  const recap = useMemo(() => weeklyRecap(store, now), [store, today]);
+  const newMilestones = useRef(new Set<string>()); // 이번 방문에 NEW였던 것은 store가 바뀌어도 계속 NEW
+  const milestones = useMemo(() => keepNew(detectMilestones(store), newMilestones.current), [store]);
+  const nextMs = useMemo(() => nextMilestone(store), [store]);
   const compare = useMemo(() => pickComparison(store.sessions, new Date()), [store.sessions]);
 
   const fieldCounts = fields.map((f) => ({
@@ -149,7 +170,11 @@ export default function DashboardHome() {
     <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
       <FocusStyle />
       <div style={{ display: 'grid', gap: 24, maxWidth: 1080 }}>
+        <StreakRiskBanner risk={risk} onDismiss={() => { saveDismissedDay(today); setDismissedDay(today); }} />
         <Label>{t('eyebrowLine', { date: formatDate(now, { weekday: 'long', month: 'long', day: 'numeric' }), n: streak.count })}</Label>
+
+        {hasRecords && <WeeklyRecapCard recap={recap} />}
+        {hasRecords && <MilestoneStrip milestones={milestones} next={nextMs} />}
 
         {resumeRec ? (
           <>
