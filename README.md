@@ -140,6 +140,10 @@ DESIGN.md             colour, type and layout rules
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | `/api/coach` request and response contract |
 | [DESIGN.md](DESIGN.md) | design system |
 
+## License
+
+Source-available, all rights reserved. You may read the code, but copying, redistributing or running it as a service needs written permission. See [LICENSE](LICENSE).
+
 ## Contact
 
 Questions, feedback or partnership: **[contact@lo9os.org](mailto:contact@lo9os.org)** · [lo9os.org](https://lo9os.org)

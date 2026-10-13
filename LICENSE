@@ -1,0 +1,28 @@
+Copyright (c) 2026 LOGOS (https://lo9os.org). All rights reserved.
+
+This repository is public so that its source code can be read. No license is
+granted to copy, modify, distribute, sublicense or otherwise use this software,
+its prompts, documentation or brand assets (including the LOGOS name, logo and
+visual design), in whole or in part, for any purpose, including operating it as
+a hosted service, without prior written permission.
+
+Viewing this repository and forking it on GitHub, to the extent the GitHub Terms
+of Service allow, is permitted. Doing so grants no further rights.
+
+Third-party components keep their own licenses and are not covered by this
+notice, including:
+- npm dependencies listed in package.json and pnpm-lock.yaml
+- web fonts loaded from Google Fonts and jsDelivr (Space Mono, Source Serif 4,
+  Outfit, Pretendard)
+- client/public/thinker.glb, a 3D model generated with Meshy AI and subject to
+  Meshy's terms
+
+For permission requests, contact contact@lo9os.org.
+
+---
+
+이 저장소는 코드를 읽을 수 있도록 공개한 것입니다. 사전 서면 허락 없이 이
+소프트웨어, 프롬프트, 문서, 브랜드 자산(LOGOS 이름·로고·디자인 포함)의 전부
+또는 일부를 복제·수정·배포하거나 서비스로 운영하는 등 어떤 목적으로도 이용할
+수 없습니다. 제3자 구성 요소는 각자의 라이선스를 따릅니다.
+문의: contact@lo9os.org
