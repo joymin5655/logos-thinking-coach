@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import PrefsToggle from '@/components/PrefsToggle';
+import SignupConsent, { CONSENT_HINT_ID } from '@/components/SignupConsent';
 import { FocusStyle, T, body, btnDisabled, btnPrimary, mono, panelStyle, serif } from '@/components/logos-ui';
 import { ensureProfile, useAuth } from '@/lib/auth';
 import { fetchMyMeta, joinCohort, parseCohortCode, type JoinErrorCode } from '@/lib/cohort';
@@ -56,6 +57,7 @@ export default function Join() {
   const code = parseCohortCode(useSearch());
   const { user, loading, ready, signIn } = useAuth();
   const [consent, setConsent] = useState(() => takeConsentFlag(code));
+  const [agreed, setAgreed] = useState(false);
   const [phase, setPhase] = useState<Phase>('form');
   const [error, setError] = useState<JoinErrorCode | null>(null);
   const [signInFailed, setSignInFailed] = useState(false);
@@ -90,7 +92,7 @@ export default function Join() {
   };
 
   const login = async () => {
-    if (!code || !consent || redirecting) return;
+    if (!code || !consent || !agreed || redirecting) return;
     setRedirecting(true);
     setSignInFailed(false);
     putConsentFlag(code);
@@ -127,7 +129,7 @@ export default function Join() {
   } else {
     const joining = phase === 'joining';
     const checking = loading && !user;
-    const blocked = !consent || joining || redirecting || checking || !ready;
+    const blocked = !consent || (!user && !agreed) || joining || redirecting || checking || !ready;
     const todo = ['todo1', 'todo2', 'todo3'] as const;
     const data = ['data1', 'data2', 'data3'] as const;
     content = (
@@ -166,12 +168,14 @@ export default function Join() {
           </span>
         </label>
 
+        {!user && <SignupConsent checked={agreed} onChange={setAgreed} />}
+
         {!ready && !loading && <p role="status" style={{ margin: 0, padding: 12, border: `1px solid ${T.borderMid}`, fontFamily: body, fontSize: 13, color: T.amber }}>{ta('notConfigured')}</p>}
         {error && <p role="alert" style={{ margin: 0, padding: '10px 14px', border: `1px solid ${T.error}`, fontFamily: body, fontSize: 13, lineHeight: 1.6, color: T.cream }}>{t(ERROR_KEY[error])}</p>}
         {signInFailed && <p role="alert" style={{ margin: 0, fontFamily: body, fontSize: 12, color: T.error }}>{ta('signInFailed')}</p>}
 
         <div style={{ display: 'grid', gap: 8 }}>
-          <button type="button" className="lg-btn" disabled={blocked} onClick={() => void (user ? join() : login())} style={{ ...bigBtn, ...(blocked ? btnDisabled : {}) }}>
+          <button type="button" className="lg-btn" disabled={blocked} aria-describedby={user ? undefined : CONSENT_HINT_ID} onClick={() => void (user ? join() : login())} style={{ ...bigBtn, ...(blocked ? btnDisabled : {}) }}>
             {joining ? t('joining') : redirecting ? ta('redirecting') : checking ? t('checking') : user ? t('joinNow') : t('joinGoogle')}
           </button>
           <span style={{ fontFamily: body, fontSize: 12, lineHeight: 1.6, color: T.creamMid, textAlign: 'center' }}>

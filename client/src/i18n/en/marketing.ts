@@ -7,6 +7,7 @@ export const marketing: Record<keyof typeof Ko, string> = {
   start: 'Get started',
   marquee: 'LOGOS · THINKING COACH · THINK DEEPER · SOCRATES · APORIA · LOGICAL CONVICTION · ',
   privacy: 'Privacy',
+  terms: 'Terms',
   errorTitle: 'An unexpected error occurred.',
   errorReload: 'Reload page',
 };

@@ -15,6 +15,7 @@ export const nav = {
   plan: 'Free · 베타',
   settings: '설정',
   privacy: '개인정보 처리방침',
+  terms: '이용약관',
   admin: '관리자',
   signOut: '로그아웃',
   signIn: '로그인',

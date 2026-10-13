@@ -269,6 +269,25 @@ export default function MarketingLayout({ children, footer, singleViewport }: Pr
           </div>
 
           <Link
+            href="/terms"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 20px',
+              flexShrink: 0,
+              borderRight: `1px solid ${BORDER}`,
+              height: '100%',
+              fontFamily: "var(--font-mono)",
+              fontSize: '11px',
+              letterSpacing: '0.12em',
+              color: FG_MID,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('terms')}
+          </Link>
+          <Link
             href="/privacy"
             style={{
               display: 'flex',

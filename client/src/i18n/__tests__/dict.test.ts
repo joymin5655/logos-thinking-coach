@@ -18,6 +18,17 @@ describe('i18n dictionaries', () => {
       for (const key of Object.keys(k)) expect(ph(e[key]), `${ns}.${key}`).toEqual(ph(k[key]));
     }
   });
+  it('uses the 18+ age rule everywhere and no stale draft badge', () => {
+    for (const d of [ko, en] as const) {
+      for (const ns of ['privacy', 'terms', 'pilot', 'auth'] as const) {
+        const text = Object.values(d[ns]).join('\n');
+        expect(text, ns).not.toMatch(/14세|under 14|14 or older/);
+      }
+      expect(Object.values(d.terms).join('\n')).toMatch(/18/);
+      expect(Object.values(d.privacy).join('\n')).toMatch(/18/);
+      expect(Object.keys(d.privacy)).not.toContain('draft');
+    }
+  });
   it('interpolates variables', () => {
     expect(interpolate('{n}회 남음', { n: 2 })).toBe('2회 남음');
   });

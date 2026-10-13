@@ -169,7 +169,7 @@ export default function Argue() {
   /* ── PICK ── */
   if (phase === 'pick') {
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <FocusStyle />
         <div style={{ maxWidth: 860, display: 'grid', gap: 24 }}>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -208,7 +208,7 @@ export default function Argue() {
     const a = rec.scoreAfter;
     const streak = computeStreak(loadStore().streak.days, toISODate(new Date()));
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <FocusStyle />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
           <div style={{ ...panelStyle, flex: '2 1 340px', display: 'grid', gap: 20 }}>
@@ -249,7 +249,7 @@ export default function Argue() {
     const busy = phase === 'scoring' && !scoringErr;
     const short = summary.trim().length < MIN_SUMMARY;
     return (
-      <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+      <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
         <FocusStyle />
         <div style={{ maxWidth: 640, display: 'grid', gap: 16 }}>
           <div style={{ ...panelStyle, display: 'grid', gap: 14 }}>
@@ -285,7 +285,7 @@ export default function Argue() {
   const done = round >= ROUNDS_TOTAL && lastIsAi;
   const max = inReason ? MAX_REASON : MAX_MESSAGE;
   return (
-    <DashboardLayout title={t('title')} titleEn={t('titleEn')}>
+    <DashboardLayout title={t('title')} titleEn={t('titleEn')} aiNotice>
       <FocusStyle />
       <div style={{ maxWidth: 780, display: 'grid', gap: 16 }}>
         <div style={{ ...panelStyle, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center' }}>

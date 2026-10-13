@@ -13,6 +13,8 @@ export const meta = {
   pricingDesc: '무료로 시작하고 필요할 때 업그레이드하세요. LOGOS 요금제를 비교합니다.',
   privacyTitle: '개인정보처리방침',
   privacyDesc: 'LOGOS가 수집하는 개인정보의 항목, 이용 목적, 보관 기간과 이용자의 권리를 안내합니다.',
+  termsTitle: '이용약관',
+  termsDesc: 'LOGOS 서비스의 이용 조건, AI 출력에 관한 안내, 이용자의 의무와 책임 범위를 안내합니다.',
   joinTitle: '파일럿 참가',
   joinDesc: 'LOGOS 파일럿 연구에 참가하는 화면이에요. 동의서를 확인하고 참가 코드를 확인합니다.',
   onboardingTitle: '시작하기',

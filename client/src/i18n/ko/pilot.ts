@@ -21,7 +21,7 @@ export const pilot = {
   joinNow: '참가하기',
   joining: '참가하는 중…',
   checking: '확인하는 중…',
-  ageNote: '만 14세 이상만 참가할 수 있어요',
+  ageNote: '만 18세 이상만 참가할 수 있어요',
   privacyLink: '개인정보 처리방침',
   noCodeTitle: '참가 코드가 필요해요',
   noCodeBody: '안내받은 링크로 다시 들어와 주세요. 주소 끝에 코드(?c=…)가 있어야 해요.',

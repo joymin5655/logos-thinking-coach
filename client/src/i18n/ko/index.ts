@@ -3,6 +3,7 @@ import { nav } from './nav';
 import { auth } from './auth';
 import { settings } from './settings';
 import { privacy } from './privacy';
+import { terms } from './terms';
 import { pricing } from './pricing';
 import { arena } from './arena';
 import { admin } from './admin';
@@ -27,5 +28,5 @@ import { pilot } from './pilot';
 import { funnel } from './funnel';
 
 // 네임스페이스 목록은 여기서만 고정한다. 페이지 작업은 각자의 ko/<ns>.ts·en/<ns>.ts만 수정한다.
-export const ko = { common, nav, auth, settings, privacy, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta, onboarding, growth, pilot, funnel };
+export const ko = { common, nav, auth, settings, privacy, terms, pricing, arena, admin, landing, about, features, dashboard, analytics, history, session, argue, diagnostic, errors, marketing, topics, ics, notFound, meta, onboarding, growth, pilot, funnel };
 export type Dict = typeof ko;

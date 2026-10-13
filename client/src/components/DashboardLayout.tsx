@@ -12,6 +12,7 @@
 import { Link, useLocation } from 'wouter';
 import { useEffect, useRef, useState } from 'react';
 import PrefsToggle from '@/components/PrefsToggle';
+import { AiNotice } from '@/components/logos-ui';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -163,6 +164,8 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
   titleEn?: string;
+  /** AI와 상호작용하는 화면이면 상단에 AI 고지 한 줄을 보인다. */
+  aiNotice?: boolean;
 }
 
 const sheetRow = (active: boolean): React.CSSProperties => ({
@@ -170,7 +173,7 @@ const sheetRow = (active: boolean): React.CSSProperties => ({
   fontWeight: active ? 700 : 400, color: active ? CREAM : CREAM_MID, textDecoration: 'none', boxSizing: 'border-box',
 });
 
-export default function DashboardLayout({ children, title, titleEn }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, title, titleEn, aiNotice }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
   const t = useT('nav');
   const { locale } = useLocale();
@@ -421,6 +424,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="min-w-48">
                 <DropdownMenuItem onSelect={() => navigate('/dashboard/settings')}>{t('settings')}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => navigate('/terms')}>{t('terms')}</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => navigate('/privacy')}>{t('privacy')}</DropdownMenuItem>
                 {isAdmin && <DropdownMenuItem onSelect={() => navigate('/admin')}>{t('admin')}</DropdownMenuItem>}
                 <DropdownMenuSeparator />
@@ -555,6 +559,7 @@ export default function DashboardLayout({ children, title, titleEn }: DashboardL
           </div>
         )}
         <div className="dl-content p-4 md:p-6">
+          {aiNotice && <AiNotice />}
           {children}
         </div>
       </main>

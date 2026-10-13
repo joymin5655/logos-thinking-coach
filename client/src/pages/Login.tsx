@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import PrefsToggle from '@/components/PrefsToggle';
+import SignupConsent, { CONSENT_HINT_ID } from '@/components/SignupConsent';
 import { T, mono, serif, body, btnPrimary, btnDisabled, panelStyle } from '@/components/logos-ui';
 import { safeNext, useAuth } from '@/lib/auth';
 import { useT } from '@/i18n';
@@ -17,12 +18,14 @@ export default function Login() {
   const { user, loading, ready, signIn } = useAuth();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     if (user) navigate(next, { replace: true });
   }, [user, next, navigate]);
 
   const go = async () => {
+    if (!agreed) return;
     setBusy(true);
     setFailed(false);
     const ok = await signIn(next);
@@ -32,7 +35,7 @@ export default function Login() {
     }
   };
 
-  const disabled = busy || loading || !ready;
+  const disabled = busy || loading || !ready || !agreed;
   return (
     <div style={{ minHeight: 'calc(100dvh / var(--ui-scale))', background: T.black, color: T.cream, fontFamily: mono, display: 'flex', flexDirection: 'column' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: `1px solid ${T.border}` }}>
@@ -49,14 +52,11 @@ export default function Login() {
           {!ready && !loading ? (
             <p role="status" style={{ margin: 0, padding: 12, border: `1px solid ${T.borderMid}`, fontFamily: body, fontSize: 13, color: T.amber }}>{t('notConfigured')}</p>
           ) : null}
-          <button type="button" className="lg-btn" onClick={() => void go()} disabled={disabled} style={{ ...btnPrimary, ...(disabled ? btnDisabled : {}) }}>
+          <SignupConsent checked={agreed} onChange={setAgreed} />
+          <button type="button" className="lg-btn" onClick={() => void go()} disabled={disabled} aria-describedby={CONSENT_HINT_ID} style={{ ...btnPrimary, ...(disabled ? btnDisabled : {}) }}>
             {busy ? t('redirecting') : t('google')}
           </button>
           {failed && <p role="alert" style={{ margin: 0, fontFamily: body, fontSize: 12, color: T.error }}>{t('signInFailed')}</p>}
-          <p style={{ margin: 0, fontFamily: body, fontSize: 12, lineHeight: 1.6, letterSpacing: 'normal', color: T.creamMid }}>
-            {t('privacyNote')}{' '}
-            <Link href="/privacy" style={{ color: T.creamMid, textDecoration: 'underline' }}>{t('privacyLink')}</Link>
-          </p>
         </div>
       </main>
     </div>
