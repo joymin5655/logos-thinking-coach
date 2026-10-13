@@ -7,6 +7,7 @@ import PrefsToggle from '@/components/PrefsToggle';
 import SignupConsent, { CONSENT_HINT_ID } from '@/components/SignupConsent';
 import { T, mono, serif, body, btnPrimary, btnDisabled, panelStyle } from '@/components/logos-ui';
 import { safeNext, useAuth } from '@/lib/auth';
+import { clearPendingTermsConsent, markPendingTermsConsent } from '@/lib/termsConsent';
 import { useT } from '@/i18n';
 import { usePageMeta } from '@/lib/usePageMeta';
 
@@ -28,8 +29,10 @@ export default function Login() {
     if (!agreed) return;
     setBusy(true);
     setFailed(false);
+    markPendingTermsConsent();
     const ok = await signIn(next);
     if (!ok) {
+      clearPendingTermsConsent();
       setFailed(true);
       setBusy(false);
     }

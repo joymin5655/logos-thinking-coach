@@ -13,6 +13,7 @@ import { T, mono, serif, sans, body, Label, btnPrimary, btnGhost, btnDisabled, p
 import { useTheme, type ThemePref } from '@/contexts/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { getAnonId, resetAnonymous } from '@/lib/track';
+import { clearPendingTermsConsent } from '@/lib/termsConsent';
 import { supabase } from '@/lib/supabase';
 import { flush, pullAll, resetSync } from '@/lib/sync';
 import { clearLocal, exportJSON, toISODate, updateStore } from '@/lib/store';
@@ -155,6 +156,7 @@ export default function Settings() {
     }
     resetLocalFor(uid);
     resetAnonymous(); // 이 기기의 익명 이벤트는 위 호출로 지웠으니 id도 새로 시작한다
+    clearPendingTermsConsent(); // 남은 동의 대기 표시가 지운 동의 기록을 되살리지 않게 한다
     setWaitlist([]);
     setPilot(null);
     setBusy(false);

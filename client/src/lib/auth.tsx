@@ -9,6 +9,7 @@ import { onSignIn, onSignedOut, signOutFlow } from './sync';
 import { getTouch } from './acquisition';
 import { getAnonId, privacyAllows, resetAnonymous, track } from './track';
 import { clearOnboardingLocal } from './onboarding';
+import { clearPendingTermsConsent, flushPendingTermsConsent } from './termsConsent';
 
 type AuthContextValue = {
   user: User | null;
@@ -107,12 +108,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearClaims();
         resetAnonymous(); // 다음 사용자에게 익명 id·미전송 이벤트·first-touch가 이어지지 않게 한다
         clearOnboardingLocal(); // 온보딩 건너뜀·완료 표시도 기기 단위라 함께 지운다
+        clearPendingTermsConsent(); // 다음 사용자의 로그인에 이전 동의 표시가 쓰이지 않게 한다
         setIsAdmin(false);
         setAdminUid(null);
         return;
       }
       void onSignIn(uid);
-      void claimProfile(uid);
+      // 프로필 행이 먼저 만들어진 뒤 가입 동의를 기록한다(실패해도 로그인은 막지 않고 다음 로드에 다시 시도)
+      void claimProfile(uid).then(() => {
+        if (cancelled || signedInUid.current !== uid) return; // 그 사이 로그아웃·계정 전환이면 기록하지 않는다
+        return flushPendingTermsConsent(client);
+      });
       void Promise.resolve(client.rpc('is_admin')).then(
         ({ data, error }) => {
           if (cancelled || signedInUid.current !== uid) return;

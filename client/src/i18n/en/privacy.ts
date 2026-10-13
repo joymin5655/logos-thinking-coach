@@ -22,6 +22,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s2l7: '[Automatic] Usage events: only the name and numeric values of events such as page visits and starting or finishing a diagnostic or session. The content of what you write is not included.',
   s2l8: '[Automatic] Referral source: only UTM values from ads or links and the domain of the site you came from. We do not store the full address.',
   s2l9: '[Optional] If you join the pilot study: the consent version and time you agreed, your cohort code and your assigned group',
+  s2l10: '[Automatic] Sign-up consent record: the version of the Terms and Privacy Policy you agreed to, and the time it was recorded on our server after you signed in (not the time you clicked)',
   s2p2: 'The IP address of a request is used briefly in server memory only to rate-limit usage. It is not stored, and it is not stored with usage events either. This means the Service itself does not store IP addresses; the hosting provider (Vercel, Section 6) may keep IP addresses in its access logs under its own policy.',
 
   s3Title: '3. Why we use it',
@@ -40,6 +41,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s4l3: 'Launch notification sign-ups: kept until you cancel them or delete your records or account.',
   s4l4: 'Usage events: destroyed 180 days after collection. If you use "Delete all my records" or delete your account sooner, events linked to your account and this device are deleted then; events that are not linked are destroyed after 180 days.',
   s4l5: 'Pilot participation information (consent version and time, group assignment): kept until you delete it or delete your account.',
+  s4l6: 'Sign-up consent record (terms version and time): kept until you delete your account or use "Delete all my records".',
   s4p1: 'Where the law requires us to keep data, we keep it for that period.',
 
   s5Title: '5. Destroying personal data',
@@ -52,7 +54,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s6Title: '6. Processors and overseas transfer',
   s6p1: 'To provide the Service, we entrust processing to the companies below, and your data is transferred abroad. Each entry lists the recipient, country, timing and method, items, purpose, retention period, and how to refuse and what happens if you do.',
   s6l1: "Anthropic, PBC\nCountry: United States\nTiming and method: sent from our server to the Anthropic API over an encrypted connection (HTTPS) each time an AI response is needed.\nItems: what you write and your conversation with the AI\nPurpose: generating AI responses and scoring\nRetention: follows the processor's policy (https://www.anthropic.com/legal/privacy).\nRefusal and effect: you can stop using the Service or ask us to delete your account. If you refuse, you cannot use AI coaching, argument, arena or diagnostic.",
-  s6l2: "Supabase, Inc. (United States)\nCountry: United States. Data is stored in Seoul, South Korea (ap-northeast-2), and may be accessed from the United States for operations and technical support.\nTiming and method: exchanged over an encrypted connection (HTTPS) whenever you sign in and save or read records.\nItems: sign-in information, what you write, AI conversations, scores and reports, survey answers, usage counts and events, device identifier, pilot participation information\nPurpose: database operation and sign-in authentication\nRetention: follows the retention periods in Section 4; system logs and backups follow the processor's policy (https://supabase.com/privacy).\nRefusal and effect: you can stop using the Service or ask us to delete your account. If you refuse, you cannot sign in or save records.",
+  s6l2: "Supabase, Inc. (United States)\nCountry: United States. Data is stored in Seoul, South Korea (ap-northeast-2), and may be accessed from the United States for operations and technical support.\nTiming and method: exchanged over an encrypted connection (HTTPS) whenever you sign in and save or read records.\nItems: sign-in information, what you write, AI conversations, scores and reports, survey answers, usage counts and events, device identifier, pilot participation information, sign-up consent record\nPurpose: database operation and sign-in authentication\nRetention: follows the retention periods in Section 4; system logs and backups follow the processor's policy (https://supabase.com/privacy).\nRefusal and effect: you can stop using the Service or ask us to delete your account. If you refuse, you cannot sign in or save records.",
   s6l3: "Vercel Inc.\nCountry: United States\nTiming and method: processed over an encrypted connection (HTTPS) whenever you visit the website or call a server function.\nItems: information in the request (including access records such as IP address) and the content of requests sent to server functions\nPurpose: hosting the website and server functions\nRetention: follows the processor's policy (https://vercel.com/legal/privacy-policy).\nRefusal and effect: you can stop using the Service. If you refuse, you cannot access the Service.",
   s6l4: "Google LLC\nCountry: United States\nTiming and method: the sign-in request and authentication information are exchanged over an encrypted connection (HTTPS) when you choose \"Continue with Google\".\nItems: email address, name and profile image URL of your Google account\nPurpose: Google account sign-in\nRetention: follows the processor's policy (https://policies.google.com/privacy).\nRefusal and effect: you can choose not to use Google sign-in. If you refuse, you cannot use features that require signing in.",
   s6p2: 'If you do not want this transfer, please do not use the Service or ask us to delete your account.',
@@ -69,7 +71,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s8Title: '8. Your rights',
   s8p1: 'You can view, download and delete your information at any time, directly in Settings.',
   s8l1: 'Export data: download your records as a JSON file in Settings.',
-  s8l2: 'Delete all my records: erase your records from the server and this device in Settings. Your profile, pilot participation information, and usage events linked to your account and this device are deleted too. Events that are not linked are destroyed after 180 days.',
+  s8l2: 'Delete all my records: erase your records from the server and this device in Settings. Your profile, pilot participation information, sign-up consent record, and usage events linked to your account and this device are deleted too. Events that are not linked are destroyed after 180 days.',
   s8l3: 'Delete account: delete your account, all records, your profile and usage events linked to your account in Settings. Events that are not linked are destroyed after 180 days.',
   s8l4: 'Withdraw pilot consent: if you joined the pilot, you can withdraw consent in Settings at any time (Section 11).',
   s8p2: 'For requests Settings cannot handle, contact the Chief Privacy Officer in Section 1.',
@@ -83,6 +85,7 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s10l2: 'A local cache of your records and a list of records not yet uploaded',
   s10l3: 'Theme and language preferences and your chosen interest fields',
   s10l4: 'Your device identifier (random ID) and referral source (UTM values, referring site domain)',
+  s10l5: 'A pending sign-up consent marker (the terms version you agreed to and the time): removed once it is recorded on the server after you sign in. If you do not sign in, it expires after 1 hour.',
   s10p2: 'You can clear storage in your browser settings, but you will be signed out and records not yet uploaded may be lost.',
   s10p3: 'If your browser sends a do-not-track signal (Global Privacy Control or Do Not Track), the Service does not collect usage events or referral source.',
 
@@ -103,5 +106,5 @@ export const privacy: Record<keyof typeof Ko, string> = {
   s12l4: 'National Police Agency Cyber Bureau: 182, no area code (https://ecrm.police.go.kr)',
 
   s13Title: '13. Changes to this policy',
-  s13p1: 'If we change this policy, we will say so on this page together with the effective date. Changes that significantly affect your rights are announced before they take effect. This revision (effective 2026-10-14) adds the Chief Privacy Officer, how data is destroyed, the split between required and automatically collected items, per-processor overseas transfer details, security measures and remedies for infringement, and raises the minimum age to 18.',
+  s13p1: 'If we change this policy, we will say so on this page together with the effective date. Changes that significantly affect your rights are announced before they take effect. This revision (effective 2026-10-14) adds the Chief Privacy Officer, how data is destroyed, the split between required and automatically collected items, per-processor overseas transfer details, security measures and remedies for infringement, and raises the minimum age to 18. It also adds that the terms version and time you agreed to at sign-up are stored on the server.',
 };

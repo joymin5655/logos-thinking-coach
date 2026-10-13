@@ -729,3 +729,79 @@ describe("함수 기본 권한(Supabase 재현)", () => {
     }
   });
 });
+
+describe("record_terms_consent", () => {
+  const V = "2026-10-14";
+  const row = () =>
+    as(db, A).q<{ v: string | null; t: string | null }>("select terms_version as v, extract(epoch from terms_agreed_at)::text as t from user_meta");
+
+  it("행이 없으면 만들고 버전·시각을 기록한다", async () => {
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    const r = await row();
+    expect(r).toHaveLength(1);
+    expect(r[0].v).toBe(V);
+    expect(r[0].t).not.toBeNull();
+  });
+
+  it("같은 버전을 다시 부르면 최초 시각을 유지하고, 다른 버전이면 갱신한다", async () => {
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    await db.exec(`update user_meta set terms_agreed_at = '2026-10-14T00:00:00Z' where user_id = '${uid(1)}'`);
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    expect(Number((await row())[0].t)).toBe(Date.parse("2026-10-14T00:00:00Z") / 1000);
+    await as(db, A).q("select record_terms_consent('2026-11-01')");
+    const r = await row();
+    expect(r[0].v).toBe("2026-11-01");
+    expect(Number(r[0].t)).not.toBe(Date.parse("2026-10-14T00:00:00Z") / 1000);
+  });
+
+  it("기존 행의 다른 컬럼(first-touch·참가 정보)을 건드리지 않는다", async () => {
+    await db.exec(`insert into user_meta (user_id, first_source, cohort_code) values ('${uid(1)}', 'blog', 'COH-AAAA')`);
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    const r = await as(db, A).q<{ s: string; c: string }>("select first_source as s, cohort_code as c from user_meta");
+    expect(r[0]).toEqual({ s: "blog", c: "COH-AAAA" });
+  });
+
+  it("동의 기록이 claim_profile보다 먼저여도 claim이 first-touch를 채우고 created:true를 내며, created_at은 auth.users.created_at이다", async () => {
+    await db.query("update auth.users set created_at = now() - interval '3 days' where id = $1", [A]);
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    expect((await db.query<{ c: string | null }>("select claimed_at::text as c from user_meta where user_id = $1", [A])).rows).toEqual([{ c: null }]);
+    const r = await as(db, A).q<{ c: { created: boolean } }>("select claim_profile($1, $2::jsonb) as c", [
+      "20000000-0000-4000-8000-000000000001",
+      JSON.stringify({ source: "kakao" }),
+    ]);
+    expect(r[0].c).toEqual({ created: false }); // 3일 전 계정은 하루 안 가입이 아니므로 signup을 내지 않는다
+    const row = (await db.query("select first_source, terms_version, claimed_at is not null as claimed, created_at = (select created_at from auth.users where id = $1) as same from user_meta where user_id = $1", [A])).rows;
+    expect(row).toEqual([{ first_source: "kakao", terms_version: V, claimed: true, same: true }]);
+  });
+
+  it("동의 기록이 먼저여도 하루 안에 가입한 계정은 claim_profile이 created:true를 낸다", async () => {
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    const r = await as(db, A).q<{ c: { created: boolean } }>("select claim_profile($1, $2::jsonb) as c", [
+      "20000000-0000-4000-8000-000000000001",
+      JSON.stringify({ source: "kakao" }),
+    ]);
+    expect(r[0].c).toEqual({ created: true });
+    expect((await db.query("select first_source, terms_version from user_meta where user_id = $1", [A])).rows).toEqual([{ first_source: "kakao", terms_version: V }]);
+  });
+
+  it("형식이 틀린 버전·null은 거부한다", async () => {
+    await expect(as(db, A).q("select record_terms_consent('v1')")).rejects.toThrow(/invalid_version/);
+    await expect(as(db, A).q("select record_terms_consent(null)")).rejects.toThrow(/invalid_version/);
+  });
+
+  it("anon은 실행할 수 없고, authenticated는 직접 쓸 수 없다", async () => {
+    await expect(as(db, "anon").q("select record_terms_consent($1)", [V])).rejects.toThrow(/permission denied/);
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    await expect(as(db, A).q("update user_meta set terms_version = 'x'")).rejects.toThrow(/permission denied/);
+    await expect(as(db, A).q("insert into user_meta (user_id, terms_version) values ($1, 'x')", [uid(2)])).rejects.toThrow(/permission denied/);
+  });
+
+  it("다른 사용자의 기록은 보이지 않고, delete_my_data가 지운다", async () => {
+    await as(db, A).q("select record_terms_consent($1)", [V]);
+    await as(db, B).q("select record_terms_consent($1)", [V]);
+    expect(await row()).toHaveLength(1);
+    await as(db, A).q("select delete_my_data()");
+    expect(await row()).toHaveLength(0);
+    expect(await as(db, B).q("select 1 from user_meta")).toHaveLength(1);
+  });
+});
